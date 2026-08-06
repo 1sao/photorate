@@ -1,5 +1,7 @@
 package isao.photorate.photosComponent.classify
 
+import isao.photorate.inference.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkImageLoader
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.annotation.Factory
 import platform.CoreGraphics.CGSizeMake

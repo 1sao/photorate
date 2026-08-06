@@ -6,7 +6,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import isao.photorate.photosComponent.classify.HandLandmarkerOptions
+import isao.photorate.inference.classify.HandLandmarkerOptions
 import isao.photorate.photosMediaPipe.AndroidMediaPipeHandLandmarkerFactory
 import isao.photorate.photosMediaPipe.detectFromBitmap
 import java.nio.ByteBuffer

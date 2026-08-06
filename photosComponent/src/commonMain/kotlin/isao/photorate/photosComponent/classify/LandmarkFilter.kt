@@ -1,5 +1,6 @@
 package isao.photorate.photosComponent.classify
 
+import isao.photorate.inference.classify.Score
 import kotlin.math.abs
 
 fun interface LandmarkFilter {

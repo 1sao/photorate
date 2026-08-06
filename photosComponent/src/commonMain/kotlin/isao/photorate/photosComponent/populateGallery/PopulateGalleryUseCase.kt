@@ -2,6 +2,7 @@ package isao.photorate.photosComponent.populateGallery
 
 import isao.photorate.galleryRepository.GalleryImageRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 

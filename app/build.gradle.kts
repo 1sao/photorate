@@ -119,6 +119,9 @@ dependencies {
     // (photosLiteRT keeps its litert dependency `implementation`, so it
     // doesn't leak here). Production code never names LiteRT types.
     androidTestImplementation(projects.photosLiteRT)
+    // The dataset tests name the inference contracts directly
+    // (HandGestureClassifier, AppClipSearchFactory, ...).
+    androidTestImplementation(projects.photosInference)
     androidTestImplementation("com.google.ai.edge.litert:litert:2.1.6")
     implementation(libs.bundles.app.ui)
     implementation(libs.kotlinx.dateTime)

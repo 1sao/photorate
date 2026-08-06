@@ -41,7 +41,7 @@ kotlin {
         }
 
         commonMain.dependencies {
-            implementation(projects.photosComponent)
+            implementation(projects.photosInference)
         }
         androidMain.dependencies {
             // The Gold-YOLO hand detector + palm-rotation + sparse-landmark models

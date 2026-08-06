@@ -6,6 +6,15 @@ import isao.photorate.db.GalleryImage
 import isao.photorate.db.GalleryImageStatus
 import isao.photorate.galleryRepository.DetectedHandRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
+import isao.photorate.inference.classify.HandLandmarker
+import isao.photorate.inference.classify.HandLandmarkerOptions
+import isao.photorate.inference.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkImageLoader
+import isao.photorate.inference.classify.LandmarkedImage
+import isao.photorate.inference.classify.LandmarkerFactoryProvider
+import isao.photorate.inference.classify.heightPx
+import isao.photorate.inference.classify.widthPx
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.time.measureTime
@@ -137,7 +146,7 @@ class LandmarkPendingImagesUseCase(
         } else {
             val cx = (points.minOf { it.x } + points.maxOf { it.x }) / 2f
             val cy = (points.minOf { it.y } + points.maxOf { it.y }) / 2f
-            val theta = Math.toRadians(deg.toDouble())
+            val theta = deg.toDouble() * PI / 180.0
             val cosT = cos(theta).toFloat()
             val sinT = sin(theta).toFloat()
             points.map { p ->

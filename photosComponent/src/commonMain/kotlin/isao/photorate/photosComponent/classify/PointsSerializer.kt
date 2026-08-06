@@ -1,6 +1,6 @@
 package isao.photorate.photosComponent.classify
 
-import isao.photorate.photosComponent.classify.LandmarkedImage.Point
+import isao.photorate.inference.classify.LandmarkedImage.Point
 
 /**
  * Serializes [List<Point>] to/from a compact ByteArray for BLOB storage.

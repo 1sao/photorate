@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.classify
+package isao.photorate.inference.classify
 
 /**
  * Platform image a hand-landmark model consumes: a Bitmap on Android, a

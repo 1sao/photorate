@@ -54,7 +54,7 @@ kotlin {
         }
 
         commonMain.dependencies {
-            implementation(projects.photosComponent)
+            implementation(projects.photosInference)
         }
         androidMain.dependencies {
             implementation("com.google.mediapipe:tasks-vision:0.10.35")

@@ -1,7 +1,8 @@
 package isao.photorate.photosComponent.classify
 
-import isao.photorate.photosComponent.classify.LandmarkedImage.Hand
-import isao.photorate.photosComponent.classify.LandmarkedImage.Point
+import isao.photorate.inference.classify.HandGestureClassifier
+import isao.photorate.inference.classify.LandmarkedImage.Hand
+import isao.photorate.inference.classify.LandmarkedImage.Point
 import kotlin.math.hypot
 
 /**

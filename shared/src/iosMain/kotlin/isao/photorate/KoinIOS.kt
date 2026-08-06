@@ -3,11 +3,11 @@ package isao.photorate
 import co.touchlab.kermit.Logger
 import isao.photorate.galleryOld.GalleryDataSource
 import isao.photorate.galleryOld.IosGalleryDataSource
-import isao.photorate.photosComponent.classify.DefaultLandmarkerFactoryProvider
-import isao.photorate.photosComponent.classify.LandmarkModel
-import isao.photorate.photosComponent.classify.LandmarkerFactoryProvider
-import isao.photorate.photosComponent.search.AppClipSearch
-import isao.photorate.photosComponent.search.AppClipSearchFactory
+import isao.photorate.inference.classify.DefaultLandmarkerFactoryProvider
+import isao.photorate.inference.classify.LandmarkModel
+import isao.photorate.inference.classify.LandmarkerFactoryProvider
+import isao.photorate.inference.search.AppClipSearch
+import isao.photorate.inference.search.AppClipSearchFactory
 import isao.photorate.photosMediaPipe.IosMediaPipeHandLandmarkerFactory
 import org.koin.core.Koin
 import org.koin.core.KoinApplication

@@ -9,8 +9,8 @@ import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryUiState.ImageSorting
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.galleryUi.GalleryUiState.PermissionState
+import isao.photorate.inference.classify.Score
 import isao.photorate.photosComponent.classify.LandmarkPendingImagesUseCase
-import isao.photorate.photosComponent.classify.Score
 import isao.photorate.photosComponent.gallery.SetUserScoreUseCase
 import isao.photorate.photosComponent.populateGallery.PopulateGalleryUseCase
 import isao.photorate.photosComponent.search.PopulateImageEmbeddingsUseCase

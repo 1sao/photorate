@@ -96,6 +96,7 @@ kotlin {
             implementation(libs.arrow.fx.coroutines)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(projects.photosComponent)
+            implementation(projects.photosInference)
             implementation(projects.configComponent)
             implementation(projects.photosUI)
             implementation(projects.photosMediaPipe)

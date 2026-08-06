@@ -3,6 +3,9 @@ package isao.photorate.photosComponent.search
 import isao.photorate.db.GalleryImage
 import isao.photorate.galleryRepository.GalleryImageRepository
 import isao.photorate.galleryRepository.ImageEmbeddingRepository
+import isao.photorate.inference.search.AppClipSearch
+import isao.photorate.inference.search.AppClipSearchFactory
+import isao.photorate.inference.search.cosineSimilarity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext

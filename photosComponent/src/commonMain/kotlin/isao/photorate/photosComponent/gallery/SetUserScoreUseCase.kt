@@ -2,7 +2,7 @@ package isao.photorate.photosComponent.gallery
 
 import isao.photorate.db.DetectedHand
 import isao.photorate.galleryRepository.DetectedHandRepository
-import isao.photorate.photosComponent.classify.Score
+import isao.photorate.inference.classify.Score
 import org.koin.core.annotation.Factory
 
 /**

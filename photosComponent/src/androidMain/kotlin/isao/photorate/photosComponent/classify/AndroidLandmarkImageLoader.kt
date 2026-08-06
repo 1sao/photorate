@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.core.net.toUri
+import isao.photorate.inference.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkImageLoader
 import kotlin.math.min
 import org.koin.core.annotation.Factory
 

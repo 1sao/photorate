@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.classify
+package isao.photorate.inference.classify
 
 /**
  * Decodes a gallery image for a hand-landmark run. Provider-agnostic: the

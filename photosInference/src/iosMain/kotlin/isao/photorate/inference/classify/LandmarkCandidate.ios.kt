@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.classify
+package isao.photorate.inference.classify
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents

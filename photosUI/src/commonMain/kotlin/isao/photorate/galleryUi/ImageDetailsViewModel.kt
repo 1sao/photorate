@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import isao.photorate.galleryRepository.DetectedHandRepository
 import isao.photorate.galleryRepository.FeatureFlagRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
-import isao.photorate.photosComponent.classify.LandmarkedImage.Point
-import isao.photorate.photosComponent.classify.Score
+import isao.photorate.inference.classify.LandmarkedImage.Point
+import isao.photorate.inference.classify.Score
 import isao.photorate.photosComponent.gallery.SetUserScoreUseCase
 import isao.photorate.photosComponent.populateGallery.SystemGalleryImageRepository
 import isao.photorate.photosComponent.populateGallery.SystemImageDetails

@@ -1,5 +1,8 @@
 package isao.photorate.photosComponent.classify
 
+import isao.photorate.inference.classify.HandGestureClassifier
+import isao.photorate.inference.classify.LandmarkedImage
+import isao.photorate.inference.classify.Score
 import org.koin.core.annotation.Factory
 
 /**
@@ -16,14 +19,6 @@ fun interface LandmarkRater {
 }
 
 data class LandmarkedRatedImage(val image: LandmarkedImage, val score: Score)
-
-enum class Score(val score: Int) {
-    ONE(1),
-    TWO(2),
-    THREE(3),
-    FOUR(4),
-    FIVE(5),
-}
 
 @Factory
 class LandmarkRaterByThumb : LandmarkRater {

@@ -1,6 +1,6 @@
 package isao.photorate.photosComponent.classify
 
-import isao.photorate.photosComponent.classify.LandmarkedImage.Hand
+import isao.photorate.inference.classify.LandmarkedImage.Hand
 
 data class HandFeatures(
     val bboxMinX: Float,

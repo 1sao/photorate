@@ -94,7 +94,7 @@ import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.galleryUi.GalleryUiState.PermissionState as GalleryPermissionState
 import isao.photorate.galleryUi.GalleryViewModel
 import isao.photorate.galleryUi.SearchUiState
-import isao.photorate.photosComponent.classify.Score
+import isao.photorate.inference.classify.Score
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

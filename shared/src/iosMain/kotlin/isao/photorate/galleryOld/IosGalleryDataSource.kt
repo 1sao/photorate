@@ -1,6 +1,6 @@
 package isao.photorate.galleryOld
 
-import isao.photorate.photosComponent.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkCandidate
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

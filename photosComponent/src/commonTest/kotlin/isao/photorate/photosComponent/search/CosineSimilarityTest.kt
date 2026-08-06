@@ -1,5 +1,6 @@
 package isao.photorate.photosComponent.search
 
+import isao.photorate.inference.search.cosineSimilarity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

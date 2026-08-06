@@ -1,7 +1,7 @@
 package isao.photorate.sqldelight.adapter
 
 import app.cash.sqldelight.ColumnAdapter
-import isao.photorate.photosComponent.classify.Score
+import isao.photorate.inference.classify.Score
 
 object ScoreAdapter : ColumnAdapter<Score, Double> { // TODO switch to long?
     override fun decode(databaseValue: Double): Score = Score.entries.first { it.score.toDouble() == databaseValue }

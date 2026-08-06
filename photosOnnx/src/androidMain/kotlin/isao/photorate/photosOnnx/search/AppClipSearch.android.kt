@@ -7,9 +7,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import isao.photorate.photosComponent.search.AppClipSearch
-import isao.photorate.photosComponent.search.AppClipSearchFactory
-import isao.photorate.photosComponent.search.ClipTokenizer
+import isao.photorate.inference.search.AppClipSearch
+import isao.photorate.inference.search.AppClipSearchFactory
+import isao.photorate.inference.search.ClipTokenizer
 import java.io.File
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
@@ -20,7 +20,7 @@ import kotlin.system.measureTimeMillis
 
 /**
  * ONNX-backed [AppClipSearchFactory] (MobileCLIP search). Mirrors the
- * hand-landmarker architecture ([isao.photorate.photosComponent.classify.HandLandmarkerFactory]):
+ * hand-landmarker architecture ([isao.photorate.inference.classify.HandLandmarkerFactory]):
  * the factory is Android-specific, injected with a [Context], and registered in
  * Koin from the shared module's [isao.photorate.PlatformModule] when the ONNX
  * provider is active (currently the app uses the LiteRT provider — see

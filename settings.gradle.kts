@@ -37,6 +37,7 @@ include(
     ":shared",
     ":umbrella",
     ":core",
+    ":photosInference",
     ":photosComponent",
     ":configComponent",
     ":photosUI",

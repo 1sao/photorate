@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.search
+package isao.photorate.inference.search
 
 import kotlin.test.Test
 import kotlin.test.assertContentEquals

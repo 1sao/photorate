@@ -9,11 +9,11 @@ import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker as MpHandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
-import isao.photorate.photosComponent.classify.HandLandmarker
-import isao.photorate.photosComponent.classify.HandLandmarkerFactory
-import isao.photorate.photosComponent.classify.HandLandmarkerOptions
-import isao.photorate.photosComponent.classify.LandmarkCandidate
-import isao.photorate.photosComponent.classify.LandmarkedImage
+import isao.photorate.inference.classify.HandLandmarker
+import isao.photorate.inference.classify.HandLandmarkerFactory
+import isao.photorate.inference.classify.HandLandmarkerOptions
+import isao.photorate.inference.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkedImage
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 

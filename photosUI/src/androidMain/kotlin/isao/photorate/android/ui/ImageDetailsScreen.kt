@@ -76,8 +76,8 @@ import coil3.compose.AsyncImage
 import isao.photorate.galleryUi.ImageDetailsIntent
 import isao.photorate.galleryUi.ImageDetailsUiState
 import isao.photorate.galleryUi.ImageDetailsViewModel
-import isao.photorate.photosComponent.classify.LandmarkedImage.Point
-import isao.photorate.photosComponent.classify.Score
+import isao.photorate.inference.classify.LandmarkedImage.Point
+import isao.photorate.inference.classify.Score
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale

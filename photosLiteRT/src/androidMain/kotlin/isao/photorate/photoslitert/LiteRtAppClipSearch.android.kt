@@ -7,9 +7,9 @@ import android.util.Log
 import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.LiteRtException
-import isao.photorate.photosComponent.search.AppClipSearch
-import isao.photorate.photosComponent.search.AppClipSearchFactory
-import isao.photorate.photosComponent.search.ClipTokenizer
+import isao.photorate.inference.search.AppClipSearch
+import isao.photorate.inference.search.AppClipSearchFactory
+import isao.photorate.inference.search.ClipTokenizer
 import javax.inject.Inject
 import kotlin.math.min
 import kotlin.math.roundToInt

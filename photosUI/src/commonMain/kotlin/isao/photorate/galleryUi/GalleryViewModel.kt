@@ -67,8 +67,12 @@ class GalleryViewModel(
 
     init {
         // Releases the ONNX search session with the ViewModel instead of
-        // overriding onCleared manually.
-        addCloseable { searchDelegate.close() }
+        // overriding onCleared manually. Explicit object: SAM conversion for
+        // AutoCloseable only exists on the JVM (native has no SAM for
+        // non-fun interfaces).
+        addCloseable(object : AutoCloseable {
+            override fun close() = searchDelegate.close()
+        })
         // Other screens (e.g. Settings after purging all data) can request a
         // full rescan through the shared trigger. The delegate's mutex queues
         // behind any in-flight scan so a purge-triggered rescan starts from the

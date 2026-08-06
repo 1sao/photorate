@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.search
+package isao.photorate.inference.search
 
 /**
  * MobileCLIP image-search pipeline (Android for now).

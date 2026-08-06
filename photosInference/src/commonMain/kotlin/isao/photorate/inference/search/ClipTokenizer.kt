@@ -1,4 +1,4 @@
-package isao.photorate.photosComponent.search
+package isao.photorate.inference.search
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -75,7 +75,7 @@ class ClipTokenizer(json: String) {
         val ids = mutableListOf(startTokenId)
         for (match in pattern.findAll(cleaned)) {
             val token = match.value
-            val bytes = token.toByteArray(Charsets.UTF_8)
+            val bytes = token.encodeToByteArray()
             val byteLevel = bytes.joinToString("") { byteEncoder.getValue(it.toInt() and 0xFF).toString() }
             for (bpeToken in bpe(byteLevel).split(" ")) {
                 ids.add(encoder.getValue(bpeToken))

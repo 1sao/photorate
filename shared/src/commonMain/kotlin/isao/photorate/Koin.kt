@@ -4,8 +4,8 @@ import co.touchlab.kermit.Logger
 import isao.photorate.config.ConfigModule
 import isao.photorate.galleryOld.GalleryDataSource
 import isao.photorate.galleryUi.PhotosUIModule
-import isao.photorate.photosComponent.classify.LandmarkerFactoryProvider
-import isao.photorate.photosComponent.search.AppClipSearchFactory
+import isao.photorate.inference.classify.LandmarkerFactoryProvider
+import isao.photorate.inference.search.AppClipSearchFactory
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -65,7 +65,7 @@ class DispatchersModule {
  * datasource and app info. Each platform source set provides an [actual]
  * implementation. The landmarker seam ([LandmarkerFactoryProvider]) is the
  * single place that picks the active on-device model — swap its
- * [isao.photorate.photosComponent.classify.LandmarkModel] there to switch
+ * [isao.photorate.inference.classify.LandmarkModel] there to switch
  * MediaPipe / ONNX without touching the scan pipeline.
  */
 @Module

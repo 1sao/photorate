@@ -1,8 +1,8 @@
 package isao.photorate.photosMediaPipe
 
 import android.graphics.Bitmap
-import isao.photorate.photosComponent.classify.HandLandmarker
-import isao.photorate.photosComponent.classify.LandmarkedImage
+import isao.photorate.inference.classify.HandLandmarker
+import isao.photorate.inference.classify.LandmarkedImage
 
 /**
  * Detects hands directly from a [Bitmap] (the common contract's Android

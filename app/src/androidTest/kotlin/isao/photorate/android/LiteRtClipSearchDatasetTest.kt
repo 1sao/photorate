@@ -6,8 +6,8 @@ import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import isao.photorate.photosComponent.search.AppClipSearchFactory
-import isao.photorate.photosComponent.search.cosineSimilarity
+import isao.photorate.inference.search.AppClipSearchFactory
+import isao.photorate.inference.search.cosineSimilarity
 import isao.photorate.photoslitert.AndroidLiteRtAppClipSearchFactory
 import java.io.ByteArrayOutputStream
 import kotlin.math.min

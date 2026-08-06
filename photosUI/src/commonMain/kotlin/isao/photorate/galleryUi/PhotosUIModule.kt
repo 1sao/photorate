@@ -13,7 +13,7 @@ import org.koin.core.annotation.Module
  * validates each Gradle module's `@Module` classes against its own graph
  * (KOIN-D001), and consumer-provided bindings are never visible to a leaf
  * module. The active hand-landmark model (MediaPipe / ONNX) is chosen by
- * shared's PlatformModule (the [isao.photorate.photosComponent.classify.LandmarkerFactoryProvider]
+ * shared's PlatformModule (the [isao.photorate.inference.classify.LandmarkerFactoryProvider]
  * seam), not here.
  */
 @Module(includes = [PhotosComponentModule::class])

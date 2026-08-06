@@ -1,7 +1,7 @@
 package isao.photorate.sqldelight.adapter
 
 import app.cash.sqldelight.ColumnAdapter
-import isao.photorate.photosComponent.classify.LandmarkedImage
+import isao.photorate.inference.classify.LandmarkedImage
 import kotlinx.serialization.json.Json
 
 object PointsAdapter : ColumnAdapter<List<LandmarkedImage.Point>, String> {

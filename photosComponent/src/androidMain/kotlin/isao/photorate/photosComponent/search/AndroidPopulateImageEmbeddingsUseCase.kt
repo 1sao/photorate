@@ -9,6 +9,8 @@ import androidx.core.net.toUri
 import co.touchlab.kermit.Logger
 import isao.photorate.galleryRepository.GalleryImageRepository
 import isao.photorate.galleryRepository.ImageEmbeddingRepository
+import isao.photorate.inference.search.AppClipSearch
+import isao.photorate.inference.search.AppClipSearchFactory
 import java.io.ByteArrayOutputStream
 import kotlin.math.min
 import kotlin.time.measureTime

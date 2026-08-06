@@ -32,13 +32,10 @@ kotlin {
         }
 
         commonMain.dependencies {
-            // The LiteRT provider implements the photosComponent contracts
+            // The LiteRT provider implements the photosInference contracts
             // (HandLandmarkerFactory + AppClipSearchFactory) so the app can run
             // hand-landmark and MobileCLIP search inference on LiteRT.
-
-            // TODO instead, we should create a module with only interfaces, and let photosComponent depend on it.
-            // Then, photosLiteRT and photosOnnx can depend on that module.
-            implementation(projects.photosComponent)
+            implementation(projects.photosInference)
         }
         androidMain.dependencies {
             // LiteRT runtime + CompiledModel API (com.google.ai.edge.litert.*)

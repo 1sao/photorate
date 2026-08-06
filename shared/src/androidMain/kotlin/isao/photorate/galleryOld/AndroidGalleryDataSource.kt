@@ -11,7 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import androidx.core.net.toUri
-import isao.photorate.photosComponent.classify.LandmarkCandidate
+import isao.photorate.inference.classify.LandmarkCandidate
 import kotlin.math.min
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

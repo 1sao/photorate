@@ -2,10 +2,10 @@ package isao.photorate
 
 import isao.photorate.galleryOld.AndroidGalleryDataSource
 import isao.photorate.galleryOld.GalleryDataSource
-import isao.photorate.photosComponent.classify.DefaultLandmarkerFactoryProvider
-import isao.photorate.photosComponent.classify.LandmarkModel
-import isao.photorate.photosComponent.classify.LandmarkerFactoryProvider
-import isao.photorate.photosComponent.search.AppClipSearchFactory
+import isao.photorate.inference.classify.DefaultLandmarkerFactoryProvider
+import isao.photorate.inference.classify.LandmarkModel
+import isao.photorate.inference.classify.LandmarkerFactoryProvider
+import isao.photorate.inference.search.AppClipSearchFactory
 import isao.photorate.photosMediaPipe.AndroidMediaPipeHandLandmarkerFactory
 import isao.photorate.photoslitert.AndroidLiteRtAppClipSearchFactory
 import isao.photorate.photoslitert.AndroidLiteRtHandLandmarkerFactory

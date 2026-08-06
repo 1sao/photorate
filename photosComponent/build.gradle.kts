@@ -60,6 +60,9 @@ kotlin {
         }
 
         commonMain.dependencies {
+            // The inference contracts (hand-landmarker + CLIP search seams) live
+            // in photosInference; this module's scan pipeline consumes them.
+            implementation(projects.photosInference)
             // `api` because this module's public Koin metadata (`PhotosComponentModule`
             // includes `CoreModule`) forces consumers to resolve core's module
             // classes at compile time — `implementation` would hide them from

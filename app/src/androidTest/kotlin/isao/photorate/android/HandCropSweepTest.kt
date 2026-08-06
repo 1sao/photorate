@@ -7,8 +7,8 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import isao.photorate.photosComponent.classify.HandGestureClassifier
-import isao.photorate.photosComponent.classify.HandLandmarkerOptions
+import isao.photorate.inference.classify.HandGestureClassifier
+import isao.photorate.inference.classify.HandLandmarkerOptions
 import isao.photorate.photosComponent.classify.LandmarkRaterByThumb
 import isao.photorate.photosMediaPipe.AndroidMediaPipeHandLandmarkerFactory
 import isao.photorate.photosMediaPipe.detectFromBitmap
@@ -161,7 +161,7 @@ class HandCropSweepTest {
         return Tile(Bitmap.createBitmap(bitmap, x0, y0, x1 - x0, y1 - y0), x0, y0)
     }
 
-    private fun dumpPoints(hand: isao.photorate.photosComponent.classify.LandmarkedImage.Hand): String =
+    private fun dumpPoints(hand: isao.photorate.inference.classify.LandmarkedImage.Hand): String =
         hand.points.joinToString(";") { p -> "${p.x},${p.y},${p.z}" }
 
     private fun decode(bytes: ByteArray, maxDim: Int): Bitmap? = try {

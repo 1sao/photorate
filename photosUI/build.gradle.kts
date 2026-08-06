@@ -47,6 +47,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(projects.photosComponent)
+            implementation(projects.photosInference)
             implementation(libs.koin.core)
             implementation(libs.koin.annotations)
             implementation(libs.koin.viewmodel)
