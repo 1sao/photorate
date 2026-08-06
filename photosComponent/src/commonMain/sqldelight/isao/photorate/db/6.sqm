@@ -1,5 +1,0 @@
-CREATE TABLE ImageEmbedding (
-    uri TEXT NOT NULL PRIMARY KEY,
-    embedding BLOB NOT NULL,
-    FOREIGN KEY (uri) REFERENCES GalleryImage(uri) ON DELETE CASCADE
-);

@@ -1,9 +1,0 @@
--- The old SetUserScoreUseCase deleted and re-inserted the user rating in two
--- separate transactions; a crash between them could not duplicate, but two
--- concurrent calls could leave two user-rated rows for one image. Dedupe
--- before the unique index so existing installs can't fail the migration.
-DELETE FROM DetectedHand WHERE isUserRated = 1 AND id NOT IN (
-    SELECT MIN(id) FROM DetectedHand WHERE isUserRated = 1 GROUP BY imageUri
-);
-
-CREATE UNIQUE INDEX DetectedHand_user_rated_image_idx ON DetectedHand(imageUri) WHERE isUserRated = 1;

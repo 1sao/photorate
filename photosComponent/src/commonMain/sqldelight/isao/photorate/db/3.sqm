@@ -1,1 +1,0 @@
-ALTER TABLE DetectedHand ADD COLUMN uncertain INTEGER AS Boolean NOT NULL DEFAULT 0;
