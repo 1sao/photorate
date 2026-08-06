@@ -64,10 +64,8 @@ class AndroidLiteRtAppClipSearchFactory @Inject constructor(private val context:
  * (the other stays blank — the text embedding is constant under image change
  * and vice versa, verified in the recipe).
  */
-class AndroidLiteRtAppClipSearch internal constructor(
-    context: Context,
-    private val options: AppClipSearchFactory.Options,
-) : AppClipSearch {
+class AndroidLiteRtAppClipSearch internal constructor(context: Context, private val options: AppClipSearchFactory.Options) :
+    AppClipSearch {
 
     private val runner = createRunner(context)
 
@@ -81,7 +79,8 @@ class AndroidLiteRtAppClipSearch internal constructor(
 
     // Vision preprocessing: 256x256 center crop, /255 only, NCHW.
     private val imageTensor = ImageTensor(
-        IMAGE_SIZE, IMAGE_SIZE,
+        IMAGE_SIZE,
+        IMAGE_SIZE,
         layout = ImageTensor.Layout.NCHW,
         channelOrder = ImageTensor.ChannelOrder.RGB,
     )
@@ -109,7 +108,8 @@ class AndroidLiteRtAppClipSearch internal constructor(
         } catch (e: LiteRtException) {
             Log.w(TAG, "S1 GPU unavailable, using CPU", e)
             CompiledModelRunner.fromAssets(
-                context, AndroidLiteRtAppClipSearchFactory.MODEL_ASSET,
+                context,
+                AndroidLiteRtAppClipSearchFactory.MODEL_ASSET,
                 CompiledModel.Options(Accelerator.CPU),
             )
         }

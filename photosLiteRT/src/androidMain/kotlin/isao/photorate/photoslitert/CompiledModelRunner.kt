@@ -57,7 +57,7 @@ class CompiledModelRunner private constructor(private val model: CompiledModel) 
             fileName: String,
             vararg accelerators: Accelerator = arrayOf(Accelerator.GPU),
         ): CompiledModelRunner = CompiledModelRunner(
-            CompiledModel.create(context.assets, fileName, CompiledModel.Options(*accelerators), null)
+            CompiledModel.create(context.assets, fileName, CompiledModel.Options(*accelerators), null),
         )
 
         /**
@@ -71,11 +71,8 @@ class CompiledModelRunner private constructor(private val model: CompiledModel) 
          * Compiles a model from an absolute file path — the pattern for large models
          * staged into the app's `filesDir` by an install script.
          */
-        fun fromFile(
-            path: String,
-            vararg accelerators: Accelerator = arrayOf(Accelerator.GPU),
-        ): CompiledModelRunner = CompiledModelRunner(
-            CompiledModel.create(path, CompiledModel.Options(*accelerators), null)
+        fun fromFile(path: String, vararg accelerators: Accelerator = arrayOf(Accelerator.GPU)): CompiledModelRunner = CompiledModelRunner(
+            CompiledModel.create(path, CompiledModel.Options(*accelerators), null),
         )
     }
 

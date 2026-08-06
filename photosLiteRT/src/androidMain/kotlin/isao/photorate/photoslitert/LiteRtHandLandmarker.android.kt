@@ -67,27 +67,30 @@ class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context
  * the ONNX provider, so dataset expectations transfer; see
  * `OnnxHandLandmarkDatasetTest` -> `LiteRtHandLandmarkDatasetTest`.
  */
-class AndroidLiteRtHandLandmarker internal constructor(
-    context: Context,
-    private val options: HandLandmarkerOptions,
-) : HandLandmarker {
+class AndroidLiteRtHandLandmarker internal constructor(context: Context, private val options: HandLandmarkerOptions) : HandLandmarker {
 
     private val detector = GpuFirstRunner(context, LiteRtRtmModels.DETECTOR_ASSET)
     private val pose = GpuFirstRunner(context, LiteRtRtmModels.RTMPOSE_ASSET)
 
     // Preprocessing tensors (zero per-frame allocation; see ImageTensor).
     private val detectorTensor = ImageTensor(
-        DETECTOR_SIZE, DETECTOR_SIZE,
+        DETECTOR_SIZE,
+        DETECTOR_SIZE,
         // mmdet normalization (123.675/58.395 ...) == ImageNet mean/std scaled
         // to 0..1; ImageTensor divides pixels by 255 first, so the equivalence
         // is exact (verified against the ONNX pipeline's bitmapToCHWMeanStd).
-        mean = ImageTensor.IMAGENET_MEAN, std = ImageTensor.IMAGENET_STD,
-        layout = ImageTensor.Layout.NCHW, channelOrder = ImageTensor.ChannelOrder.RGB,
+        mean = ImageTensor.IMAGENET_MEAN,
+        std = ImageTensor.IMAGENET_STD,
+        layout = ImageTensor.Layout.NCHW,
+        channelOrder = ImageTensor.ChannelOrder.RGB,
     )
     private val poseTensor = ImageTensor(
-        RTMPOSE_SIZE, RTMPOSE_SIZE,
-        mean = ImageTensor.IMAGENET_MEAN, std = ImageTensor.IMAGENET_STD,
-        layout = ImageTensor.Layout.NCHW, channelOrder = ImageTensor.ChannelOrder.BGR,
+        RTMPOSE_SIZE,
+        RTMPOSE_SIZE,
+        mean = ImageTensor.IMAGENET_MEAN,
+        std = ImageTensor.IMAGENET_STD,
+        layout = ImageTensor.Layout.NCHW,
+        channelOrder = ImageTensor.ChannelOrder.BGR,
     )
 
     override fun detect(candidate: LandmarkCandidate): LandmarkedImage {
@@ -642,7 +645,9 @@ class AndroidLiteRtHandLandmarker internal constructor(
                 demoted = true
                 Log.w(TAG, "$asset GPU failed at runtime, demoting to CPU", e)
                 val cpu = CompiledModelRunner.fromAssets(
-                    appContext, asset, CompiledModel.Options(Accelerator.CPU),
+                    appContext,
+                    asset,
+                    CompiledModel.Options(Accelerator.CPU),
                 )
                 val old = runner
                 runner = cpu

@@ -26,7 +26,7 @@ class DefaultSearchHistoryRepository(private val db: PhotoRateDb) : SearchHistor
     @OptIn(ExperimentalTime::class)
     override suspend fun addRecentSearch(query: String) {
         withContext(Dispatchers.IO) {
-            //TODO clocks should be constructor-injected
+            // TODO clocks should be constructor-injected
             queries.insertSearch(query.trim(), Clock.System.now().toEpochMilliseconds())
         }
     }

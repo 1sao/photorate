@@ -32,5 +32,16 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version("1.0.0")
 }
 
-include(":app", ":shared", ":umbrella", ":photosComponent", ":configComponent", ":photosUI", ":photosOnnx", ":photosMediaPipe", ":photosLiteRT")
+include(
+    ":app",
+    ":shared",
+    ":umbrella",
+    ":core",
+    ":photosComponent",
+    ":configComponent",
+    ":photosUI",
+    ":photosOnnx",
+    ":photosMediaPipe",
+    ":photosLiteRT",
+)
 rootProject.name = "PhotoRate"

@@ -18,7 +18,7 @@ import org.koin.core.annotation.Single
  *
  * Lives in this leaf module because the repositories that inject [PhotoRateDb]
  * live here too (the sqldelight schema and `isao.photorate.db` package moved to
- * this module as part of the module split). See [LogModule] for why bindings
+ * this module as part of the module split). See [isao.photorate.core.di.LogModule] for why bindings
  * used by a leaf module must be defined in that module.
  */
 @Module(includes = [DatabasePlatformModule::class])

@@ -1,7 +1,7 @@
 package isao.photorate.photosComponent
 
+import isao.photorate.core.CoreModule
 import isao.photorate.photosComponent.di.DatabaseModule
-import isao.photorate.photosComponent.di.LogModule
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 
@@ -12,10 +12,11 @@ import org.koin.core.annotation.Module
  * would report components of one scan as missing from another).
  *
  * `includes` makes the plugin compose this module's graph with the di modules
- * (Logger, SqlDriver, PhotoRateDb) so the scanned components' dependencies
- * resolve at leaf-module compile time instead of being deferred.
+ * (the cross-cutting logger from core, SqlDriver, PhotoRateDb) so the scanned
+ * components' dependencies resolve at leaf-module compile time instead of
+ * being deferred.
  */
-@Module(includes = [LogModule::class, DatabaseModule::class])
+@Module(includes = [CoreModule::class, DatabaseModule::class])
 @ComponentScan(
     "isao.photorate.photosComponent",
     "isao.photorate.galleryRepository",

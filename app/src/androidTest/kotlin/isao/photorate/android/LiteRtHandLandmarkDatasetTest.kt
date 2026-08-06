@@ -85,7 +85,9 @@ class LiteRtHandLandmarkDatasetTest {
                         val score = rater.rate(hand)?.score
                         val gesture = HandGestureClassifier.classify(hand)?.gesture
                         log(
-                            "$scoreDir/$file|hand=${detected.hands.indexOf(hand)}|gesture=$gesture|score=$score|uncertain=${hand.uncertain}",
+                            "$scoreDir/$file|hand=${detected.hands.indexOf(
+                                hand,
+                            )}|gesture=$gesture|score=$score|uncertain=${hand.uncertain}",
                         )
                         score
                     }

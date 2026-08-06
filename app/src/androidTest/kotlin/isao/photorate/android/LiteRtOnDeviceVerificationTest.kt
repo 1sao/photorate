@@ -109,8 +109,14 @@ class LiteRtOnDeviceVerificationTest {
                 if (used[k]) continue
                 val o = keep[k] * 4
                 val iou = MathOps.iou(
-                    rx1, ry1, rx2, ry2,
-                    boxes[o], boxes[o + 1], boxes[o + 2], boxes[o + 3],
+                    rx1,
+                    ry1,
+                    rx2,
+                    ry2,
+                    boxes[o],
+                    boxes[o + 1],
+                    boxes[o + 2],
+                    boxes[o + 3],
                 )
                 if (iou > bestIou) {
                     bestIou = iou
@@ -169,20 +175,36 @@ class LiteRtOnDeviceVerificationTest {
     @Test
     fun verifyQuantizedVariants() {
         verifyQuantizedVariant(
-            asset = "rtmdet_hand_320_f16.tflite", prefix = "det", gates = detGates,
-            taskGate = ::detectorTaskGate, requireGpuCompile = true, assertTaskGate = true,
+            asset = "rtmdet_hand_320_f16.tflite",
+            prefix = "det",
+            gates = detGates,
+            taskGate = ::detectorTaskGate,
+            requireGpuCompile = true,
+            assertTaskGate = true,
         )
         verifyQuantizedVariant(
-            asset = "rtmdet_hand_320_i8.tflite", prefix = "det", gates = detGates,
-            taskGate = ::detectorTaskGate, requireGpuCompile = false, assertTaskGate = false,
+            asset = "rtmdet_hand_320_i8.tflite",
+            prefix = "det",
+            gates = detGates,
+            taskGate = ::detectorTaskGate,
+            requireGpuCompile = false,
+            assertTaskGate = false,
         )
         verifyQuantizedVariant(
-            asset = "rtmpose_hand_256_f16.tflite", prefix = "pose", gates = poseGates,
-            taskGate = ::poseTaskGate, requireGpuCompile = true, assertTaskGate = true,
+            asset = "rtmpose_hand_256_f16.tflite",
+            prefix = "pose",
+            gates = poseGates,
+            taskGate = ::poseTaskGate,
+            requireGpuCompile = true,
+            assertTaskGate = true,
         )
         verifyQuantizedVariant(
-            asset = "rtmpose_hand_256_i8.tflite", prefix = "pose", gates = poseGates,
-            taskGate = ::poseTaskGate, requireGpuCompile = false, assertTaskGate = false,
+            asset = "rtmpose_hand_256_i8.tflite",
+            prefix = "pose",
+            gates = poseGates,
+            taskGate = ::poseTaskGate,
+            requireGpuCompile = false,
+            assertTaskGate = false,
         )
     }
 
@@ -243,7 +265,7 @@ class LiteRtOnDeviceVerificationTest {
         }
         val gpuTex2d = CompiledModel.Options(Accelerator.GPU).apply {
             gpuOptions = CompiledModel.GpuOptions(
-                bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.TEXTURE_2D
+                bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.TEXTURE_2D,
             )
         }
         val gpuExternal = CompiledModel.Options(Accelerator.GPU).apply {
@@ -305,7 +327,7 @@ class LiteRtOnDeviceVerificationTest {
                     } catch (e: LiteRtException) {
                         "NOT_SUPPORTED: ${e.message?.take(400)}"
                     }
-                    log("probe_${name}_${tag}=$result")
+                    log("probe_${name}_$tag=$result")
                 }
             }
         }
@@ -329,7 +351,9 @@ class LiteRtOnDeviceVerificationTest {
             //    TOPK_V2 / data-dependent GATHER / RELU_0_TO_1.
             try {
                 CompiledModelRunner.fromAssets(
-                    context, asset, CompiledModel.Options(Accelerator.GPU),
+                    context,
+                    asset,
+                    CompiledModel.Options(Accelerator.GPU),
                 ).use {
                     log("original_det_gpu=COMPILED (unexpected)")
                 }
@@ -339,7 +363,9 @@ class LiteRtOnDeviceVerificationTest {
             // 2) CPU run: the 5 capped detections must match the ONNX top-5, and
             //    report the CPU latency baseline.
             CompiledModelRunner.fromAssets(
-                context, asset, CompiledModel.Options(Accelerator.CPU),
+                context,
+                asset,
+                CompiledModel.Options(Accelerator.CPU),
             ).use { runner ->
                 runTimed(runner, "det_real_input.npy") // warmup
                 runner.writeInput(0, readRefF32("det_real_input.npy"))
@@ -461,7 +487,11 @@ class LiteRtOnDeviceVerificationTest {
                     val timings = (0 until LATENCY_RUNS).map { runTimed(runner, inputRef(tags.first())) }
                     val median = timings.sorted()[timings.size / 2]
                     val mean = timings.average()
-                    log("latency asset=$asset accel=$accel runs=${timings.joinToString(",")} median_ms=$median mean_ms=${"%.1f".format(mean)}")
+                    log(
+                        "latency asset=$asset accel=$accel runs=${timings.joinToString(
+                            ",",
+                        )} median_ms=$median mean_ms=${"%.1f".format(mean)}",
+                    )
                 }
             }
         }
@@ -512,13 +542,15 @@ class LiteRtOnDeviceVerificationTest {
             // GL shader storage buffers (litert's GlBuffer IO) need ES 3.1+.
             // EGL14 lacks EGL_OPENGL_ES3_BIT; its value is 0x0040 (EGL_KHR_create_context).
             val configAttrs = intArrayOf(
-                EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT,
-                EGL14.EGL_RENDERABLE_TYPE, 0x0040, // EGL_OPENGL_ES3_BIT
+                EGL14.EGL_SURFACE_TYPE,
+                EGL14.EGL_PBUFFER_BIT,
+                EGL14.EGL_RENDERABLE_TYPE,
+                0x0040, // EGL_OPENGL_ES3_BIT
                 EGL14.EGL_NONE,
             )
             check(
                 EGL14.eglChooseConfig(display, configAttrs, 0, configs, 0, configs.size, numConfigs, 0) &&
-                    numConfigs[0] > 0
+                    numConfigs[0] > 0,
             ) { "eglChooseConfig failed" }
             val contextAttrs = intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE)
             context = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT, contextAttrs, 0)

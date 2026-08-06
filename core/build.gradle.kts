@@ -1,79 +1,76 @@
+@file:OptIn(KotlinNativeCacheApi::class)
+
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCacheApi
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
-    alias(libs.plugins.android.lint)
+    alias(libs.plugins.koin.compiler)
+}
+
+// Leaf module. Hosts the cross-cutting DB infrastructure — the sqldelight
+// driver libraries, adapters and coroutine helpers — plus the Kermit logger
+// provider. Feature modules that own .sq schemas depend on this module for the
+// driver + adapter classpath. No databases are generated here.
+koinCompiler {
+    compileSafety = true
 }
 
 kotlin {
+    jvmToolchain(11)
+
     android {
-        namespace = "isao.core"
-        compileSdk {
-            version = release(36) {
-                minorApiLevel = 1
-            }
-        }
+        // Unique per-module namespace required by AGP (AndroidManifest merger).
+        // Kotlin packages stay `isao.photorate.*`; this only affects the Android
+        // R/manifest package of this module.
+        namespace = "isao.photorate.core"
+        compileSdk = libs.versions.compileSdk.get().toInt()
         minSdk = libs.versions.minSdk.get().toInt()
 
-        withHostTestBuilder {
-        }
-
-        withDeviceTestBuilder {
-            sourceSetTreeName = "test"
-        }.configure {
-            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        }
+        androidResources.enable = true
+        // Run commonTest (pure logic: FloatArrayAdapter) on the JVM host,
+        // mirroring photosComponent.
+        withHostTestBuilder {}.configure {}
     }
-
-    val xcfName = "coreKit"
-
-    iosX64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    iosArm64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    iosSimulatorArm64 {
-        binaries.framework {
-            baseName = xcfName
+    // Core is consumed by iOS-targeted modules (galleryComponent etc.), so it
+    // must expose the same iOS targets.
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach {
+        it.binaries.framework {
+            isStatic = true
         }
     }
 
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
+        all {
+            languageSettings.apply {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             }
         }
 
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
+        commonMain.dependencies {
+            implementation(libs.koin.core)
+            implementation(libs.koin.annotations)
+            implementation(libs.coroutines.core)
+            implementation(libs.sqlDelight.coroutinesExt)
+            implementation(libs.touchlab.kermit)
         }
-
-        androidMain {
-            dependencies {
-            }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
-
-        getByName("androidDeviceTest") {
-            dependencies {
-                implementation(libs.androidx.junit)
-                implementation(libs.androidx.runner)
-                implementation(libs.core)
-            }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.kotlin.test)
         }
-
-        iosMain {
-            dependencies {
-            }
+        androidMain.dependencies {
+            implementation(libs.sqlDelight.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqlDelight.native)
+            api(libs.touchlab.kermit.simple)
         }
     }
-
 }

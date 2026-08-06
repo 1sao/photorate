@@ -60,10 +60,7 @@ object MathOps {
     }
 
     /** Intersection-over-union of two xyxy boxes. */
-    fun iou(
-        ax1: Float, ay1: Float, ax2: Float, ay2: Float,
-        bx1: Float, by1: Float, bx2: Float, by2: Float,
-    ): Float {
+    fun iou(ax1: Float, ay1: Float, ax2: Float, ay2: Float, bx1: Float, by1: Float, bx2: Float, by2: Float): Float {
         val interWidth = max(0f, min(ax2, bx2) - max(ax1, bx1))
         val interHeight = max(0f, min(ay2, by2) - max(ay1, by1))
         val inter = interWidth * interHeight
@@ -79,12 +76,7 @@ object MathOps {
      * @param scores one score per detection
      * @return indices of the kept detections, sorted by descending score
      */
-    fun nms(
-        boxes: FloatArray,
-        scores: FloatArray,
-        iouThreshold: Float,
-        scoreThreshold: Float = 0f,
-    ): IntArray {
+    fun nms(boxes: FloatArray, scores: FloatArray, iouThreshold: Float, scoreThreshold: Float = 0f): IntArray {
         val order = scores.indices
             .filter { scores[it] >= scoreThreshold }
             .sortedByDescending { scores[it] }
@@ -102,8 +94,14 @@ object MathOps {
                     continue
                 }
                 val overlap = iou(
-                    boxes[4 * i], boxes[4 * i + 1], boxes[4 * i + 2], boxes[4 * i + 3],
-                    boxes[4 * j], boxes[4 * j + 1], boxes[4 * j + 2], boxes[4 * j + 3],
+                    boxes[4 * i],
+                    boxes[4 * i + 1],
+                    boxes[4 * i + 2],
+                    boxes[4 * i + 3],
+                    boxes[4 * j],
+                    boxes[4 * j + 1],
+                    boxes[4 * j + 2],
+                    boxes[4 * j + 3],
                 )
                 if (overlap > iouThreshold) {
                     suppressed[j] = true

@@ -122,7 +122,7 @@ class ImageDetailsViewModel(
      * cascade) so it leaves the gallery grid. The file stays in the device
      * gallery — the caller navigates back once this completes.
      */
-    //TODO hide instead to track history
+    // TODO hide instead to track history
     private fun deleteImage() {
         val uri = _uiState.value.uri
         if (uri.isBlank()) return

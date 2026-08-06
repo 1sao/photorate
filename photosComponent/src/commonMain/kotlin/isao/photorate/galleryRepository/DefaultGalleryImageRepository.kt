@@ -19,7 +19,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageRepository {
 
-    //TODO queries should be constructor-injected instead of the whole db
+    // TODO queries should be constructor-injected instead of the whole db
     private val queries get() = db.galleryImageQueries
     private val embeddingQueries get() = db.imageEmbeddingQueries
     private val detectedHandQueries get() = db.detectedHandQueries
@@ -81,7 +81,7 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
         }
     }
 
-    //TODO should be a usecase
+    // TODO should be a usecase
     override suspend fun markNoHand(uri: String) {
         // One transaction so a rejection can't leave partial state (e.g. hands
         // gone but status still DONE-with-detections). All three statements

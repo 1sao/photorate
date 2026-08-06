@@ -60,6 +60,11 @@ kotlin {
         }
 
         commonMain.dependencies {
+            // `api` because this module's public Koin metadata (`PhotosComponentModule`
+            // includes `CoreModule`) forces consumers to resolve core's module
+            // classes at compile time — `implementation` would hide them from
+            // consumers' compile classpath and break KOIN-D001 resolution.
+            api(projects.core)
             implementation(libs.koin.core)
             implementation(libs.koin.annotations)
             implementation(libs.coroutines.core)
