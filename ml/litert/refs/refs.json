@@ -1,0 +1,10 @@
+{
+  "sample": "/Users/ihp/AndroidStudioProjects/PhotoRate2/plans/samples/5/5_kenya.jpg",
+  "seed": 42,
+  "nms": {
+    "iou": 0.6,
+    "score_thr": 0.05,
+    "max_out": 200
+  },
+  "note": "inputs are the exact tensors fed to the models; device tests must feed them verbatim"
+}

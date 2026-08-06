@@ -1,0 +1,7 @@
+schemaVersion: 1
+sessionDefaults:
+  scheme: PhotoRateiOS
+  simulatorName: iPhone 17
+  simulatorId: 6CE944C9-4680-4637-8BF7-B03FBFD6D07D
+  platform: iOS Simulator
+  simulatorPlatform: iOS Simulator

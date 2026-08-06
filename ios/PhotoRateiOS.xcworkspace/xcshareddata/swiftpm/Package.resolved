@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swifttasksvision",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jordond/SwiftTasksVision.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "db3d02b891f9165d21e28bc74b5bad19488e9b4c"
+      }
+    }
+  ],
+  "version" : 2
+}

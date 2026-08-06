@@ -1,0 +1,3 @@
+-- Developer-mode feature flag: one Boolean column on the existing singleton
+-- config row (see FeatureFlagRepository). Defaults off for existing installs.
+ALTER TABLE config ADD COLUMN dev_mode INTEGER AS Boolean NOT NULL DEFAULT 0;

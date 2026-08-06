@@ -1,0 +1,1 @@
+https://huggingface.co/anton96vice/mobileclip2_tflite

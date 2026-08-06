@@ -1,0 +1,4 @@
+CREATE TABLE SearchHistory (
+    query TEXT NOT NULL PRIMARY KEY,
+    searchedAt INTEGER NOT NULL
+);
