@@ -98,13 +98,15 @@ kotlin {
             implementation(projects.photosComponent)
             implementation(projects.configComponent)
             implementation(projects.photosUI)
-            implementation(projects.photosOnnx)
             implementation(projects.photosMediaPipe)
         }
         commonTest.dependencies {
             implementation(libs.bundles.shared.commonTest)
         }
         androidMain.dependencies {
+            // The LiteRT provider (Android-only — it has no iOS targets) backs
+            // the PlatformModule's landmarker + search factories.
+            implementation(projects.photosLiteRT)
             implementation(compose.components.resources)
             implementation("androidx.compose.runtime:runtime:${libs.versions.compose.get()}")
             implementation(libs.androidx.lifecycle.viewmodel)

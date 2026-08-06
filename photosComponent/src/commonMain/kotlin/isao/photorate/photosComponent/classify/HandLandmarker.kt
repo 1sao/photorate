@@ -54,6 +54,7 @@ interface HandLandmarkerFactory {
 enum class LandmarkModel(val id: String, val displayName: String) {
     MEDIAPIPE("mediapipe", "MediaPipe"),
     ONNX("onnx", "ONNX"),
+    LITERT("litert", "LiteRT"),
     ;
 
     /** App-tuned default options for this model (thresholds in plans/benchmarks). */
@@ -75,6 +76,17 @@ enum class LandmarkModel(val id: String, val displayName: String) {
                 // struct defaults it to 0f, which made every ROCK/OK above
                 // the kp floor confident and silently changed the uncertain
                 // tier on-device (see OnnxHandLandmarkDatasetTest expectations).
+                minHandConfidentKpConfidence = 0.45f,
+                preferredImageDimension = 640,
+            )
+
+            // The LiteRT pipeline runs the same RTMDet + RTMPose models on the
+            // LiteRT runtime (ml/litert/ recipe), so its tuned gates match the
+            // ONNX provider's.
+            LITERT -> HandLandmarkerOptions(
+                maxNumHands = 2,
+                minHandDetectionConfidence = 0.25f,
+                minHandKpConfidence = 0.3f,
                 minHandConfidentKpConfidence = 0.45f,
                 preferredImageDimension = 640,
             )

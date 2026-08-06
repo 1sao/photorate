@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Provided
 
 /**
  * Android [SearchImagesUseCase] backed by the MobileCLIP search pipeline.
@@ -16,15 +17,19 @@ import org.koin.core.annotation.Factory
  * only embeds the query text and ranks the stored vectors by cosine similarity
  * — it never re-embeds gallery images.
  *
- * The ONNX session is created lazily and reused across searches: model copy
- * + session creation is expensive (~1s), and the `@Factory` instance is
+ * The CLIP session (LiteRT or ONNX, whichever AppClipSearchFactory the root
+ * PlatformModule provides) is created lazily and reused across searches: model
+ * load + session creation is expensive, and the `@Factory` instance is
  * ViewModel-scoped so the cache lives exactly as long as the screen.
  */
 @Factory
 class AndroidSearchImagesUseCase(
     private val galleryImageRepository: GalleryImageRepository,
     private val imageEmbeddingRepository: ImageEmbeddingRepository,
-    private val searchFactory: AppClipSearchFactory,
+    // The factory is bound by the root PlatformModule (shared) — the leaf
+    // module cannot see it (the ONNX/LiteRT search providers live in their own
+    // modules), so mark it external like LandmarkerFactoryProvider.
+    @Provided private val searchFactory: AppClipSearchFactory,
 ) : SearchImagesUseCase {
 
     private val sessionMutex = Any()

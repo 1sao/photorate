@@ -57,6 +57,32 @@ misses 3/52 boxes). The app still loads the float32 assets — wiring a quantize
 asset into `LiteRtRtmModels` is a separate deployment step. Full numbers in
 `converted/README.md`.
 
+## App wiring
+
+The `photosLiteRT` module implements the app's inference providers on top of
+CompiledModel (see `compiled-model-app-scaffolding`):
+
+- **Hand landmarks (default Android model):** `AndroidLiteRtHandLandmarkerFactory`
+  — a port of the verified ONNX pipeline (RTMDet letterbox → multi-rotation
+  RTMPose search → gesture gate) running the float32 conversions, GPU-first
+  (OpenCL, FP32 precision) with CPU fallback. Wired as `LandmarkModel.LITERT`
+  in `shared`'s PlatformModule.
+- **Search:** `AndroidLiteRtAppClipSearchFactory` — the combined MobileCLIP-S1
+  graph (`clip_s1_combined_f16.tflite`) in a CPU+GPU hybrid (the text head's
+  CAST/EMBEDDING_LOOKUP have no GPU kernel; see `converted/CLIP_S1_README.md`),
+  reusing `photosComponent`'s `ClipTokenizer`.
+
+The ONNX provider (`photosOnnx`, hand pipeline + MobileCLIP-B search) is
+unplugged from the app while LiteRT is the default.
+
+On-device (Redmi M2003J15SC / Adreno 618 / OpenCL, 2026-08-06):
+`LiteRtOnDeviceVerificationTest` (5/5, incl. strict GPU gates),
+`LiteRtHandLandmarkDatasetTest` (1/1) and `LiteRtClipSearchDatasetTest` (2/2)
+all pass. One documented finding vs the ONNX baseline: `2/2_coffee.jpg`'s
+holding hand reads a confident THUMBS-4 on the GPU (keypoint drift flips the
+gesture gates ONNX-CPU rejected) — tracked in the dataset test's
+KNOWN_SCORE_MISMATCHES.
+
 ## Environment
 
 `ml/litert/.venv` (Python 3.11): `onnx2tf 1.28.8`, `tensorflow 2.18.0`,

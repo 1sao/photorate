@@ -58,29 +58,20 @@ android {
         jvmToolchain(11)
     }
 
-    // Hand-landmark (RTMDet + RTMPose) and MobileCLIP models + tokenizer live
-    // in the repo's ml/original_models folder (confirmed-source exports).
-    // Expose them as app assets so the on-device pipelines can load them like
-    // any other asset.
+    // The LiteRT conversions (ml/litert/converted: RTMDet/RTMPose hand models
+    // + the MobileCLIP-S1 combined tflite) and the shared CLIP tokenizer ship
+    // as app assets; the ONNX source models (ml/original_models, 514 MB) are
+    // not shipped while the photosOnnx provider is unplugged.
     sourceSets {
         getByName("main") {
-            // TEMPORARY (old-device LiteRT test): ml/original_models (514 MB of
-            // MobileCLIP + RTM onnx sources) excluded from assets — the LiteRT
-            // verification harness only reads ml/litert/converted. Restore by
-            // uncommenting the line below.
-            // assets.directories.add(rootProject.layout.projectDirectory.dir("ml/original_models").asFile.path)
-            // LiteRT-converted RTM models (see ml/litert/ recipe) ship as assets
-            // for the CompiledModel on-device verification harness.
             assets.directories.add(rootProject.layout.projectDirectory.dir("ml/litert/converted").asFile.path)
+            assets.directories.add(rootProject.layout.projectDirectory.dir("ml/litert/tokenizer").asFile.path)
         }
-        // Instrumented hand-landmarker dataset tests read the sample images
-        // straight from plans/samples (score dirs 5, 4, 3, 2, 1, no_score),
-        // keeping a single source of truth for the dataset.
+        // Instrumented hand-landmarker + search dataset tests read the sample
+        // images straight from plans/samples (score dirs 5, 4, 3, 2, 1,
+        // no_score, search), keeping a single source of truth for the dataset.
         getByName("androidTest") {
-            // TEMPORARY (old-device LiteRT test): plans/samples (107 MB of
-            // dataset photos) excluded — only used by the dataset tests, not
-            // by LiteRtOnDeviceVerificationTest. Restore by uncommenting.
-            // assets.directories.add(rootProject.layout.projectDirectory.dir("plans/samples").asFile.path)
+            assets.directories.add(rootProject.layout.projectDirectory.dir("plans/samples").asFile.path)
             // Host-generated reference dumps + GPU op probes for the LiteRT
             // on-device verification.
             assets.directories.add(rootProject.layout.projectDirectory.dir("ml/litert/refs").asFile.path)
@@ -122,15 +113,10 @@ dependencies {
     implementation(projects.shared) // TODO duplicate?
     implementation(projects.photosUI)
     implementation(projects.photosComponent)
-    implementation(projects.photosOnnx)
     implementation(projects.photosMediaPipe)
-    // androidTest-only: the NNAPI benchmark reads the `nnapiFlags`
-    // instrumentation argument and needs the NNAPIFlags type on the test
-    // compile classpath (photosOnnx keeps its ORT dependency `implementation`,
-    // so it doesn't leak here). Production code never names ORT types.
-    androidTestImplementation(libs.onnxruntime.android)
-    // LiteRT on-device verification: the test names CompiledModel/TensorBuffer
-    // types (photosLiteRT keeps its litert dependency `implementation`, so it
+    // LiteRT on-device verification + dataset tests: they name
+    // CompiledModel/TensorBuffer types and the LiteRT factory classes
+    // (photosLiteRT keeps its litert dependency `implementation`, so it
     // doesn't leak here). Production code never names LiteRT types.
     androidTestImplementation(projects.photosLiteRT)
     androidTestImplementation("com.google.ai.edge.litert:litert:2.1.6")

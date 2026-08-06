@@ -80,15 +80,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.sqlDelight.android)
             implementation(libs.androidx.core)
-            implementation("com.aallam.ktoken:ktoken:0.4.0")
-            // `javax.inject.Inject` on the AndroidAppClipSearchFactory (used by
-            // the app's androidTest dataset tests, mirrors photosOnnx/
-            // photosMediaPipe).
-            implementation("javax.inject:javax.inject:1")
-            // MobileCLIP image-search models run on-device via ONNX Runtime.
-            // Only Android for now (iOS comes later). The AAR ships the native
-            // libs for all ABIs; the Gradle cache already resolves 1.28.0.
-            implementation(libs.onnxruntime.android)
+            // No onnxruntime here: the ONNX hand-landmark and MobileCLIP search
+            // implementations live in the photosOnnx provider module (unplugged
+            // from the app for now); the app's inference runs on photosLiteRT.
         }
         iosMain.dependencies {
             implementation(libs.sqlDelight.native)

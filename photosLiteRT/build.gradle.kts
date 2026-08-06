@@ -31,11 +31,20 @@ kotlin {
             }
         }
 
+        commonMain.dependencies {
+            // The LiteRT provider implements the photosComponent contracts
+            // (HandLandmarkerFactory + AppClipSearchFactory) so the app can run
+            // hand-landmark and MobileCLIP search inference on LiteRT.
+            implementation(projects.photosComponent)
+        }
         androidMain.dependencies {
             // LiteRT runtime + CompiledModel API (com.google.ai.edge.litert.*)
             // with the OpenCL/GL GPU accelerator. 2.1.6 is the version the
             // google-ai-edge/litert-samples image_segmentation sample pins.
             implementation("com.google.ai.edge.litert:litert:2.1.6")
+            // `javax.inject.Inject` on the factories mirrors photosOnnx/
+            // photosMediaPipe (used by the app's androidTest dataset tests).
+            implementation("javax.inject:javax.inject:1")
         }
     }
 }

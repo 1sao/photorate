@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Provided
 
 /**
  * Android [PopulateImageEmbeddingsUseCase] backed by the MobileCLIP vision
@@ -33,7 +34,8 @@ class AndroidPopulateImageEmbeddingsUseCase(
     private val context: Context,
     private val galleryImageRepository: GalleryImageRepository,
     private val imageEmbeddingRepository: ImageEmbeddingRepository,
-    private val searchFactory: AppClipSearchFactory,
+    // External binding from the root PlatformModule (see AndroidSearchImagesUseCase).
+    @Provided private val searchFactory: AppClipSearchFactory,
     private val log: Logger,
 ) : PopulateImageEmbeddingsUseCase {
 

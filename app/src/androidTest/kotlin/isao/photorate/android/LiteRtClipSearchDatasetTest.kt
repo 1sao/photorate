@@ -6,10 +6,9 @@ import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import isao.photorate.android.MobileClipSearchDatasetTest.Companion.DECODE_MIN_DIM
-import isao.photorate.photosComponent.search.AndroidAppClipSearchFactory
 import isao.photorate.photosComponent.search.AppClipSearchFactory
 import isao.photorate.photosComponent.search.cosineSimilarity
+import isao.photorate.photoslitert.AndroidLiteRtAppClipSearchFactory
 import java.io.ByteArrayOutputStream
 import kotlin.math.min
 import org.junit.Assert.assertEquals
@@ -18,18 +17,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * On-device MobileCLIP search verification over the dataset in
- * plans/samples/search (exposed as androidTest assets) — the Kotlin mirror of
- * onnx/test_mobileclip_samples.py:
+ * On-device MobileCLIP-S1 search verification over the dataset in
+ * plans/samples/search (exposed as androidTest assets) — the LiteRT mirror of
+ * the ONNX MobileCLIP test (now in the unplugged photosOnnx module):
  *
  *  1. Every image must be the TOP-1 match for its own description (what the
  *     app's search does when the user types a query).
  *  2. The scaled-down decode used by AndroidPopulateImageEmbeddingsUseCase must
  *     embed almost identically to a full-resolution decode (the model only
- *     sees a 224x224 center crop, so we never need to decode full-size photos).
+ *     sees a 256x256 center crop, so we never need to decode full-size photos).
+ *
+ * The S1 combined graph (vision + text in one file) passed the host task check
+ * at 5/6 with /255-only preprocessing (ml/litert/converted/CLIP_S1_README.md);
+ * the app's two-sample set must rank its own description top on-device.
  */
 @RunWith(AndroidJUnit4::class)
-class MobileClipSearchDatasetTest {
+class LiteRtClipSearchDatasetTest {
 
     private val appContext: Context = ApplicationProvider.getApplicationContext()
     private val assets = InstrumentationRegistry.getInstrumentation().context.assets
@@ -42,7 +45,7 @@ class MobileClipSearchDatasetTest {
 
     @Test
     fun searchFindsImagesByTheirDescription() {
-        AndroidAppClipSearchFactory(appContext)
+        AndroidLiteRtAppClipSearchFactory(appContext)
             .createFromOptions(AppClipSearchFactory.Options())
             .use { clip ->
                 val imageEmbeddings = samples.keys.associateWith { name ->
@@ -67,7 +70,7 @@ class MobileClipSearchDatasetTest {
 
     @Test
     fun scaledDownDecodeMatchesFullDecode() {
-        AndroidAppClipSearchFactory(appContext)
+        AndroidLiteRtAppClipSearchFactory(appContext)
             .createFromOptions(AppClipSearchFactory.Options())
             .use { clip ->
                 for (name in samples.keys) {
@@ -108,7 +111,7 @@ class MobileClipSearchDatasetTest {
     }
 
     private fun log(msg: String) {
-        android.util.Log.i("ClipDataset", "CLIPDATASET $msg")
+        android.util.Log.i("LiteRtClip", "LITERTCLIP $msg")
     }
 
     companion object {
