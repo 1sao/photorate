@@ -288,7 +288,6 @@ private fun previewGalleryStatusFlow(
         )
 
         while (done + failed < totalPhotos) {
-            // one image starts processing
             emit(
                 GalleryStatusCounts(
                     counts = mapOf(
@@ -301,7 +300,6 @@ private fun previewGalleryStatusFlow(
             )
             delay(processingDelay.milliseconds)
 
-            // it finishes - mostly success, occasional failure
             if (Random.nextInt(failureChanceOneIn) == 0) failed++ else done++
             emit(
                 GalleryStatusCounts(

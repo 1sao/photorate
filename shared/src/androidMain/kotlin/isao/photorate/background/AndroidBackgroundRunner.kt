@@ -11,14 +11,7 @@ class AndroidBackgroundRunner : BackgroundRunner {
 }
 
 @KoinWorker
-class MyWorker(
-    context: Context,
-    workerParams: WorkerParameters,
-    // private val myService: MyService
-) : CoroutineWorker(context, workerParams) {
+class MyWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
-    override suspend fun doWork(): Result {
-        // myService.performTask()
-        return Result.success()
-    }
+    override suspend fun doWork(): Result = Result.success()
 }

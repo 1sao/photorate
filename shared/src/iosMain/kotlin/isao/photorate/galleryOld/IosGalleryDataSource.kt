@@ -18,11 +18,9 @@ import swiftPMImport.PhotoRate.shared.MPPImage
 class IosGalleryDataSource : GalleryDataSource {
 
     suspend fun requestPermission(): Boolean {
-        // Check current status first
         if (PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatusAuthorized) {
             return true
         }
-        // Request permission
         var result = false
         PHPhotoLibrary.requestAuthorization { status ->
             result = status == PHAuthorizationStatusAuthorized
@@ -65,7 +63,6 @@ class IosGalleryDataSource : GalleryDataSource {
         val asset = fetchResult.firstObject as? PHAsset
             ?: throw IllegalArgumentException("Asset not found: ${ref.id}")
 
-        // Use PHImageManager to get image data synchronously
         val options = PHImageRequestOptions().apply {
             synchronous = true
             deliveryMode = 1 // PHImageRequestOptionsDeliveryModeOpportunistic

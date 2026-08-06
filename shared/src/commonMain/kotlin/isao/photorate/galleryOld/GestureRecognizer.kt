@@ -31,13 +31,11 @@ fun calculateThumbRating(landmarks: List<Landmark>): Int {
     val wrist = landmarks[0]
     val thumbTip = landmarks[4]
 
-    // Calculate angle of thumb tip relative to wrist
-    // In image coordinates: y increases downward
+    // Image coordinates: y increases downward; angle from horizontal,
+    // 0° = right, 90° = down, -90° = up.
     val dx = thumbTip.x - wrist.x
     val dy = thumbTip.y - wrist.y
 
-    // atan2 returns angle in radians, convert to degrees
-    // Angle from horizontal: 0° = right, 90° = down, -90° = up
     val angleRad = atan2(dy.toDouble(), dx.toDouble())
     val angleDeg = angleRad * 180.0 / PI
 

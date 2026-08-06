@@ -73,11 +73,6 @@ class AndroidSystemGalleryImageRepository(private val context: Context) : System
             MediaStore.Images.Media.DATA, // Real path to file
             MediaStore.Images.Media.DATE_MODIFIED,
             MediaStore.Images.Media.DATE_TAKEN,
-            // MediaStore.Images.Media.DATE_EXPIRES,
-            // MediaStore.Images.Media.DISPLAY_NAME,
-            // MediaStore.Images.Media.OEM_METADATA,
-            // MediaStore.Images.Media.RELATIVE_PATH,
-            // MediaStore.Images.Media.RESOLUTION,
             MediaStore.Images.Media.GENERATION_ADDED,
             MediaStore.Images.Media.GENERATION_MODIFIED,
         )
@@ -96,11 +91,6 @@ class AndroidSystemGalleryImageRepository(private val context: Context) : System
             val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
             val dateTakenColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
-            // val dateExpiresColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_EXPIRES)
-            // val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            // val oemMetadataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.OEM_METADATA)
-            // val relativePathColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
-            // val resolutionColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RESOLUTION)
             val generationAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_ADDED)
             val generationModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_MODIFIED)
 

@@ -34,5 +34,3 @@ plugins {
 
 include(":app", ":shared", ":umbrella", ":photosComponent", ":configComponent", ":photosUI", ":photosOnnx", ":photosMediaPipe", ":photosLiteRT")
 rootProject.name = "PhotoRate"
-// include(":core")
-// include(":ktor")
