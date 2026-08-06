@@ -7,6 +7,7 @@ import isao.photorate.db.SelectImagesWithScores
 import isao.photorate.db.SelectMatching
 import isao.photorate.db.SelectUncertainImagesWithScore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.Factory
 
@@ -17,13 +18,13 @@ class DefaultGalleryFilterRepository(private val db: PhotoRateDb) : GalleryFilte
 
     override fun selectMatching(): Flow<List<SelectMatching>> = queries.selectMatching()
         .asFlow()
-        .mapToList(Dispatchers.Default)
+        .mapToList(Dispatchers.IO)
 
     override fun selectImagesWithScores(): Flow<List<SelectImagesWithScores>> = queries.selectImagesWithScores()
         .asFlow()
-        .mapToList(Dispatchers.Default)
+        .mapToList(Dispatchers.IO)
 
     override fun selectUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> = queries.selectUncertainImagesWithScore()
         .asFlow()
-        .mapToList(Dispatchers.Default)
+        .mapToList(Dispatchers.IO)
 }

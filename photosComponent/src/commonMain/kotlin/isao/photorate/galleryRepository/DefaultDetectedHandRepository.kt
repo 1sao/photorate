@@ -4,9 +4,10 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import isao.photorate.db.DetectedHand
 import isao.photorate.db.PhotoRateDb
-import isao.photorate.sqldelight.transactionWithContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -16,11 +17,10 @@ class DefaultDetectedHandRepository(private val db: PhotoRateDb) : DetectedHandR
 
     override fun getHandsForImage(imageUri: String): Flow<List<DetectedHand>> = queries.selectHandsForImage(imageUri)
         .asFlow()
-        .mapToList(Dispatchers.Default)
+        .mapToList(Dispatchers.IO)
 
     override suspend fun insertHand(hand: DetectedHand) {
-        db.transactionWithContext(Dispatchers.Default) {
-            // TODO change to IO? Drop transactions when it's not needed?
+        withContext(Dispatchers.IO) {
             queries.insertHand(
                 imageUri = hand.imageUri,
                 handIndex = hand.handIndex,
@@ -40,8 +40,7 @@ class DefaultDetectedHandRepository(private val db: PhotoRateDb) : DetectedHandR
     }
 
     override suspend fun upsertUserRatedHand(hand: DetectedHand) {
-        db.transactionWithContext(Dispatchers.Default) {
-            // TODO change to IO? Drop transactions when it's not needed?
+        withContext(Dispatchers.IO) {
             queries.upsertUserRatedHand(
                 imageUri = hand.imageUri,
                 handIndex = hand.handIndex,
@@ -60,13 +59,13 @@ class DefaultDetectedHandRepository(private val db: PhotoRateDb) : DetectedHandR
     }
 
     override suspend fun deleteRealHandsForImage(imageUri: String) {
-        db.transactionWithContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             queries.deleteRealHandsForImage(imageUri)
         }
     }
 
     override suspend fun deleteAll() {
-        db.transactionWithContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             queries.deleteAllHands()
         }
     }

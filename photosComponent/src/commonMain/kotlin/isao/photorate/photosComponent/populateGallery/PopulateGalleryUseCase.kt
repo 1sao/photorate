@@ -1,14 +1,16 @@
 package isao.photorate.photosComponent.populateGallery
 
 import isao.photorate.galleryRepository.GalleryImageRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
 class PopulateGalleryUseCase(
     private val systemGalleryImageRepository: SystemGalleryImageRepository,
     private val galleryImageRepository: GalleryImageRepository,
-) { // TODO NEXT TASK make sure every UseCase runs on Dispatchers.IO for IO and Dispatchers.Default for inference.
-    suspend operator fun invoke() {
+) {
+    suspend operator fun invoke() = withContext(Dispatchers.IO) {
         val images = systemGalleryImageRepository.getAllImages()
         val validUris = images.map { it.uri }.toSet()
 

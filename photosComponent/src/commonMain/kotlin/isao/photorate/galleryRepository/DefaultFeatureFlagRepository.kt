@@ -3,10 +3,11 @@ package isao.photorate.galleryRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOne
 import isao.photorate.db.PhotoRateDb
-import isao.photorate.sqldelight.transactionWithContext
 import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -16,10 +17,10 @@ class DefaultFeatureFlagRepository(private val db: PhotoRateDb) : FeatureFlagRep
 
     override fun devModeEnabled(): Flow<Boolean> = queries.getDevMode()
         .asFlow()
-        .mapToOne(Dispatchers.Default)
+        .mapToOne(Dispatchers.IO)
 
     override suspend fun setDevModeEnabled(enabled: Boolean) {
-        db.transactionWithContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             queries.updateDevMode(
                 dev_mode = enabled,
                 updated_at = Clock.System.now().toEpochMilliseconds(),
