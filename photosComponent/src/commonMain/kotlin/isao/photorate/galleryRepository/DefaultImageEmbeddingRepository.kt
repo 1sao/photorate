@@ -13,7 +13,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultImageEmbeddingRepository(private val db: PhotoRateDb) : ImageEmbeddingRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.imageEmbeddingQueries
 
     override fun getEmbeddings(): Flow<List<ImageEmbedding>> = queries.selectAllEmbeddings()
         .asFlow()

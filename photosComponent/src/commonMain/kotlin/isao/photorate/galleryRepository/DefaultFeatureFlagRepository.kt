@@ -13,7 +13,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultFeatureFlagRepository(private val db: PhotoRateDb) : FeatureFlagRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.configQueries
 
     override fun devModeEnabled(): Flow<Boolean> = queries.getDevMode()
         .asFlow()

@@ -1,0 +1,15 @@
+-- SearchHistory: one row per recent CLIP search query
+CREATE TABLE SearchHistory (
+    query TEXT NOT NULL PRIMARY KEY,
+    searchedAt INTEGER NOT NULL
+);
+
+insertSearch:
+INSERT INTO SearchHistory(query, searchedAt) VALUES (?, ?)
+ON CONFLICT(query) DO UPDATE SET searchedAt = excluded.searchedAt;
+
+recentSearches:
+SELECT query FROM SearchHistory ORDER BY searchedAt DESC LIMIT ?;
+
+clearSearchHistory:
+DELETE FROM SearchHistory;

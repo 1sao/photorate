@@ -19,7 +19,10 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageRepository {
 
-    private val queries get() = db.galleryQueries
+    //TODO queries should be constructor-injected instead of the whole db
+    private val queries get() = db.galleryImageQueries
+    private val embeddingQueries get() = db.imageEmbeddingQueries
+    private val detectedHandQueries get() = db.detectedHandQueries
 
     override fun getImages(): Flow<List<GalleryImage>> = queries.selectAllImages()
         .asFlow()
@@ -78,13 +81,14 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
         }
     }
 
+    //TODO should be a usecase
     override suspend fun markNoHand(uri: String) {
         // One transaction so a rejection can't leave partial state (e.g. hands
         // gone but status still DONE-with-detections). All three statements
         // live on the same SQLDelight queries object.
         db.transactionWithContext(Dispatchers.IO) {
-            queries.deleteRealHandsForImage(uri)
-            queries.deleteEmbedding(uri)
+            detectedHandQueries.deleteRealHandsForImage(uri)
+            embeddingQueries.deleteEmbedding(uri)
             queries.updateImageStatus(GalleryImageStatus.DONE, uri)
         }
     }

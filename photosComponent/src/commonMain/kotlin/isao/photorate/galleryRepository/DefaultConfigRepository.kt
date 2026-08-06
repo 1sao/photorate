@@ -16,7 +16,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultConfigRepository(private val db: PhotoRateDb) : ConfigRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.configQueries
 
     override fun getConfig(): Flow<GalleryConfig> = queries.getConfig()
         .asFlow()

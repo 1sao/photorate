@@ -56,7 +56,7 @@ class UpsertRegressionTest {
     @Test
     fun upsertingAnImageKeepsItsDetectedHands() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.insertHand(
             imageUri = "content://media/1",
@@ -85,7 +85,7 @@ class UpsertRegressionTest {
     @Test
     fun upsertingAnImageKeepsItsEmbedding() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.upsertEmbedding("content://media/1", floatArrayOf(1f, 2f, 3f))
 
@@ -100,7 +100,7 @@ class UpsertRegressionTest {
     @Test
     fun userRatingUpsertReplacesInsteadOfDuplicating() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
 
         fun rate(score: Score) = queries.upsertUserRatedHand(
@@ -131,7 +131,7 @@ class UpsertRegressionTest {
     @Test
     fun upsertingAnUnchangedImageKeepsItsScanResults() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.updateImageDone(detectedInMs = 10L, uri = "content://media/1")
 
@@ -148,7 +148,7 @@ class UpsertRegressionTest {
     @Test
     fun upsertingAChangedImageResetsItForRescan() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.updateImageDone(detectedInMs = 10L, uri = "content://media/1")
 
@@ -164,7 +164,7 @@ class UpsertRegressionTest {
     @Test
     fun upsertingAnUnchangedImageRecoversAStuckProcessingStatus() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.updateImageStatus(GalleryImageStatus.PROCESSING, "content://media/1")
 
@@ -180,7 +180,7 @@ class UpsertRegressionTest {
     @Test
     fun deleteRealHandsKeepsUserRating() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
         db.insertImage("content://media/1")
         queries.insertHand(
             imageUri = "content://media/1",

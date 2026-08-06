@@ -1,0 +1,152 @@
+import isao.photorate.db.GalleryImageStatus;
+
+
+-- GalleryImage: one row per scanned image. Scan results (status/scannedAt/
+-- detectedInMs) live here; the detected hands themselves are DetectedHand rows.
+CREATE TABLE GalleryImage (
+    uri TEXT NOT NULL PRIMARY KEY,
+    createdAt INTEGER NOT NULL,
+    modifiedAt INTEGER NOT NULL,
+    status TEXT AS GalleryImageStatus NOT NULL DEFAULT 'PENDING',
+    scannedAt INTEGER,
+    detectedInMs INTEGER
+);
+
+-- One row per status with its count, in one query.
+countsByStatus:
+SELECT status, COUNT(*) AS count
+FROM GalleryImage
+GROUP BY status;
+
+-- Single status count, if you just need one number (e.g. a badge).
+countForStatus:
+SELECT COUNT(*)
+FROM GalleryImage
+WHERE status = ?;
+
+-- Total row count, handy alongside the breakdown.
+totalCount:
+SELECT COUNT(*)
+FROM GalleryImage;
+
+-- Detail view: all matching hands with image info. The JOIN on DetectedHand
+-- already restricts to images that have hands, so no handCount filter needed.
+selectMatching:
+SELECT gi.uri, dh.id, dh.imageUri, dh.handIndex, dh.score, dh.bboxMinX, dh.bboxMinY, dh.bboxMaxX, dh.bboxMaxY, dh.bboxAreaFraction, dh.centroidX, dh.centroidY, dh.points
+FROM GalleryImage gi
+JOIN DetectedHand dh ON dh.imageUri = gi.uri
+JOIN config c ON c.id = 1
+WHERE dh.score >= c.min_score
+  AND dh.score <= c.max_score
+  AND dh.bboxAreaFraction >= c.min_bboxAreaFraction
+ORDER BY dh.score DESC;
+
+-- Grid view with per-image scores, join-based rewrite of
+-- selectImagesWithScoresOld. Same semantics: user-rated scores win when a
+-- rating is present, otherwise the distinct confident real scores; images with
+-- only uncertain hands (or none) are excluded. The per-image score lists are
+-- precomputed in LEFT JOINed aggregates instead of correlated subqueries.
+-- scores is a comma-separated list like "3.0,5.0". Note GROUP_CONCAT order
+-- within the list is unspecified (the UI sorts it before display).
+-- TODO simplify
+selectImagesWithScores:
+SELECT gi.uri, gi.scannedAt,
+  COALESCE(rated.scores, detected.scores) AS scores
+FROM GalleryImage gi
+LEFT JOIN (
+    SELECT imageUri, GROUP_CONCAT(DISTINCT score) AS scores
+    FROM DetectedHand
+    WHERE isUserRated = 1
+    GROUP BY imageUri
+) rated ON rated.imageUri = gi.uri
+LEFT JOIN (
+    SELECT imageUri, GROUP_CONCAT(DISTINCT score) AS scores
+    FROM DetectedHand
+    WHERE uncertain = 0
+      AND score >= (SELECT min_score FROM config WHERE id = 1)
+      AND score <= (SELECT max_score FROM config WHERE id = 1)
+      AND bboxAreaFraction >= (SELECT min_bboxAreaFraction FROM config WHERE id = 1)
+    GROUP BY imageUri
+) detected ON detected.imageUri = gi.uri
+WHERE rated.imageUri IS NOT NULL OR detected.imageUri IS NOT NULL
+ORDER BY gi.scannedAt DESC;
+
+-- Uncertain grid view: distinct images whose best-scored hand is only a
+-- low-confidence guess (uncertain tier), with the best guess score per image
+-- so the UI can label the card. Shown separately from the confident grid so
+-- the user can review and (in the future) correct those scores.
+selectUncertainImagesWithScore:
+SELECT gi.uri, gi.scannedAt, MAX(dh.score) AS bestGuessScore
+FROM GalleryImage gi
+JOIN DetectedHand dh ON dh.imageUri = gi.uri
+WHERE dh.uncertain = 1
+  AND NOT EXISTS (
+    SELECT 1 FROM DetectedHand dh2
+    WHERE dh2.imageUri = gi.uri
+      AND dh2.uncertain = 0
+  )
+GROUP BY gi.uri, gi.scannedAt
+ORDER BY gi.scannedAt DESC;
+
+-- Gallery image CRUD. Real upsert: INSERT OR REPLACE used to delete the
+-- conflicting row, which cascade-deleted the image's DetectedHand and
+-- ImageEmbedding rows (their FKs point back here with ON DELETE CASCADE).
+-- File metadata (createdAt/modifiedAt) always follows the system gallery;
+-- scan results (status/scannedAt/detectedInMs) are only reset when the file
+-- actually changed (modifiedAt differs). A row left in PROCESSING (a previous
+-- scan killed mid-image) is re-queued for landmarking. DONE/FAILED results for
+-- an unchanged file are kept, so re-populating on every launch does not re-run
+-- landmarking for already-scanned images.
+insertOrUpdateImage:
+INSERT INTO GalleryImage(uri, createdAt, modifiedAt, status, scannedAt, detectedInMs)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT(uri) DO UPDATE SET
+  createdAt = excluded.createdAt,
+  modifiedAt = excluded.modifiedAt,
+  status = CASE
+    WHEN modifiedAt = excluded.modifiedAt AND status = 'PROCESSING' THEN 'PENDING'
+    WHEN modifiedAt = excluded.modifiedAt THEN status
+    ELSE 'PENDING'
+  END,
+  scannedAt = CASE WHEN modifiedAt = excluded.modifiedAt THEN scannedAt ELSE NULL END,
+  detectedInMs = CASE WHEN modifiedAt = excluded.modifiedAt THEN detectedInMs ELSE NULL END;
+
+deleteImage:
+DELETE FROM GalleryImage WHERE uri = ?;
+
+selectImageByUri:
+SELECT * FROM GalleryImage WHERE uri = ?;
+
+updateImageStatus:
+UPDATE GalleryImage SET status = ? WHERE uri = ?;
+
+updateImageDone:
+UPDATE GalleryImage SET status = 'DONE', detectedInMs = ? WHERE uri = ?;
+
+selectAllImages:
+SELECT * FROM GalleryImage;
+
+selectAllUris:
+SELECT uri FROM GalleryImage;
+
+-- Hand images that don't have an embedding yet (incremental fill after
+-- landmarking, or after an upgrade that introduced search). "Hand image"
+-- means at least one real detection (isUserRated = 0) — what the landmarker
+-- writes. A user-entered rating alone does not count.
+selectImagesMissingEmbeddings:
+SELECT gi.* FROM GalleryImage gi
+LEFT JOIN ImageEmbedding e ON e.uri = gi.uri
+WHERE EXISTS (
+    SELECT 1 FROM DetectedHand dh
+    WHERE dh.imageUri = gi.uri AND dh.isUserRated = 0
+  )
+  AND e.uri IS NULL;
+
+deleteByUris:
+DELETE FROM GalleryImage WHERE uri IN ?;
+
+selectUnprocessed:
+SELECT * FROM GalleryImage WHERE status = 'PENDING' ORDER BY scannedAt DESC;
+
+deleteAllImages:
+DELETE FROM GalleryImage;

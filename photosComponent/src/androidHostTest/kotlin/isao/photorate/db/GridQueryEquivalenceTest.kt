@@ -68,7 +68,7 @@ class GridQueryEquivalenceTest {
     @Test
     fun joinBasedGridQueryMatchesSubqueryVersion() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
 
         // User rating only.
         db.insertImage("content://media/rated")
@@ -107,7 +107,7 @@ class GridQueryEquivalenceTest {
     @Test
     fun joinBasedQueryAppliesConfigFilterToRealHands() {
         val db = db()
-        val queries = db.galleryQueries
+        val queries = db.galleryImageQueries
 
         // Real hands below the (tightened) min_score: excluded unless a rating exists.
         db.insertImage("content://media/below-min")

@@ -14,7 +14,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultGalleryFilterRepository(private val db: PhotoRateDb) : GalleryFilterRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.galleryImageQueries
 
     override fun selectMatching(): Flow<List<SelectMatching>> = queries.selectMatching()
         .asFlow()

@@ -13,7 +13,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultDetectedHandRepository(private val db: PhotoRateDb) : DetectedHandRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.detectedHandQueries
 
     override fun getHandsForImage(imageUri: String): Flow<List<DetectedHand>> = queries.selectHandsForImage(imageUri)
         .asFlow()

@@ -17,7 +17,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultSearchHistoryRepository(private val db: PhotoRateDb) : SearchHistoryRepository {
 
-    private val queries get() = db.galleryQueries
+    private val queries get() = db.searchHistoryQueries
 
     override fun observeRecentSearches(limit: Long): Flow<List<String>> = queries.recentSearches(limit)
         .asFlow()
@@ -26,6 +26,7 @@ class DefaultSearchHistoryRepository(private val db: PhotoRateDb) : SearchHistor
     @OptIn(ExperimentalTime::class)
     override suspend fun addRecentSearch(query: String) {
         withContext(Dispatchers.IO) {
+            //TODO clocks should be constructor-injected
             queries.insertSearch(query.trim(), Clock.System.now().toEpochMilliseconds())
         }
     }
