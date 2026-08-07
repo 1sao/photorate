@@ -22,6 +22,31 @@ kotlin {
             export(project(":configComponent"))
             export(project(":photosUI"))
             export(libs.touchlab.kermit.simple)
+            if (it.name == "iosArm64" || it.name == "iosSimulatorArm64") {
+                // shared links kmplitert (photosLiteRT) on the arm64 iOS targets;
+                // the umbrella framework (what Xcode links) must resolve the same
+                // LiteRT dylib, so mirror shared's staged copy + linkerOpt.
+                val variant = if (it.name == "iosArm64") "ios" else "simulator"
+                val staged = layout.buildDirectory.dir("litert-dylibs/$variant")
+                linkerOpts("-L${staged.get().asFile.absolutePath}", "-lLiteRt")
+            }
+        }
+    }
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        val variant = if (target.name == "iosArm64") "ios" else "simulator"
+        val staged = layout.buildDirectory.dir("litert-dylibs/$variant")
+        tasks.register("stageLiteRtDylib_${target.name}", Copy::class.java) {
+            from(rootProject.layout.projectDirectory.file("ml/litert_cpp/libLiteRt-$variant.dylib"))
+            into(staged)
+            rename { "libLiteRt.dylib" }
+        }
+        target.binaries.configureEach {
+            tasks.matching { task ->
+                task.name == "linkDebugFramework${target.name.replaceFirstChar(Char::uppercase)}" ||
+                    task.name == "linkReleaseFramework${target.name.replaceFirstChar(Char::uppercase)}"
+            }.configureEach {
+                dependsOn("stageLiteRtDylib_${target.name}")
+            }
         }
     }
 

@@ -15,16 +15,10 @@
  */
 
 package isao.photorate.photoslitert
-// Vendored from common/kotlin/ImageTensor.kt — edit the canonical and run tools/sync_common.py --apply.
-
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Paint
 
 /**
- * Bitmap → normalized float tensor conversion with zero per-frame allocation.
+ * EngineImage → normalized float tensor conversion with zero per-frame
+ * allocation.
  *
  * Configure once with the model's input geometry and normalization, then call [load]
  * per frame. The returned array is owned by this instance and overwritten by the next
@@ -49,15 +43,6 @@ class ImageTensor(
     /** Channel order expected by the model ([mean]/[std] are indexed in this order). */
     enum class ChannelOrder { RGB, BGR }
 
-    /** Aspect-ratio policy applied by [load]. */
-    enum class Fit { STRETCH, LETTERBOX }
-
-    /**
-     * Geometry of the last [load]: `model_x = source_x * scaleX + padX` (and same for y).
-     * Use it to map detections back to source-image coordinates.
-     */
-    data class Mapping(val scaleX: Float, val scaleY: Float, val padX: Float, val padY: Float)
-
     companion object {
         val IMAGENET_MEAN = floatArrayOf(0.485f, 0.456f, 0.406f)
         val IMAGENET_STD = floatArrayOf(0.229f, 0.224f, 0.225f)
@@ -67,40 +52,18 @@ class ImageTensor(
     val floats = FloatArray(3 * width * height)
 
     private val pixels = IntArray(width * height)
-    private val scaled = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    private val canvas = Canvas(scaled)
-    private val matrix = Matrix()
-    private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
-
-    /** Geometry of the last [load]. */
-    var mapping = Mapping(1f, 1f, 0f, 0f)
-        private set
 
     /**
-     * Converts [bitmap] into the configured float layout and returns [floats].
-     *
-     * @param padColor letterbox padding color (e.g. `0xFF727272.toInt()` for YOLOX gray 114)
+     * Converts [image] (resized to this tensor's geometry first if needed) into
+     * the configured float layout and returns [floats].
      */
-    fun load(bitmap: Bitmap, fit: Fit = Fit.STRETCH, padColor: Int = Color.BLACK): FloatArray {
-        when (fit) {
-            Fit.STRETCH -> {
-                val scaleX = width.toFloat() / bitmap.width
-                val scaleY = height.toFloat() / bitmap.height
-                matrix.setScale(scaleX, scaleY)
-                mapping = Mapping(scaleX, scaleY, 0f, 0f)
-            }
-            Fit.LETTERBOX -> {
-                val scale = minOf(width.toFloat() / bitmap.width, height.toFloat() / bitmap.height)
-                val padX = (width - bitmap.width * scale) / 2f
-                val padY = (height - bitmap.height * scale) / 2f
-                canvas.drawColor(padColor)
-                matrix.setScale(scale, scale)
-                matrix.postTranslate(padX, padY)
-                mapping = Mapping(scale, scale, padX, padY)
-            }
+    fun load(image: EngineImage): FloatArray {
+        val ready = if (image.width == width && image.height == height) {
+            image
+        } else {
+            image.resized(width, height)
         }
-        canvas.drawBitmap(bitmap, matrix, paint)
-        scaled.getPixels(pixels, 0, width, 0, 0, width, height)
+        ready.getPixels().copyInto(pixels, 0, 0, width * height)
 
         val plane = width * height
         for (i in 0 until plane) {
@@ -135,10 +98,6 @@ class ImageTensor(
         return floats
     }
 
-    /** Releases the internal scratch bitmap. */
-    fun release() {
-        if (!scaled.isRecycled) {
-            scaled.recycle()
-        }
-    }
+    /** No-op: pixel scratch lives on the managed heap now. */
+    fun release() = Unit
 }

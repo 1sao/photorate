@@ -60,13 +60,7 @@ kotlin {
             implementation("androidx.compose.ui:ui-tooling-preview:${libs.versions.compose.get()}")
             implementation("androidx.compose.foundation:foundation:${libs.versions.compose.get()}")
             implementation("androidx.compose.animation:animation:${libs.versions.compose.get()}")
-            // 1.5.0-alpha24 pulls foundation/ui 1.12.0-beta01 (already what the app
-            // resolves at runtime via material3-adaptive-navigation-suite). It is
-            // required for the Material 3 Expressive HorizontalFloatingToolbar.
             implementation("androidx.compose.material3:material3:1.5.0-alpha24")
-            // Official window size class API (also used by the app module), for
-            // the adaptive uncertain-card span (full row on phones, half row on
-            // tablets).
             implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
             implementation("androidx.compose.material:material-icons-core:1.6.0")
             implementation(libs.androidx.lifecycle.viewmodel)

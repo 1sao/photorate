@@ -1,5 +1,7 @@
 package isao.photorate.photoslitert
 
+import isao.photorate.photoslitert.LiteRtRtmModels.NUM_LANDMARKS
+import isao.photorate.photoslitert.LiteRtRtmModels.SIMCC_SPLIT_RATIO
 import kotlin.math.min
 
 /**

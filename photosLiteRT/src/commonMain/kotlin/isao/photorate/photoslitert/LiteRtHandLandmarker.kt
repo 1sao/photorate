@@ -1,24 +1,13 @@
 package isao.photorate.photoslitert
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.util.Log
-import com.google.ai.edge.litert.Accelerator
-import com.google.ai.edge.litert.CompiledModel
-import com.google.ai.edge.litert.LiteRtException
 import isao.photorate.inference.classify.GestureClassification
 import isao.photorate.inference.classify.HandGesture
 import isao.photorate.inference.classify.HandGestureClassifier
 import isao.photorate.inference.classify.HandLandmarker
-import isao.photorate.inference.classify.HandLandmarkerFactory
 import isao.photorate.inference.classify.HandLandmarkerOptions
 import isao.photorate.inference.classify.LandmarkCandidate
 import isao.photorate.inference.classify.LandmarkedImage
-import javax.inject.Inject
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -26,53 +15,30 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.system.measureTimeMillis
+import kotlin.time.measureTimedValue
 
 /**
- * Android [HandLandmarkerFactory] backed by LiteRT CompiledModel: RTMDet hand
- * detection -> multi-rotation RTMPose search -> gesture rating. This is a port
- * of the verified ONNX pipeline (`photosOnnx.AndroidOnnxHandLandmarker`) that
- * swaps ONNX Runtime sessions for the LiteRT conversions of the same two
- * models (ml/litert/ recipe; assets shipped from ml/litert/converted):
+ * The shared LiteRT [HandLandmarker] pipeline: RTMDet hand detection ->
+ * multi-rotation RTMPose search -> gesture rating. This is a port of the
+ * verified ONNX pipeline (`photosOnnx.AndroidOnnxHandLandmarker`) that swaps
+ * ONNX Runtime sessions for the LiteRT conversions of the same two models
+ * (ml/litert/ recipe; assets shipped from ml/litert/converted):
  *
  *  - Detector: `rtmdet_hand_320_f32.tflite` (raw anchors, NMS caller-side).
  *  - Pose: `rtmpose_hand_256_f32.tflite` (raw SimCC, decode caller-side).
  *
- * Inference is GPU-first (OpenCL backend, FP32 precision — the accuracy-safe
- * config verified in LiteRtOnDeviceVerificationTest) with a CPU fallback when
- * the GPU cannot compile the graph or fails at runtime, mirroring the
- * MediaPipe factory's GPU->CPU fallback. The scan runs on background threads
- * with no EGL context; OpenCL buffers need none (only the GL backend's
- * textures would).
+ * Platform-neutral: images come in as [EngineImage] and inference goes out
+ * through the injected [LiteRtEngine]s. Android wires CompiledModel engines
+ * (GPU-first with CPU fallback), iOS/JVM kmplitert engines. The scan runs on
+ * background threads with no EGL context; OpenCL buffers need none (only the
+ * GL backend's textures would).
  */
-class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context: Context) : HandLandmarkerFactory {
-    override fun createFromOptions(options: HandLandmarkerOptions): HandLandmarker {
-        val landmarker: AndroidLiteRtHandLandmarker
-        measureTimeMillis {
-            landmarker = AndroidLiteRtHandLandmarker(context, options)
-        }.also {
-            Log.d(TAG, "Initialized LiteRT hand pipeline in $it ms (GPU first, CPU fallback)")
-        }
-        return landmarker
-    }
+class LiteRtHandLandmarker(
+    private val detector: LiteRtEngine,
+    private val pose: LiteRtEngine,
+    private val options: HandLandmarkerOptions,
+) : HandLandmarker {
 
-    companion object {
-        private const val TAG = "LiteRtHandLandmarker"
-    }
-}
-
-/**
- * Android LiteRT pipeline: RTMDet letterbox -> multi-rotation RTMPose search ->
- * gesture classifier (the gate). Same pipeline shape and tuned thresholds as
- * the ONNX provider, so dataset expectations transfer; see
- * `OnnxHandLandmarkDatasetTest` -> `LiteRtHandLandmarkDatasetTest`.
- */
-class AndroidLiteRtHandLandmarker internal constructor(context: Context, private val options: HandLandmarkerOptions) : HandLandmarker {
-
-    private val detector = GpuFirstRunner(context, LiteRtRtmModels.DETECTOR_ASSET)
-    private val pose = GpuFirstRunner(context, LiteRtRtmModels.RTMPOSE_ASSET)
-
-    // Preprocessing tensors (zero per-frame allocation; see ImageTensor).
     private val detectorTensor = ImageTensor(
         DETECTOR_SIZE,
         DETECTOR_SIZE,
@@ -94,22 +60,19 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
     )
 
     override fun detect(candidate: LandmarkCandidate): LandmarkedImage {
-        var detectedIn = 0L
-        val hands: List<LandmarkedImage.Hand>
-        measureTimeMillis {
-            hands = runPipeline(candidate)
-        }.also { detectedIn = it }
-        return LandmarkedImage(hands = hands, detectedInMs = detectedIn)
+        val image = candidate.toEngineImage()
+        val timed = measureTimedValue { runPipeline(image) }
+        return LandmarkedImage(hands = timed.value, detectedInMs = timed.duration.inWholeMilliseconds)
     }
 
     // --- Pipeline: RTMDet boxes -> multi-rot RTMPose search -> gesture rate ---
 
-    private fun runPipeline(bitmap: LandmarkCandidate): List<LandmarkedImage.Hand> {
-        val boxes = detectBoxes(bitmap) // pixel coords in the original image
+    private fun runPipeline(image: EngineImage): List<LandmarkedImage.Hand> {
+        val boxes = detectBoxes(image) // pixel coords in the original image
         val hands = ArrayList<LandmarkedImage.Hand>()
         for ((box, score) in boxes.take(options.maxNumHands)) {
             if (score < options.minHandDetectionConfidence) continue
-            rtmposeRating(bitmap, box)?.let { hands.add(it) }
+            rtmposeRating(image, box)?.let { hands.add(it) }
         }
         // Edge fallback: a hand mostly out of frame at the left/right image
         // edge is invisible to full-frame RTMDet (5_kimbo — the thumb is in
@@ -118,34 +81,32 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
         // (edgeDetected hands take the classifier's thumb-only path).
         if (hands.isEmpty()) {
             val hint = boxes.firstOrNull()?.second ?: 0f
-            hands.addAll(edgeThumbFallback(bitmap, hint).take(options.maxNumHands))
+            hands.addAll(edgeThumbFallback(image, hint).take(options.maxNumHands))
         }
         return hands
     }
 
     // --- Detection stage: RTMDet letterbox (320x320, top-left pad, mean/std) ---
 
-    private fun detectBoxes(bitmap: Bitmap): List<Pair<IntArray, Float>> {
-        val iw = bitmap.width
-        val ih = bitmap.height
+    private fun detectBoxes(image: EngineImage): List<Pair<IntArray, Float>> {
+        val iw = image.width
+        val ih = image.height
         val ratio = min(DETECTOR_SIZE / iw.toFloat(), DETECTOR_SIZE / ih.toFloat())
         val nw = max((iw * ratio).toInt(), 1)
         val nh = max((ih * ratio).toInt(), 1)
-        val resized = Bitmap.createScaledBitmap(bitmap, nw, nh, true)
-        val padded = Bitmap.createBitmap(DETECTOR_SIZE, DETECTOR_SIZE, Bitmap.Config.ARGB_8888)
-        Canvas(padded).drawBitmap(resized, 0f, 0f, Paint())
-        // Top-left padded bitmap is already DETECTOR_SIZE x DETECTOR_SIZE, so
-        // STRETCH is an identity resize; only the channel split happens here.
+        // Top-left letterbox: resize to (nw, nh) then place at (0, 0) on a
+        // 320x320 canvas (transparent black == the old Bitmap default).
+        val padded = image.resized(nw, nh).drawnOn(DETECTOR_SIZE, DETECTOR_SIZE, 0, 0, 0)
+
         val input = detectorTensor.load(padded)
 
         // Raw anchors boxes [1,2100,4] + scores [1,2100,1] in 320-space
         // (top-left padded). Post-processing (score filter + NMS) uses the
         // baked export's params via LiteRtRtmModels.
-        val (boxesRaw, scoresRaw) = detector.run { runner ->
-            runner.writeInput(0, input)
-            runner.run()
-            runner.readOutput(0) to runner.readOutput(1)
-        }
+        detector.writeFloatInput(0, input)
+        detector.run()
+        val boxesRaw = detector.readOutput(0)
+        val scoresRaw = detector.readOutput(1)
         val keep = LiteRtRtmModels.nmsAnchors(boxesRaw, scoresRaw)
         val boxes = ArrayList<Pair<IntArray, Float>>(keep.size)
         for (i in keep) {
@@ -192,9 +153,9 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
      * undistorted regardless of image aspect ratio. Storage code un-rotates
      * via [LandmarkedImage.Hand.rotationDegrees] and normalizes to 0..1.
      */
-    private fun rtmposeRating(bitmap: Bitmap, box: IntArray): LandmarkedImage.Hand? {
-        val iw = bitmap.width
-        val ih = bitmap.height
+    private fun rtmposeRating(image: EngineImage, box: IntArray): LandmarkedImage.Hand? {
+        val iw = image.width
+        val ih = image.height
         val candidates = CANDIDATE_ROTATIONS
 
         var imageSpace: HandWithScore? = null
@@ -209,7 +170,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
             val cy = (square[1] + square[3]) / 2f
             val side = (square[2] - square[0]).toFloat()
             for (deg in candidates) {
-                val (crop, _) = rotateAndCropRectangle(bitmap, cx, cy, side, side, deg) ?: continue
+                val (crop, _) = rotateAndCropRectangle(image, cx, cy, side, side, deg) ?: continue
                 val kps = rtmposeLandmarks(crop) ?: continue
                 val points = ArrayList<LandmarkedImage.Point>(NUM_LANDMARKS)
                 var kpSum = 0f
@@ -308,13 +269,13 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
      * classifying each read with edgeDetected = true — the strip detector must
      * fire above the detection gate and the read above the kp floor.
      */
-    private fun edgeThumbFallback(bitmap: Bitmap, fullFrameBest: Float): List<LandmarkedImage.Hand> {
+    private fun edgeThumbFallback(image: EngineImage, fullFrameBest: Float): List<LandmarkedImage.Hand> {
         // The full-frame detector already ran for the main pass; an edge hand
         // still leaves a weak full-frame response (5_kimbo: 0.167), so below
         // the hint threshold the image has no hand signal at all — skip.
         if (fullFrameBest < EDGE_HINT_DET) return emptyList()
-        val iw = bitmap.width
-        val ih = bitmap.height
+        val iw = image.width
+        val ih = image.height
         val stripW = max((iw * EDGE_STRIP_FRACTION).toInt(), 1)
         val hands = ArrayList<LandmarkedImage.Hand>()
         for (side in 0..1) {
@@ -322,7 +283,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
             for ((fb, ft) in EDGE_BANDS) {
                 val y0 = (ih * fb).toInt()
                 val y1 = (ih * ft).toInt()
-                val strip = padStripToSquare(bitmap, x0, y0, stripW, y1 - y0)
+                val strip = padStripToSquare(image, x0, y0, stripW, y1 - y0)
                 val boxes = detectBoxes(strip)
                 if (boxes.isEmpty() ||
                     boxes.first().second < options.minHandDetectionConfidence
@@ -331,7 +292,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
                 }
                 val (box, _) = boxes.first()
                 val imBox = intArrayOf(x0 + box[0], y0 + box[1], x0 + box[2], y0 + box[3])
-                edgeThumbScan(bitmap, imBox)?.let {
+                edgeThumbScan(image, imBox)?.let {
                     hands.add(it)
                     break
                 }
@@ -346,9 +307,9 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
      * classifier's thumb-only path), or null. The hand is marked uncertain
      * (the off-frame fingers are unreliable — the score is a best guess).
      */
-    private fun edgeThumbScan(bitmap: Bitmap, box: IntArray): LandmarkedImage.Hand? {
-        val iw = bitmap.width
-        val ih = bitmap.height
+    private fun edgeThumbScan(image: EngineImage, box: IntArray): LandmarkedImage.Hand? {
+        val iw = image.width
+        val ih = image.height
         val square = expandSquare(box, iw, ih, BOX_EXPANSION)
         val cx = (square[0] + square[2]) / 2f
         val cy = (square[1] + square[3]) / 2f
@@ -357,7 +318,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
         var bestThumbConf = 0f
         var bestKpMean = 0f
         for (deg in CANDIDATE_ROTATIONS) {
-            val (crop, _) = rotateAndCropRectangle(bitmap, cx, cy, side, side, deg) ?: continue
+            val (crop, _) = rotateAndCropRectangle(image, cx, cy, side, side, deg) ?: continue
             val kps = rtmposeLandmarks(crop) ?: continue
             val points = ArrayList<LandmarkedImage.Point>(NUM_LANDMARKS)
             var kpSum = 0f
@@ -405,14 +366,10 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
     }
 
     /** Crops [x0, y0, w, h] from the image and pads it to a square with gray. */
-    private fun padStripToSquare(image: Bitmap, x0: Int, y0: Int, w: Int, h: Int): Bitmap {
-        val crop = Bitmap.createBitmap(image, x0, y0, w, h)
+    private fun padStripToSquare(image: EngineImage, x0: Int, y0: Int, w: Int, h: Int): EngineImage {
+        val crop = image.cropped(x0, y0, w, h) ?: return image
         val side = max(w, h)
-        val out = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(out)
-        canvas.drawColor(Color.rgb(114, 114, 114))
-        canvas.drawBitmap(crop, 0f, 0f, Paint())
-        return out
+        return crop.drawnOn(side, side, 0, 0, 0xFF727272.toInt())
     }
 
     private data class HandWithScore(val hand: LandmarkedImage.Hand, val cls: GestureClassification?, val kpMean: Float)
@@ -425,17 +382,16 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
      * through the inverse affine to crop pixels, with min(peak_x, peak_y) as
      * confidence (LiteRtRtmModels.decodeSimcc).
      */
-    private fun rtmposeLandmarks(crop: Bitmap): FloatArray? {
+    private fun rtmposeLandmarks(crop: EngineImage): FloatArray? {
         val w = crop.width
         val h = crop.height
         val warped = topDownAffine(crop)
-        val input = poseTensor.load(warped)
 
-        val (simccX, simccY) = pose.run { runner ->
-            runner.writeInput(0, input)
-            runner.run()
-            runner.readOutput(0) to runner.readOutput(1)
-        }
+        val input = poseTensor.load(warped)
+        pose.writeFloatInput(0, input)
+        pose.run()
+        val simccX = pose.readOutput(0)
+        val simccY = pose.readOutput(1)
         val kps256 = LiteRtRtmModels.decodeSimcc(simccX, simccY)
 
         val out = FloatArray(NUM_LANDMARKS * 3)
@@ -461,23 +417,14 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
      * plans/benchmarks/landmark_stage.md): scale the crop about its center so
      * the max(0.75h, 1.25w)-scaled box fills 256x256, black-filled borders.
      */
-    private fun topDownAffine(crop: Bitmap): Bitmap {
+    private fun topDownAffine(crop: EngineImage): EngineImage {
         val w = crop.width.toFloat()
         val h = crop.height.toFloat()
         val bboxW = 1.25f * w
         val bboxH = 1.25f * h
         val wScaled = max(bboxH * 0.75f, bboxW)
         val scale = RTMPOSE_SIZE / wScaled
-        val cx = w / 2f
-        val cy = h / 2f
-        val matrix = Matrix()
-        matrix.postScale(scale, scale, cx, cy)
-        matrix.postTranslate(RTMPOSE_SIZE / 2f - cx, RTMPOSE_SIZE / 2f - cy)
-        val out = Bitmap.createBitmap(RTMPOSE_SIZE, RTMPOSE_SIZE, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(out)
-        canvas.drawColor(Color.BLACK)
-        canvas.drawBitmap(crop, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
-        return out
+        return crop.scaledAboutCenter(scale, RTMPOSE_SIZE, 0xFF000000.toInt())
     }
 
     /** Expands a box around its center and makes it square (UNCLAMPED). */
@@ -496,16 +443,16 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
         )
     }
 
-    // --- Bitmap helpers (port of the verified Python preprocessing) ---
+    // --- Image helpers (port of the verified Python preprocessing) ---
 
     private fun rotateAndCropRectangle(
-        image: Bitmap,
+        image: EngineImage,
         cx: Float,
         cy: Float,
         width: Float,
         height: Float,
         degree: Float,
-    ): Pair<Bitmap, FloatArray>? {
+    ): Pair<EngineImage, FloatArray>? {
         val ih = image.height
         val iw = image.width
         val size = (sqrt((iw * iw + ih * ih).toDouble()).toInt() + 2) * 2
@@ -530,24 +477,22 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
         return final to floatArrayOf(wDiff, hDiff)
     }
 
-    private fun padImage(image: Bitmap, tw: Int, th: Int): Bitmap {
-        val padded = Bitmap.createBitmap(tw, th, Bitmap.Config.ARGB_8888)
+    private fun padImage(image: EngineImage, tw: Int, th: Int): EngineImage {
         val startH = th / 2 - image.height / 2
         val startW = tw / 2 - image.width / 2
-        Canvas(padded).drawBitmap(image, startW.toFloat(), startH.toFloat(), Paint())
-        return padded
+        return image.drawnOn(tw, th, startW, startH, 0)
     }
 
-    private fun cropRect(image: Bitmap, cx: Int, cy: Int, width: Int, height: Int): Bitmap? {
+    private fun cropRect(image: EngineImage, cx: Int, cy: Int, width: Int, height: Int): EngineImage? {
         val x0 = cx - width / 2
         val y0 = cy - height / 2
         if (x0 < 0 || y0 < 0 || x0 + width > image.width || y0 + height > image.height) return null
-        return Bitmap.createBitmap(image, x0, y0, width, height)
+        return image.cropped(x0, y0, width, height)
     }
 
     /** Upright bounding box of a rotated rect: [cx, cy, width, height] in pixels. */
     private fun boundingBoxFromRotatedRect(cx: Float, cy: Float, w: Float, h: Float, degree: Float): IntArray {
-        val theta = Math.toRadians(degree.toDouble())
+        val theta = degree.toDouble() / 180.0 * PI
         val cosT = cos(theta)
         val sinT = sin(theta)
         val hw = w / 2f
@@ -575,21 +520,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
     /**
      * Rotates the image about its center without cropping (expands the canvas).
      */
-    private fun imageRotationWithoutCrop(image: Bitmap, degree: Float): Bitmap {
-        val w = image.width
-        val h = image.height
-        val theta = Math.toRadians(degree.toDouble())
-        val absCos = abs(cos(theta))
-        val absSin = abs(sin(theta))
-        val boundW = (h * absSin + w * absCos).toInt()
-        val boundH = (h * absCos + w * absSin).toInt()
-        val matrix = Matrix()
-        matrix.postRotate(-degree, w / 2f, h / 2f)
-        matrix.postTranslate(boundW / 2f - w / 2f, boundH / 2f - h / 2f)
-        val out = Bitmap.createBitmap(boundW, boundH, Bitmap.Config.ARGB_8888)
-        Canvas(out).drawBitmap(image, matrix, Paint())
-        return out
-    }
+    private fun imageRotationWithoutCrop(image: EngineImage, degree: Float): EngineImage = image.rotatedWithoutCrop(degree)
 
     override fun close() {
         detector.close()
@@ -598,72 +529,7 @@ class AndroidLiteRtHandLandmarker internal constructor(context: Context, private
         poseTensor.release()
     }
 
-    /**
-     * Owns one CompiledModelRunner that prefers the GPU (OpenCL, FP32 — the
-     * accuracy-safe config from LiteRtOnDeviceVerificationTest) and demotes to
-     * CPU when the GPU cannot compile the graph (no OpenCL on emulators/some
-     * devices) or fails at runtime. Serial calls only (the scan runs one
-     * detect() at a time).
-     */
-    private inner class GpuFirstRunner(private val appContext: Context, private val asset: String) {
-        /** False once the GPU is known-unusable (compile failure at init). */
-        private var gpuActive = true
-
-        @Volatile
-        var runner: CompiledModelRunner = create()
-            private set
-
-        private var demoted = false
-
-        private fun create(): CompiledModelRunner = try {
-            CompiledModelRunner.fromAssets(appContext, asset, gpuOptions()).also {
-                Log.d(TAG, "$asset compiled on GPU (OpenCL, FP32)")
-            }
-        } catch (e: LiteRtException) {
-            gpuActive = false
-            Log.w(TAG, "$asset GPU compile failed, falling back to CPU", e)
-            CompiledModelRunner.fromAssets(appContext, asset, CompiledModel.Options(Accelerator.CPU))
-        }
-
-        private fun gpuOptions() = CompiledModel.Options(Accelerator.GPU).apply {
-            gpuOptions = CompiledModel.GpuOptions(
-                backend = CompiledModel.GpuOptions.Backend.OPENCL,
-                precision = CompiledModel.GpuOptions.Precision.FP32,
-            )
-        }
-
-        /**
-         * Runs [block] on the current runner; demotes to CPU once when the GPU
-         * fails at runtime. Only a GPU runner may demote — a CPU runner (GPU
-         * compile already failed at init) that throws is a real error, not a
-         * fallback opportunity.
-         */
-        fun <T> run(block: (CompiledModelRunner) -> T): T = try {
-            block(runner)
-        } catch (e: LiteRtException) {
-            if (!demoted && gpuActive) {
-                demoted = true
-                Log.w(TAG, "$asset GPU failed at runtime, demoting to CPU", e)
-                val cpu = CompiledModelRunner.fromAssets(
-                    appContext,
-                    asset,
-                    CompiledModel.Options(Accelerator.CPU),
-                )
-                val old = runner
-                runner = cpu
-                old.close()
-                block(cpu)
-            } else {
-                throw e
-            }
-        }
-
-        fun close() = runner.close()
-    }
-
     private companion object {
-        private const val TAG = "LiteRtHandLandmarker"
-
         // Minimum mean RTMPose keypoint confidence for the deg-0 (image-space)
         // rating to be trusted over the rotated search's best rating.
         const val MIN_RTMPOSE_KP = 0.3f

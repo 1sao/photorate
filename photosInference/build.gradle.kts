@@ -26,8 +26,10 @@ kotlin {
         // photosComponent.
         withHostTestBuilder {}.configure {}
     }
-    // Consumed by the iOS-targeted provider modules (photosMediaPipe), so it must
-    // expose the same iOS targets.
+    // JVM target so the LiteRT provider (photosLiteRT) can run real inference
+    // on the host (kmplitert-core-jvm bundles the darwin dylib), and the same
+    // iOS targets the iOS-targeted provider modules expose.
+    jvm()
     listOf(
         iosX64(),
         iosArm64(),

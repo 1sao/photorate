@@ -20,9 +20,6 @@ android {
     }
 
     signingConfigs {
-        // Override AGP's default debug keystore with a project-local one so AGP never
-        // touches ~/.android/debug.keystore, which macOS TCC/sandbox restrictions
-        // block ("Operation not permitted").
         getByName("debug") {
             storeFile = file("debug.keystore")
             storePassword = "android"

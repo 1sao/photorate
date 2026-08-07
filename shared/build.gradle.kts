@@ -38,6 +38,9 @@ kotlin {
             abortOnError = true
         }
     }
+    // photosLiteRT (kmplitert) publishes no iosX64 klib, so the LiteRT
+    // classpath + dylib linking are wired per arm64 target only. iosX64 keeps
+    // the MediaPipe-only pipeline (KoinIOS defaults to it on every target).
     listOf(
         iosX64(),
         iosArm64(),
@@ -53,6 +56,34 @@ kotlin {
             isStatic = true // TODO revert?
             linkerOpts("-lsqlite3")
             export(libs.touchlab.kermit.simple)
+            if (it.name == "iosArm64" || it.name == "iosSimulatorArm64") {
+                // The user's LiteRT C++ dylibs (ml/litert_cpp) feed kmplitert's
+                // `-lLiteRt` cinterop linkerOpt. Stage a per-target copy named
+                // libLiteRt.dylib (the `-l` convention) so the framework link
+                // resolves, then the framework consumer embeds it in the app.
+                val variant = if (it.name == "iosArm64") "ios" else "simulator"
+                val staged = layout.buildDirectory.dir("litert-dylibs/$variant")
+                linkerOpts("-L${staged.get().asFile.absolutePath}", "-lLiteRt")
+            }
+        }
+    }
+    // Register the dylib staging copies once per target (the framework
+    // closures above run per binary, so the task registration must live here).
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        val variant = if (target.name == "iosArm64") "ios" else "simulator"
+        val staged = layout.buildDirectory.dir("litert-dylibs/$variant")
+        tasks.register("stageLiteRtDylib_${target.name}", Copy::class.java) {
+            from(rootProject.layout.projectDirectory.file("ml/litert_cpp/libLiteRt-$variant.dylib"))
+            into(staged)
+            rename { "libLiteRt.dylib" }
+        }
+        target.binaries.configureEach {
+            tasks.matching { task ->
+                task.name == "linkDebugFramework${target.name.replaceFirstChar(Char::uppercase)}" ||
+                    task.name == "linkReleaseFramework${target.name.replaceFirstChar(Char::uppercase)}"
+            }.configureEach {
+                dependsOn("stageLiteRtDylib_${target.name}")
+            }
         }
     }
     // iosSimulatorArm64 {
@@ -105,8 +136,10 @@ kotlin {
             implementation(libs.bundles.shared.commonTest)
         }
         androidMain.dependencies {
-            // The LiteRT provider (Android-only — it has no iOS targets) backs
-            // the PlatformModule's landmarker + search factories.
+            // The LiteRT provider backs the PlatformModule's landmarker + search
+            // factories on Android (custom CompiledModel code) and iOS
+            // (kmplitert). It has no iosX64 target (kmplitert publishes none),
+            // so it stays out of the iosX64-only classpath.
             implementation(projects.photosLiteRT)
             implementation(compose.components.resources)
             implementation("androidx.compose.runtime:runtime:${libs.versions.compose.get()}")
@@ -121,6 +154,15 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.sqlDelight.native)
             api(libs.touchlab.kermit.simple)
+        }
+        // LiteRT on iOS: kmplitert-core publishes iosArm64 + iosSimulatorArm64
+        // klibs only, so the classpath is added to those leaf source sets (the
+        // framework linkerOpts above resolve the dylibs it links against).
+        getByName("iosArm64Main").dependencies {
+            implementation(projects.photosLiteRT)
+        }
+        getByName("iosSimulatorArm64Main").dependencies {
+            implementation(projects.photosLiteRT)
         }
     }
 }
