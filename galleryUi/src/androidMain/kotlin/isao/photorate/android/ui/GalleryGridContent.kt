@@ -4,7 +4,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -185,11 +184,7 @@ fun SharedTransitionScope.GalleryGridContent(
             span = { GridItemSpan(if (isTablet) maxLineSpan / 2 else maxLineSpan) },
           ) { image ->
             UncertainImageCard(
-              modifier =
-                Modifier.animateItem(
-                  fadeInSpec = tween(200),
-                  fadeOutSpec = tween(250),
-                ),
+              modifier = Modifier.animateItem(),
               uri = image.uri,
               bestGuessScore = image.bestGuessScore,
               onClick = remember(image.uri) { { onOpenImage(image.uri) } },

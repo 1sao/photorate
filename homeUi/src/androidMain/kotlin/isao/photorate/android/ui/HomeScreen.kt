@@ -1,22 +1,23 @@
 package isao.photorate.android.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,27 +26,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberContainedSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
-import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryUiState
@@ -55,7 +50,6 @@ import isao.photorate.galleryUi.GalleryUiState.PermissionState as GalleryPermiss
 import isao.photorate.homeUi.HomeIntent
 import isao.photorate.homeUi.HomeScreenUiState
 import isao.photorate.homeUi.HomeViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
@@ -100,27 +94,7 @@ fun SharedTransitionScope.HomeScreenContent(
   val galleryState = state.gallery
   val searchState = state.search
 
-  var showRationaleDialog by remember { mutableStateOf(false) }
-  val status = permissionState.status
-  val isGranted = status is PermissionStatus.Granted
-  val denied = status as? PermissionStatus.Denied
-
   val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
-
-  LaunchedEffect(isGranted) { if (isGranted) onIntent(HomeIntent.Rescan) }
-
-  val requestPermission: () -> Unit = {
-    if (denied?.shouldShowRationale == true) {
-      showRationaleDialog = true
-    } else {
-      permissionState.launchPermissionRequest()
-    }
-  }
-  val confirmRationale: () -> Unit = {
-    showRationaleDialog = false
-    permissionState.launchPermissionRequest()
-  }
-  val dismissRationale: () -> Unit = { showRationaleDialog = false }
 
   val searchBarState = rememberContainedSearchBarState()
   val textFieldState = rememberTextFieldState(searchState.query)
@@ -143,7 +117,6 @@ fun SharedTransitionScope.HomeScreenContent(
       textFieldState = textFieldState,
       searchBarState = searchBarState,
       colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
-      modifier = Modifier.expandSearchBarOnTap(searchBarState, scope),
       onSearch = { text ->
         onIntent(HomeIntent.UpdateSearchQuery(text))
         onIntent(HomeIntent.SubmitSearch)
@@ -151,11 +124,17 @@ fun SharedTransitionScope.HomeScreenContent(
       },
       placeholder = { Text("Search your photos…") },
       leadingIcon = {
-        Icon(
-          Icons.Filled.Search,
-          contentDescription = null,
-          tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (searchBarState.currentValue == SearchBarValue.Expanded) {
+          IconButton(onClick = { scope.launch { searchBarState.animateToCollapsed() } }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+          }
+        } else {
+          Icon(
+            Icons.Filled.Search,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
       },
       trailingIcon = {
         if (textFieldState.text.isNotEmpty()) {
@@ -168,33 +147,33 @@ fun SharedTransitionScope.HomeScreenContent(
   }
 
   val gridState = rememberLazyGridState()
-  val gallerySections =
-    remember(
-      galleryState.imagesState.detections,
-      galleryState.imagesState.uncertainDetections,
-      galleryState.imagesState.sorting,
-    ) {
-      buildIndexSections(
-        detections = galleryState.imagesState.detections,
-        uncertainDetections = galleryState.imagesState.uncertainDetections,
-        sorting = galleryState.imagesState.sorting,
-      )
-    }
-  val galleryLabelAt =
-    remember(
-      galleryState.imagesState.detections,
-      galleryState.imagesState.uncertainDetections,
-      galleryState.imagesState.sorting,
-    ) {
-      { index: Int ->
-        indexLabel(
-          index = index,
-          detections = galleryState.imagesState.detections,
-          uncertainDetections = galleryState.imagesState.uncertainDetections,
-          sorting = galleryState.imagesState.sorting,
-        )
-      }
-    }
+  //  val gallerySections =
+  //    remember(
+  //      galleryState.imagesState.detections,
+  //      galleryState.imagesState.uncertainDetections,
+  //      galleryState.imagesState.sorting,
+  //    ) {
+  //      buildIndexSections(
+  //        detections = galleryState.imagesState.detections,
+  //        uncertainDetections = galleryState.imagesState.uncertainDetections,
+  //        sorting = galleryState.imagesState.sorting,
+  //      )
+  //    }
+  //  val galleryLabelAt =
+  //    remember(
+  //      galleryState.imagesState.detections,
+  //      galleryState.imagesState.uncertainDetections,
+  //      galleryState.imagesState.sorting,
+  //    ) {
+  //      { index: Int ->
+  //        indexLabel(
+  //          index = index,
+  //          detections = galleryState.imagesState.detections,
+  //          uncertainDetections = galleryState.imagesState.uncertainDetections,
+  //          sorting = galleryState.imagesState.sorting,
+  //        )
+  //      }
+  //    }
 
   Scaffold(
     modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -205,8 +184,22 @@ fun SharedTransitionScope.HomeScreenContent(
         colors = appBarWithSearchColors,
         inputField = inputField,
         actions = {
-          IconButton(onClick = onOpenSettings) {
-            Icon(Icons.Filled.Settings, contentDescription = "Settings")
+          AnimatedVisibility(
+            visible = searchBarState.targetValue == SearchBarValue.Collapsed,
+            enter =
+              slideIn(
+                animationSpec = tween(durationMillis = 150),
+                initialOffset = { IntOffset(it.width, 0) },
+              ),
+            exit =
+              slideOut(
+                animationSpec = tween(durationMillis = 150),
+                targetOffset = { IntOffset(it.width, 0) },
+              ),
+          ) {
+            IconButton(onClick = onOpenSettings) {
+              Icon(Icons.Filled.Settings, contentDescription = "Settings")
+            }
           }
         },
       )
@@ -251,43 +244,17 @@ fun SharedTransitionScope.HomeScreenContent(
         contentPadding = innerPadding,
       )
       if (searchState.query.isBlank()) {
-        IndexScrollbar(
-          gridState = gridState,
-          sections = gallerySections,
-          labelAt = galleryLabelAt,
-          modifier = Modifier.fillMaxSize(),
-        )
+        // TODO scrollbar
+        //        IndexScrollbar(
+        //          gridState = gridState,
+        //          sections = gallerySections,
+        //          labelAt = galleryLabelAt,
+        //          modifier = Modifier.fillMaxSize(),
+        //        )
       }
     }
-  }
-
-  if (showRationaleDialog) {
-    AlertDialog(
-      onDismissRequest = dismissRationale,
-      title = { Text("Photos access needed") },
-      text = {
-        Text("PhotoRate scans your gallery to find photos with hands. Grant access to continue.")
-      },
-      confirmButton = { TextButton(onClick = confirmRationale) { Text("Grant access") } },
-      dismissButton = { TextButton(onClick = dismissRationale) { Text("Not now") } },
-    )
   }
 }
-
-private fun Modifier.expandSearchBarOnTap(
-  searchBarState: SearchBarState,
-  scope: CoroutineScope,
-): Modifier =
-  pointerInput(searchBarState) {
-    awaitEachGesture {
-      awaitFirstDown(requireUnconsumed = false)
-      val up = waitForUpOrCancellation() ?: return@awaitEachGesture
-      if (up.isConsumed) return@awaitEachGesture
-      if (searchBarState.currentValue != SearchBarValue.Expanded) {
-        scope.launch { searchBarState.animateToExpanded() }
-      }
-    }
-  }
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true, widthDp = 411, heightDp = 891)
