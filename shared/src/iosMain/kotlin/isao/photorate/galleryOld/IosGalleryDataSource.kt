@@ -17,70 +17,86 @@ import swiftPMImport.PhotoRate.shared.MPPImage
 
 class IosGalleryDataSource : GalleryDataSource {
 
-    suspend fun requestPermission(): Boolean {
-        if (PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatusAuthorized) {
-            return true
-        }
-        var result = false
-        PHPhotoLibrary.requestAuthorization { status ->
-            result = status == PHAuthorizationStatusAuthorized
-        }
-        return result
+  suspend fun requestPermission(): Boolean {
+    if (PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatusAuthorized) {
+      return true
     }
-
-    override suspend fun fetchAllImageRefs(): List<GalleryImageRef> {
-        val refs = mutableListOf<GalleryImageRef>()
-        val fetchOptions = PHFetchOptions()
-
-        val result = PHAsset.fetchAssetsWithMediaType(PHAssetMediaTypeImage, fetchOptions)
-        val count = result.count.toInt()
-
-        for (index in 0 until count) {
-            val asset = result.objectAtIndex(index.toULong()) as PHAsset
-            refs.add(
-                GalleryImageRef(
-                    id = asset.localIdentifier,
-                    uriString = asset.localIdentifier,
-                    dateAdded = 0L,
-                ),
-            )
-        }
-        return refs
+    var result = false
+    PHPhotoLibrary.requestAuthorization { status ->
+      result = status == PHAuthorizationStatusAuthorized
     }
+    return result
+  }
 
-    override fun observeNewImages(): Flow<GalleryImageRef> = callbackFlow {
-        // Stub: return empty flow. iOS observer requires delegate pattern.
-        // TODO: Implement PHPhotoLibraryChangeObserver for live updates
-        awaitClose { }
-    }
+  override suspend fun fetchAllImageRefs(): List<GalleryImageRef> {
+    val refs = mutableListOf<GalleryImageRef>()
+    val fetchOptions = PHFetchOptions()
 
-    @OptIn(ExperimentalForeignApi::class)
-    override suspend fun loadCandidate(ref: GalleryImageRef): LandmarkCandidate {
-        val fetchResult = PHAsset.fetchAssetsWithLocalIdentifiers(
-            listOf(ref.id),
-            null,
+    val result =
+      PHAsset.fetchAssetsWithMediaType(
+        PHAssetMediaTypeImage,
+        fetchOptions,
+      )
+    val count = result.count.toInt()
+
+    for (index in 0 until count) {
+      val asset = result.objectAtIndex(index.toULong()) as PHAsset
+      refs.add(
+        GalleryImageRef(
+          id = asset.localIdentifier,
+          uriString = asset.localIdentifier,
+          dateAdded = 0L,
         )
-        val asset = fetchResult.firstObject as? PHAsset
-            ?: throw IllegalArgumentException("Asset not found: ${ref.id}")
-
-        val options = PHImageRequestOptions().apply {
-            synchronous = true
-            deliveryMode = 1 // PHImageRequestOptionsDeliveryModeOpportunistic
-        }
-
-        var resultImage: MPPImage? = null
-
-        PHImageManager.defaultManager().requestImageForAsset(
-            asset,
-            platform.CoreGraphics.CGSizeMake(1024.0, 1024.0),
-            PHImageContentModeDefault,
-            options,
-        ) { result, info ->
-            result?.let { uiImage ->
-                resultImage = MPPImage(uiImage, null)
-            }
-        }
-
-        return resultImage ?: throw IllegalArgumentException("Failed to load image: ${ref.id}")
+      )
     }
+    return refs
+  }
+
+  override fun observeNewImages(): Flow<GalleryImageRef> = callbackFlow {
+    // Stub: return empty flow. iOS observer requires
+    // delegate pattern.
+    // TODO: Implement PHPhotoLibraryChangeObserver for
+    // live updates
+    awaitClose {}
+  }
+
+  @OptIn(ExperimentalForeignApi::class)
+  override suspend fun loadCandidate(ref: GalleryImageRef): LandmarkCandidate {
+    val fetchResult =
+      PHAsset.fetchAssetsWithLocalIdentifiers(
+        listOf(ref.id),
+        null,
+      )
+    val asset =
+      fetchResult.firstObject as? PHAsset
+        ?: throw IllegalArgumentException("Asset not found: ${ref.id}")
+
+    val options =
+      PHImageRequestOptions().apply {
+        synchronous = true
+        deliveryMode = 1 // PHImageRequestOptionsDeliveryModeOpportunistic
+      }
+
+    var resultImage: MPPImage? = null
+
+    PHImageManager.defaultManager().requestImageForAsset(
+      asset,
+      platform.CoreGraphics.CGSizeMake(
+        1024.0,
+        1024.0,
+      ),
+      PHImageContentModeDefault,
+      options,
+    ) { result, info ->
+      result?.let { uiImage ->
+        resultImage =
+          MPPImage(
+            uiImage,
+            null,
+          )
+      }
+    }
+
+    return resultImage ?: throw IllegalArgumentException("Failed to load image: ${ref.id}")
+  }
 }

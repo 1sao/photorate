@@ -13,21 +13,22 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultImageEmbeddingRepository(private val db: PhotoRateDb) : ImageEmbeddingRepository {
 
-    private val queries get() = db.imageEmbeddingQueries
+  private val queries
+    get() = db.imageEmbeddingQueries
 
-    override fun getEmbeddings(): Flow<List<ImageEmbedding>> = queries.selectAllEmbeddings()
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+  override fun getEmbeddings(): Flow<List<ImageEmbedding>> =
+    queries.selectAllEmbeddings().asFlow().mapToList(Dispatchers.IO)
 
-    override suspend fun upsert(uri: String, embedding: FloatArray) {
-        withContext(Dispatchers.IO) {
-            queries.upsertEmbedding(uri, embedding)
-        }
+  override suspend fun upsert(uri: String, embedding: FloatArray) {
+    withContext(Dispatchers.IO) {
+      queries.upsertEmbedding(
+        uri,
+        embedding,
+      )
     }
+  }
 
-    override suspend fun deleteAll() {
-        withContext(Dispatchers.IO) {
-            queries.deleteAllEmbeddings()
-        }
-    }
+  override suspend fun deleteAll() {
+    withContext(Dispatchers.IO) { queries.deleteAllEmbeddings() }
+  }
 }

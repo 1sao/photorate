@@ -63,428 +63,431 @@ import isao.photorate.configUi.SliderOption
 
 @Composable
 fun ConfigScreen(
-    configViewModel: ConfigViewModel,
-    onBack: () -> Unit,
-    onPurgeAndRescan: () -> Unit,
-    appVersionName: String,
-    appVersionCode: Int,
+  configViewModel: ConfigViewModel,
+  onBack: () -> Unit,
+  onPurgeAndRescan: () -> Unit,
+  appVersionName: String,
+  appVersionCode: Int,
 ) {
-    val uiState by configViewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by configViewModel.uiState.collectAsStateWithLifecycle()
 
-    ConfigScreenContent(
-        uiState = uiState,
-        onBack = onBack,
-        onIntent = configViewModel::onIntent,
-        onPurgeAndRescan = onPurgeAndRescan,
-        appVersionName = appVersionName,
-        appVersionCode = appVersionCode,
-    )
+  ConfigScreenContent(
+    uiState = uiState,
+    onBack = onBack,
+    onIntent = configViewModel::onIntent,
+    onPurgeAndRescan = onPurgeAndRescan,
+    appVersionName = appVersionName,
+    appVersionCode = appVersionCode,
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigScreenContent(
-    uiState: ConfigUiState,
-    onBack: () -> Unit,
-    onIntent: (ConfigIntent) -> Unit,
-    onPurgeAndRescan: () -> Unit = {},
-    appVersionName: String = "",
-    appVersionCode: Int = 0,
+  uiState: ConfigUiState,
+  onBack: () -> Unit,
+  onIntent: (ConfigIntent) -> Unit,
+  onPurgeAndRescan: () -> Unit = {},
+  appVersionName: String = "",
+  appVersionCode: Int = 0,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        rememberTopAppBarState(),
-    )
+  val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    var dialogOption by remember { mutableStateOf<ConfigOption?>(null) }
-    var showPurgeDialog by remember { mutableStateOf(false) }
+  var dialogOption by remember { mutableStateOf<ConfigOption?>(null) }
+  var showPurgeDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            Column {
-                LargeTopAppBar(
-                    title = { Text("Settings") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
-                AnimatedVisibility(
-                    visible = scrollBehavior.state.collapsedFraction >= 1f,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    HorizontalDivider()
-                }
+  Scaffold(
+    modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+    topBar = {
+      Column {
+        LargeTopAppBar(
+          title = { Text("Settings") },
+          navigationIcon = {
+            IconButton(onClick = onBack) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+              )
             }
-        },
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+          },
+          scrollBehavior = scrollBehavior,
+        )
+        AnimatedVisibility(
+          visible = scrollBehavior.state.collapsedFraction >= 1f,
+          enter = fadeIn(),
+          exit = fadeOut(),
         ) {
-            uiState.sections.forEach { section ->
-                item(key = "section-${section.title}") { SectionTitle(section.title) }
-                section.options.forEach { option ->
-                    when (option) {
-                        is RadioOption -> item(key = "radio-${option.name}") {
-                            RadioOptionRow(
-                                option = option,
-                                config = uiState.config,
-                                onIntent = onIntent,
-                            )
-                        }
-
-                        is SliderOption -> item(key = "slider-${option.name}") {
-                            SettingRow(
-                                title = option.name,
-                                value = option.currentValue(uiState.config),
-                                onClick = { dialogOption = option },
-                            )
-                        }
-
-                        is RangeSliderOption -> item(key = "range-${option.name}") {
-                            SettingRow(
-                                title = option.name,
-                                value = option.currentValue(uiState.config),
-                                onClick = { dialogOption = option },
-                            )
-                        }
-                    }
-                }
-            }
-            item(key = "section-Developer") { SectionTitle("Developer") }
-            item(key = "switch-dev-mode") {
-                DevModeSwitchRow(
-                    enabled = uiState.devModeEnabled,
-                    onToggle = { onIntent(ConfigIntent.ToggleDevMode(it)) },
-                )
-            }
-            item(key = "purge-rescan") {
-                PurgeAndRescanRow(onClick = { showPurgeDialog = true })
-            }
-            item(key = "version-footer") {
-                VersionFooter(
-                    versionName = appVersionName,
-                    versionCode = appVersionCode,
-                )
-            }
+          HorizontalDivider()
         }
-    }
-
-    when (val option = dialogOption) {
-        is SliderOption -> SliderDialog(
-            option = option,
-            config = uiState.config,
-            onIntent = onIntent,
-            onDismiss = { dialogOption = null },
-        )
-
-        is RangeSliderOption -> RangeSliderDialog(
-            option = option,
-            config = uiState.config,
-            onIntent = onIntent,
-            onDismiss = { dialogOption = null },
-        )
-
-        else -> Unit
-    }
-
-    if (showPurgeDialog) {
-        AlertDialog(
-            onDismissRequest = { showPurgeDialog = false },
-            title = { Text("Purge all saved images?") },
-            text = {
-                Text(
-                    "Deletes every stored scan and re-runs the full gallery scan from scratch. Use this after changing dev-mode filters so they apply to the whole gallery.",
+      }
+    },
+  ) { innerPadding ->
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+      uiState.sections.forEach { section ->
+        item(key = "section-${section.title}") { SectionTitle(section.title) }
+        section.options.forEach { option ->
+          when (option) {
+            is RadioOption ->
+              item(key = "radio-${option.name}") {
+                RadioOptionRow(
+                  option = option,
+                  config = uiState.config,
+                  onIntent = onIntent,
                 )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showPurgeDialog = false
-                        onPurgeAndRescan()
-                    },
-                ) { Text("Purge & rescan") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPurgeDialog = false }) { Text("Cancel") }
-            },
+              }
+
+            is SliderOption ->
+              item(key = "slider-${option.name}") {
+                SettingRow(
+                  title = option.name,
+                  value = option.currentValue(uiState.config),
+                  onClick = { dialogOption = option },
+                )
+              }
+
+            is RangeSliderOption ->
+              item(key = "range-${option.name}") {
+                SettingRow(
+                  title = option.name,
+                  value = option.currentValue(uiState.config),
+                  onClick = { dialogOption = option },
+                )
+              }
+          }
+        }
+      }
+      item(key = "section-Developer") { SectionTitle("Developer") }
+      item(key = "switch-dev-mode") {
+        DevModeSwitchRow(
+          enabled = uiState.devModeEnabled,
+          onToggle = { onIntent(ConfigIntent.ToggleDevMode(it)) },
         )
+      }
+      item(key = "purge-rescan") { PurgeAndRescanRow(onClick = { showPurgeDialog = true }) }
+      item(key = "version-footer") {
+        VersionFooter(
+          versionName = appVersionName,
+          versionCode = appVersionCode,
+        )
+      }
     }
+  }
+
+  when (val option = dialogOption) {
+    is SliderOption ->
+      SliderDialog(
+        option = option,
+        config = uiState.config,
+        onIntent = onIntent,
+        onDismiss = { dialogOption = null },
+      )
+
+    is RangeSliderOption ->
+      RangeSliderDialog(
+        option = option,
+        config = uiState.config,
+        onIntent = onIntent,
+        onDismiss = { dialogOption = null },
+      )
+
+    else -> Unit
+  }
+
+  if (showPurgeDialog) {
+    AlertDialog(
+      onDismissRequest = { showPurgeDialog = false },
+      title = { Text("Purge all saved images?") },
+      text = {
+        Text(
+          "Deletes every stored scan and re-runs the full gallery scan from scratch. Use this after changing dev-mode filters so they apply to the whole gallery."
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showPurgeDialog = false
+            onPurgeAndRescan()
+          }
+        ) {
+          Text("Purge & rescan")
+        }
+      },
+      dismissButton = { TextButton(onClick = { showPurgeDialog = false }) { Text("Cancel") } },
+    )
+  }
 }
 
 @Preview(
-    name = "Settings screen",
-    showBackground = true,
-    widthDp = 411,
-    heightDp = 891,
+  name = "Settings screen",
+  showBackground = true,
+  widthDp = 411,
+  heightDp = 891,
 )
 @Composable
 private fun ConfigScreenPreview() {
-    MaterialTheme {
-        ConfigScreenContent(
-            uiState = ConfigUiState(
-                config = GalleryConfig(
-                    scoreRange = 2..5,
-                    minHandSizePercent = 35,
-                    sorting = GallerySorting.SCORE,
-                    dateHeaderMode = DateHeaderMode.MONTHS,
-                ),
-            ),
-            onBack = {},
-            onIntent = {},
-        )
-    }
+  MaterialTheme {
+    ConfigScreenContent(
+      uiState =
+        ConfigUiState(
+          config =
+            GalleryConfig(
+              scoreRange = 2..5,
+              minHandSizePercent = 35,
+              sorting = GallerySorting.SCORE,
+              dateHeaderMode = DateHeaderMode.MONTHS,
+            )
+        ),
+      onBack = {},
+      onIntent = {},
+    )
+  }
 }
 
 @Composable
 private fun VersionFooter(versionName: String, versionCode: Int) {
-    val label = when {
-        versionName.isNotBlank() && versionCode > 0 -> "Version $versionName ($versionCode)"
-        versionName.isNotBlank() -> "Version $versionName"
-        else -> ""
+  val label =
+    when {
+      versionName.isNotBlank() && versionCode > 0 -> "Version $versionName ($versionCode)"
+      versionName.isNotBlank() -> "Version $versionName"
+      else -> ""
     }
-    if (label.isBlank()) return
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp),
-    )
+  if (label.isBlank()) return
+  Text(
+    text = label,
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textAlign = TextAlign.Center,
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
+  )
 }
 
 @Composable
 private fun PurgeAndRescanRow(onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.errorContainer,
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                text = "Purge all saved images & rescan",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-            )
-            Text(
-                text = "Deletes stored detections and re-scans the whole gallery (needed after changing dev-mode filters).",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-            )
-        }
+  Surface(
+    modifier =
+      Modifier.fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 4.dp)
+        .clickable(onClick = onClick),
+    shape = RoundedCornerShape(16.dp),
+    color = MaterialTheme.colorScheme.errorContainer,
+  ) {
+    Column(Modifier.padding(16.dp)) {
+      Text(
+        text = "Purge all saved images & rescan",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onErrorContainer,
+      )
+      Text(
+        text =
+          "Deletes stored detections and re-scans the whole gallery (needed after changing dev-mode filters).",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onErrorContainer,
+      )
     }
+  }
 }
 
 @Composable
 private fun DevModeSwitchRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = "Developer Mode",
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = "Show raw hand landmarks on photo details (for debugging the model).",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Switch(
-            checked = enabled,
-            onCheckedChange = onToggle,
-        )
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(Modifier.weight(1f)) {
+      Text(
+        text = "Developer Mode",
+        style = MaterialTheme.typography.bodyLarge,
+      )
+      Text(
+        text = "Show raw hand landmarks on photo details (for debugging the model).",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
     }
+    Switch(
+      checked = enabled,
+      onCheckedChange = onToggle,
+    )
+  }
 }
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    )
+  Text(
+    text = text,
+    style = MaterialTheme.typography.titleMedium,
+    color = MaterialTheme.colorScheme.primary,
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+  )
 }
 
 @Composable
 private fun SettingRow(title: String, value: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .clickable(onClick = onClick)
+        .padding(horizontal = 16.dp, vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(
+      text = title,
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.weight(1f),
+    )
+    Text(
+      text = value,
+      style = MaterialTheme.typography.bodyLarge,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+  }
 }
 
 @OptIn(ExperimentalFlexBoxApi::class)
 @Composable
-private fun RadioOptionRow(option: RadioOption, config: GalleryConfig, onIntent: (ConfigIntent) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+private fun RadioOptionRow(
+  option: RadioOption,
+  config: GalleryConfig,
+  onIntent: (ConfigIntent) -> Unit,
+) {
+  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+    Text(
+      text = option.name,
+      style = MaterialTheme.typography.bodyLarge,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.padding(bottom = 4.dp),
+    )
+    FlexBox(
+      modifier = Modifier.fillMaxWidth(),
+      config = {
+        direction(FlexDirection.Row)
+        wrap(FlexWrap.Wrap)
+        gap(12.dp)
+      },
     ) {
-        Text(
-            text = option.name,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 4.dp),
-        )
-        FlexBox(
-            modifier = Modifier.fillMaxWidth(),
-            config = {
-                direction(FlexDirection.Row)
-                wrap(FlexWrap.Wrap)
-                gap(12.dp)
-            },
+      option.choices.forEach { choice ->
+        Row(
+          modifier =
+            Modifier.selectable(
+                selected = choice.isSelected(config),
+                onClick = { onIntent(choice.intent()) },
+              )
+              .padding(vertical = 6.dp),
+          verticalAlignment = Alignment.CenterVertically,
         ) {
-            option.choices.forEach { choice ->
-                Row(
-                    modifier = Modifier
-                        .selectable(
-                            selected = choice.isSelected(config),
-                            onClick = { onIntent(choice.intent()) },
-                        )
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = choice.isSelected(config), onClick = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(choice.label, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
+          RadioButton(selected = choice.isSelected(config), onClick = null)
+          Spacer(Modifier.width(8.dp))
+          Text(choice.label, style = MaterialTheme.typography.bodyLarge)
         }
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SliderDialog(option: SliderOption, config: GalleryConfig, onIntent: (ConfigIntent) -> Unit, onDismiss: () -> Unit) {
-    var value by remember(option, config) { mutableStateOf(option.current(config)) }
+private fun SliderDialog(
+  option: SliderOption,
+  config: GalleryConfig,
+  onIntent: (ConfigIntent) -> Unit,
+  onDismiss: () -> Unit,
+) {
+  var value by remember(option, config) { mutableStateOf(option.current(config)) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(option.name) },
-        text = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = option.formatValue(value),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                option.description?.let { description ->
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                Slider(
-                    value = value,
-                    onValueChange = { value = it },
-                    valueRange = option.valueRange,
-                    steps = option.steps,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onIntent(option.intentFor(value))
-                    onDismiss()
-                },
-            ) { Text("Done") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-    )
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(option.name) },
+    text = {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth(),
+      ) {
+        Text(
+          text = option.formatValue(value),
+          style = MaterialTheme.typography.titleMedium,
+        )
+        option.description?.let { description ->
+          Spacer(Modifier.height(8.dp))
+          Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+          )
+        }
+        Spacer(Modifier.height(8.dp))
+        Slider(
+          value = value,
+          onValueChange = { value = it },
+          valueRange = option.valueRange,
+          steps = option.steps,
+        )
+      }
+    },
+    confirmButton = {
+      TextButton(
+        onClick = {
+          onIntent(option.intentFor(value))
+          onDismiss()
+        }
+      ) {
+        Text("Done")
+      }
+    },
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RangeSliderDialog(option: RangeSliderOption, config: GalleryConfig, onIntent: (ConfigIntent) -> Unit, onDismiss: () -> Unit) {
-    var range by remember(option, config) { mutableStateOf(option.current(config)) }
+private fun RangeSliderDialog(
+  option: RangeSliderOption,
+  config: GalleryConfig,
+  onIntent: (ConfigIntent) -> Unit,
+  onDismiss: () -> Unit,
+) {
+  var range by remember(option, config) { mutableStateOf(option.current(config)) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(option.name) },
-        text = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = option.formatValue(range),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                option.description?.let { description ->
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                RangeSlider(
-                    value = range,
-                    onValueChange = { range = it },
-                    valueRange = option.valueRange,
-                    steps = option.steps,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onIntent(option.intentFor(range))
-                    onDismiss()
-                },
-            ) { Text("Done") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-    )
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(option.name) },
+    text = {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth(),
+      ) {
+        Text(
+          text = option.formatValue(range),
+          style = MaterialTheme.typography.titleMedium,
+        )
+        option.description?.let { description ->
+          Spacer(Modifier.height(8.dp))
+          Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+          )
+        }
+        Spacer(Modifier.height(8.dp))
+        RangeSlider(
+          value = range,
+          onValueChange = { range = it },
+          valueRange = option.valueRange,
+          steps = option.steps,
+        )
+      }
+    },
+    confirmButton = {
+      TextButton(
+        onClick = {
+          onIntent(option.intentFor(range))
+          onDismiss()
+        }
+      ) {
+        Text("Done")
+      }
+    },
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+  )
 }

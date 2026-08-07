@@ -11,29 +11,29 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
-/**
- * SQLDelight-backed [SearchHistoryRepository].
- */
+/** SQLDelight-backed [SearchHistoryRepository]. */
 @Factory
 class DefaultSearchHistoryRepository(private val db: PhotoRateDb) : SearchHistoryRepository {
 
-    private val queries get() = db.searchHistoryQueries
+  private val queries
+    get() = db.searchHistoryQueries
 
-    override fun observeRecentSearches(limit: Long): Flow<List<String>> = queries.recentSearches(limit)
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+  override fun observeRecentSearches(limit: Long): Flow<List<String>> =
+    queries.recentSearches(limit).asFlow().mapToList(Dispatchers.IO)
 
-    @OptIn(ExperimentalTime::class)
-    override suspend fun addRecentSearch(query: String) {
-        withContext(Dispatchers.IO) {
-            // TODO clocks should be constructor-injected
-            queries.insertSearch(query.trim(), Clock.System.now().toEpochMilliseconds())
-        }
+  @OptIn(ExperimentalTime::class)
+  override suspend fun addRecentSearch(query: String) {
+    withContext(Dispatchers.IO) {
+      // TODO clocks should be
+      // constructor-injected
+      queries.insertSearch(
+        query.trim(),
+        Clock.System.now().toEpochMilliseconds(),
+      )
     }
+  }
 
-    override suspend fun clear() {
-        withContext(Dispatchers.IO) {
-            queries.clearSearchHistory()
-        }
-    }
+  override suspend fun clear() {
+    withContext(Dispatchers.IO) { queries.clearSearchHistory() }
+  }
 }

@@ -17,58 +17,58 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.scope.Scope
 import org.koin.plugin.module.dsl.modules
 
-/**
- * Values provided from Swift before Koin starts. Read by the iOS [PlatformModule].
- */
+/** Values provided from Swift before Koin starts. Read by the iOS [PlatformModule]. */
 internal object IosPlatformConfig {
-    lateinit var appInfo: AppInfo
+  lateinit var appInfo: AppInfo
 }
 
 fun initKoinIos(appInfo: AppInfo, doOnStartup: () -> Unit): KoinApplication {
-    IosPlatformConfig.appInfo = appInfo
-    return initKoin {
-        // The iOS SqlDriver (full merged schema) — the feature modules'
-        // `@Provided` driver parameters resolve to this binding.
-        modules(IosDatabaseModule::class)
-    }
+  IosPlatformConfig.appInfo = appInfo
+  return initKoin {
+    // The iOS SqlDriver (full merged schema) — the
+    // feature modules'
+    // `@Provided` driver parameters resolve to this
+    // binding.
+    modules(IosDatabaseModule::class)
+  }
 }
 
 @Module
 actual class PlatformModule {
 
-    @Single
-    actual fun provideAppInfo(): AppInfo = IosPlatformConfig.appInfo
+  @Single actual fun provideAppInfo(): AppInfo = IosPlatformConfig.appInfo
 
-    /**
-     * iOS ships only the MediaPipe pipeline (the ONNX runtime is not wired for
-     * iOS yet), so it is both the default and the only registered model.
-     */
-    @Single
-    actual fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider = DefaultLandmarkerFactoryProvider(
-        defaultModel = LandmarkModel.MEDIAPIPE,
-        factories = mapOf(
-            LandmarkModel.MEDIAPIPE to IosMediaPipeHandLandmarkerFactory(),
-        ),
+  /**
+   * iOS ships only the MediaPipe pipeline (the ONNX runtime is not wired for iOS yet), so it is
+   * both the default and the only registered model.
+   */
+  @Single
+  actual fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider =
+    DefaultLandmarkerFactoryProvider(
+      defaultModel = LandmarkModel.MEDIAPIPE,
+      factories = mapOf(LandmarkModel.MEDIAPIPE to IosMediaPipeHandLandmarkerFactory()),
     )
 
-    @Single
-    actual fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory =
-        // MobileCLIP search is Android-only for now (onnxruntime not yet added
-        // for iOS); the factory throws if anything tries to create a session.
-        object : AppClipSearchFactory {
-            override fun createFromOptions(options: AppClipSearchFactory.Options): AppClipSearch =
-                error("MobileCLIP search not implemented on iOS yet")
-        }
+  @Single
+  actual fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory =
+    // MobileCLIP search is Android-only for now
+    // (onnxruntime not yet added
+    // for iOS); the factory throws if anything tries to
+    // create a session.
+    object : AppClipSearchFactory {
+      override fun createFromOptions(options: AppClipSearchFactory.Options): AppClipSearch =
+        error("MobileCLIP search not implemented on iOS yet")
+    }
 
-    @Single
-    actual fun provideGalleryDataSource(scope: Scope): GalleryDataSource = IosGalleryDataSource()
+  @Single
+  actual fun provideGalleryDataSource(scope: Scope): GalleryDataSource = IosGalleryDataSource()
 }
 
 // Access from Swift to create a logger
-@Suppress("unused")
-fun Koin.loggerWithTag(tag: String) = get<Logger>().withTag(tag)
+@Suppress("unused") fun Koin.loggerWithTag(tag: String) = get<Logger>().withTag(tag)
 
 @Suppress("unused") // Called from Swift
 object KotlinDependencies : KoinComponent {
-    fun getHandLandmarkerCreator() = getKoin().get<LandmarkerFactoryProvider>().factoryFor(LandmarkModel.MEDIAPIPE)
+  fun getHandLandmarkerCreator() =
+    getKoin().get<LandmarkerFactoryProvider>().factoryFor(LandmarkModel.MEDIAPIPE)
 }

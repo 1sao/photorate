@@ -6,12 +6,12 @@ import androidx.work.WorkerParameters
 import org.koin.android.annotation.KoinWorker
 
 class AndroidBackgroundRunner : BackgroundRunner {
-    init {
-    }
+  init {}
 }
 
 @KoinWorker
-class MyWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
+class MyWorker(context: Context, workerParams: WorkerParameters) :
+  CoroutineWorker(context, workerParams) {
 
-    override suspend fun doWork(): Result = Result.success()
+  override suspend fun doWork(): Result = Result.success()
 }

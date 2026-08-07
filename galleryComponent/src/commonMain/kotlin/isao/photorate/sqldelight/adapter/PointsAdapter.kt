@@ -5,14 +5,14 @@ import isao.photorate.inference.classify.LandmarkedImage
 import kotlinx.serialization.json.Json
 
 object PointsAdapter : ColumnAdapter<List<LandmarkedImage.Point>, String> {
-    override fun decode(databaseValue: String): List<LandmarkedImage.Point> {
-        // return
-        // if (databaseValue.isEmpty()) {
-        //     emptyList()
-        // } else {
-        return Json.decodeFromString(databaseValue)
-        // }
-    }
+  override fun decode(databaseValue: String): List<LandmarkedImage.Point> {
+    // return
+    // if (databaseValue.isEmpty()) {
+    //     emptyList()
+    // } else {
+    return Json.decodeFromString(databaseValue)
+    // }
+  }
 
-    override fun encode(value: List<LandmarkedImage.Point>): String = Json.encodeToString(value)
+  override fun encode(value: List<LandmarkedImage.Point>): String = Json.encodeToString(value)
 }

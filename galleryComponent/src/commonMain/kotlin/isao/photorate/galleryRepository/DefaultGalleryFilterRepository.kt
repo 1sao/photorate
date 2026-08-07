@@ -14,17 +14,15 @@ import org.koin.core.annotation.Factory
 @Factory
 class DefaultGalleryFilterRepository(private val db: PhotoRateDb) : GalleryFilterRepository {
 
-    private val queries get() = db.galleryImageQueries
+  private val queries
+    get() = db.galleryImageQueries
 
-    override fun selectMatching(): Flow<List<SelectMatching>> = queries.selectMatching()
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+  override fun selectMatching(): Flow<List<SelectMatching>> =
+    queries.selectMatching().asFlow().mapToList(Dispatchers.IO)
 
-    override fun selectImagesWithScores(): Flow<List<SelectImagesWithScores>> = queries.selectImagesWithScores()
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+  override fun selectImagesWithScores(): Flow<List<SelectImagesWithScores>> =
+    queries.selectImagesWithScores().asFlow().mapToList(Dispatchers.IO)
 
-    override fun selectUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> = queries.selectUncertainImagesWithScore()
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+  override fun selectUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> =
+    queries.selectUncertainImagesWithScore().asFlow().mapToList(Dispatchers.IO)
 }

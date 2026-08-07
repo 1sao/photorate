@@ -27,7 +27,13 @@ manual wiring.
   layers.
 - **Verification**: always build Android (`./gradlew :app:assembleDebug`) with no errors. Optionally
   build iOS and run tests if the change touches shared logic or platform-specific code. When using
-  Ktlint, run `ktlintFormat` first to auto-fix easily fixable problems.
+  ktfmt, run `ktfmtFormat` first to auto-fix easily fixable problems.
+- **ktfmt + Android sources**: KMP modules must declare `android.library` (the
+  `com.android.kotlin.multiplatform.library` plugin) BEFORE `kotlin.multiplatform` in their
+  `plugins {}` block — otherwise ktfmt-gradle 0.27.0 silently skips `src/androidMain` (upstream
+  bug, fails without errors).
+- **Git hooks**: committed hooks live in `.githooks/` (formatting via ktfmt runs on commit).
+  Activate once per clone with `git config core.hooksPath .githooks`.
 - **Implementation scope**: if the actual implementation diverges significantly from an initial
   plan, confirm with the user before proceeding.
 - **Take slow Internet into account**: adjust large download timeouts accordingly, try proceeding with some other work in parallel while waiting.

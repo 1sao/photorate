@@ -8,14 +8,18 @@ import org.koin.plugin.module.dsl.modules
 
 class MainApp : Application() {
 
-    override fun onCreate() {
-        super.onCreate()
-        initKoin {
-            androidContext(this@MainApp)
-            workManagerFactory()
-            // The app-owned SqlDriver (full merged schema) — the feature
-            // modules' `@Provided` driver parameters resolve to this binding.
-            modules(AppDatabaseModule::class)
-        }
+  override fun onCreate() {
+    super.onCreate()
+    initKoin {
+      androidContext(this@MainApp)
+      workManagerFactory()
+      // The app-owned SqlDriver
+      // (full merged schema) — the
+      // feature
+      // modules' `@Provided` driver
+      // parameters resolve to this
+      // binding.
+      modules(AppDatabaseModule::class)
     }
+  }
 }

@@ -15,12 +15,14 @@ import org.koin.core.annotation.Single
 @Module(includes = [CoreModule::class])
 @ComponentScan("isao.photorate.config")
 class ConfigModule {
-    @Single
-    fun provideConfigDb(@Provided driver: SqlDriver): PhotoRateDb = PhotoRateDb(
-        driver,
-        configAdapter = Config.Adapter(
-            sort_byAdapter = EnumColumnAdapter(),
-            date_header_modeAdapter = EnumColumnAdapter(),
+  @Single
+  fun provideConfigDb(@Provided driver: SqlDriver): PhotoRateDb =
+    PhotoRateDb(
+      driver,
+      configAdapter =
+        Config.Adapter(
+          sort_byAdapter = EnumColumnAdapter(),
+          date_header_modeAdapter = EnumColumnAdapter(),
         ),
     )
 }

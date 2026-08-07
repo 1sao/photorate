@@ -61,244 +61,264 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.HomeScreen(
-    homeViewModel: HomeViewModel,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onOpenSettings: () -> Unit,
-    onOpenAppSettings: () -> Unit,
-    onOpenImage: (String) -> Unit,
-    onIntent: (HomeIntent) -> Unit,
+  homeViewModel: HomeViewModel,
+  animatedVisibilityScope: AnimatedVisibilityScope,
+  onOpenSettings: () -> Unit,
+  onOpenAppSettings: () -> Unit,
+  onOpenImage: (String) -> Unit,
+  onIntent: (HomeIntent) -> Unit,
 ) {
-    val screenState by homeViewModel.uiState.collectAsStateWithLifecycle()
-    val galleryPermissionState = rememberPermissionState(GALLERY_PERMISSION)
+  val screenState by homeViewModel.uiState.collectAsStateWithLifecycle()
+  val galleryPermissionState = rememberPermissionState(GALLERY_PERMISSION)
 
-    HomeScreenContent(
-        state = screenState,
-        permissionState = galleryPermissionState,
-        animatedVisibilityScope = animatedVisibilityScope,
-        onOpenSettings = onOpenSettings,
-        onOpenAppSettings = onOpenAppSettings,
-        onOpenImage = onOpenImage,
-        onIntent = onIntent,
-    )
+  HomeScreenContent(
+    state = screenState,
+    permissionState = galleryPermissionState,
+    animatedVisibilityScope = animatedVisibilityScope,
+    onOpenSettings = onOpenSettings,
+    onOpenAppSettings = onOpenAppSettings,
+    onOpenImage = onOpenImage,
+    onIntent = onIntent,
+  )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(
+  ExperimentalMaterial3Api::class,
+  ExperimentalPermissionsApi::class,
+  ExperimentalSharedTransitionApi::class,
+)
 @Composable
 fun SharedTransitionScope.HomeScreenContent(
-    state: HomeScreenUiState,
-    permissionState: PermissionState,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onOpenSettings: () -> Unit,
-    onOpenAppSettings: () -> Unit,
-    onOpenImage: (String) -> Unit,
-    onIntent: (HomeIntent) -> Unit,
+  state: HomeScreenUiState,
+  permissionState: PermissionState,
+  animatedVisibilityScope: AnimatedVisibilityScope,
+  onOpenSettings: () -> Unit,
+  onOpenAppSettings: () -> Unit,
+  onOpenImage: (String) -> Unit,
+  onIntent: (HomeIntent) -> Unit,
 ) {
-    val galleryState = state.gallery
-    val searchState = state.search
+  val galleryState = state.gallery
+  val searchState = state.search
 
-    var showRationaleDialog by remember { mutableStateOf(false) }
-    val status = permissionState.status
-    val isGranted = status is PermissionStatus.Granted
-    val denied = status as? PermissionStatus.Denied
+  var showRationaleDialog by remember { mutableStateOf(false) }
+  val status = permissionState.status
+  val isGranted = status is PermissionStatus.Granted
+  val denied = status as? PermissionStatus.Denied
 
-    val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
+  val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
 
-    LaunchedEffect(isGranted) {
-        if (isGranted) onIntent(HomeIntent.Rescan)
+  LaunchedEffect(isGranted) { if (isGranted) onIntent(HomeIntent.Rescan) }
+
+  val requestPermission: () -> Unit = {
+    if (denied?.shouldShowRationale == true) {
+      showRationaleDialog = true
+    } else {
+      permissionState.launchPermissionRequest()
     }
+  }
+  val confirmRationale: () -> Unit = {
+    showRationaleDialog = false
+    permissionState.launchPermissionRequest()
+  }
+  val dismissRationale: () -> Unit = { showRationaleDialog = false }
 
-    val requestPermission: () -> Unit = {
-        if (denied?.shouldShowRationale == true) {
-            showRationaleDialog = true
-        } else {
-            permissionState.launchPermissionRequest()
-        }
-    }
-    val confirmRationale: () -> Unit = {
-        showRationaleDialog = false
-        permissionState.launchPermissionRequest()
-    }
-    val dismissRationale: () -> Unit = { showRationaleDialog = false }
-
-    val searchBarState = rememberContainedSearchBarState()
-    val textFieldState = rememberTextFieldState(searchState.query)
-    val scope = rememberCoroutineScope()
-    val appBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(
-        searchBarColors = SearchBarDefaults.containedColors(state = searchBarState),
+  val searchBarState = rememberContainedSearchBarState()
+  val textFieldState = rememberTextFieldState(searchState.query)
+  val scope = rememberCoroutineScope()
+  val appBarWithSearchColors =
+    SearchBarDefaults.appBarWithSearchColors(
+      searchBarColors = SearchBarDefaults.containedColors(state = searchBarState)
     )
-    LaunchedEffect(searchState.query) {
-        if (textFieldState.text.toString() != searchState.query) {
-            textFieldState.edit { replace(0, length, searchState.query) }
-        }
+  LaunchedEffect(searchState.query) {
+    if (textFieldState.text.toString() != searchState.query) {
+      textFieldState.edit { replace(0, length, searchState.query) }
     }
-    LaunchedEffect(textFieldState) {
-        snapshotFlow { textFieldState.text.toString() }.collect { text ->
-            onIntent(HomeIntent.UpdateSearchQuery(text))
-        }
-    }
-    val inputField: @Composable () -> Unit = {
-        SearchBarDefaults.InputField(
-            textFieldState = textFieldState,
-            searchBarState = searchBarState,
-            colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
-            modifier = Modifier.expandSearchBarOnTap(searchBarState, scope),
-            onSearch = { text ->
-                onIntent(HomeIntent.UpdateSearchQuery(text))
-                onIntent(HomeIntent.SubmitSearch)
-                scope.launch { searchBarState.animateToCollapsed() }
-            },
-            placeholder = { Text("Search your photos…") },
-            leadingIcon = {
-                Icon(
-                    Icons.Filled.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            },
-            trailingIcon = {
-                if (textFieldState.text.isNotEmpty()) {
-                    IconButton(onClick = { onIntent(HomeIntent.ClearSearch) }) {
-                        Icon(Icons.Filled.Close, contentDescription = "Clear search")
-                    }
-                }
-            },
+  }
+  LaunchedEffect(textFieldState) {
+    snapshotFlow { textFieldState.text.toString() }
+      .collect { text -> onIntent(HomeIntent.UpdateSearchQuery(text)) }
+  }
+  val inputField: @Composable () -> Unit = {
+    SearchBarDefaults.InputField(
+      textFieldState = textFieldState,
+      searchBarState = searchBarState,
+      colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
+      modifier = Modifier.expandSearchBarOnTap(searchBarState, scope),
+      onSearch = { text ->
+        onIntent(HomeIntent.UpdateSearchQuery(text))
+        onIntent(HomeIntent.SubmitSearch)
+        scope.launch { searchBarState.animateToCollapsed() }
+      },
+      placeholder = { Text("Search your photos…") },
+      leadingIcon = {
+        Icon(
+          Icons.Filled.Search,
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+      },
+      trailingIcon = {
+        if (textFieldState.text.isNotEmpty()) {
+          IconButton(onClick = { onIntent(HomeIntent.ClearSearch) }) {
+            Icon(Icons.Filled.Close, contentDescription = "Clear search")
+          }
+        }
+      },
+    )
+  }
+
+  val gridState = rememberLazyGridState()
+  val gallerySections =
+    remember(
+      galleryState.imagesState.detections,
+      galleryState.imagesState.uncertainDetections,
+      galleryState.imagesState.sorting,
+    ) {
+      buildIndexSections(
+        detections = galleryState.imagesState.detections,
+        uncertainDetections = galleryState.imagesState.uncertainDetections,
+        sorting = galleryState.imagesState.sorting,
+      )
+    }
+  val galleryLabelAt =
+    remember(
+      galleryState.imagesState.detections,
+      galleryState.imagesState.uncertainDetections,
+      galleryState.imagesState.sorting,
+    ) {
+      { index: Int ->
+        indexLabel(
+          index = index,
+          detections = galleryState.imagesState.detections,
+          uncertainDetections = galleryState.imagesState.uncertainDetections,
+          sorting = galleryState.imagesState.sorting,
+        )
+      }
     }
 
-    val gridState = rememberLazyGridState()
-    val gallerySections =
-        remember(galleryState.imagesState.detections, galleryState.imagesState.uncertainDetections, galleryState.imagesState.sorting) {
-            buildIndexSections(
-                detections = galleryState.imagesState.detections,
-                uncertainDetections = galleryState.imagesState.uncertainDetections,
-                sorting = galleryState.imagesState.sorting,
-            )
-        }
-    val galleryLabelAt =
-        remember(galleryState.imagesState.detections, galleryState.imagesState.uncertainDetections, galleryState.imagesState.sorting) {
-            { index: Int ->
-                indexLabel(
-                    index = index,
-                    detections = galleryState.imagesState.detections,
-                    uncertainDetections = galleryState.imagesState.uncertainDetections,
-                    sorting = galleryState.imagesState.sorting,
-                )
-            }
-        }
-
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            AppBarWithSearch(
-                state = searchBarState,
-                scrollBehavior = scrollBehavior,
-                colors = appBarWithSearchColors,
-                inputField = inputField,
-                actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
-                    }
-                },
-            )
-            ExpandedFullScreenContainedSearchBar(
-                state = searchBarState,
-                inputField = inputField,
-                colors = appBarWithSearchColors.searchBarColors,
-            ) {
-                SearchContent(
-                    state = searchState,
-                    onSelectRecent = { query ->
-                        onIntent(HomeIntent.SelectRecentSearch(query))
-                        scope.launch { searchBarState.animateToCollapsed() }
-                    },
-                    onMinSimilarityChange = { value -> onIntent(HomeIntent.SetMinSimilarity(value)) },
-                )
-            }
+  Scaffold(
+    modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+    topBar = {
+      AppBarWithSearch(
+        state = searchBarState,
+        scrollBehavior = scrollBehavior,
+        colors = appBarWithSearchColors,
+        inputField = inputField,
+        actions = {
+          IconButton(onClick = onOpenSettings) {
+            Icon(Icons.Filled.Settings, contentDescription = "Settings")
+          }
         },
-    ) { innerPadding ->
-        Box(Modifier.fillMaxSize()) {
-            GalleryGridContent(
-                detections = galleryState.imagesState.detections,
-                uncertainDetections = galleryState.imagesState.uncertainDetections,
-                status = galleryState.imagesState.status,
-                gridState = gridState,
-                searchUris = galleryState.imagesState.searchUris,
-                isSearching = searchState.isSearching,
-                searchQuery = searchState.query,
-                permissionState = permissionState,
-                onOpenAppSettings = onOpenAppSettings,
-                onOpenImage = onOpenImage,
-                onAcceptUncertain = { uri, score -> onIntent(HomeIntent.AcceptUncertain(uri, score)) },
-                onDeleteUncertain = { uri -> onIntent(HomeIntent.DeleteUncertain(uri)) },
-                animatedVisibilityScope = animatedVisibilityScope,
-                contentPadding = innerPadding,
-            )
-            if (searchState.query.isBlank()) {
-                IndexScrollbar(
-                    gridState = gridState,
-                    sections = gallerySections,
-                    labelAt = galleryLabelAt,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-        }
-    }
-
-    if (showRationaleDialog) {
-        AlertDialog(
-            onDismissRequest = dismissRationale,
-            title = { Text("Photos access needed") },
-            text = { Text("PhotoRate scans your gallery to find photos with hands. Grant access to continue.") },
-            confirmButton = {
-                TextButton(onClick = confirmRationale) { Text("Grant access") }
-            },
-            dismissButton = {
-                TextButton(onClick = dismissRationale) { Text("Not now") }
-            },
+      )
+      ExpandedFullScreenContainedSearchBar(
+        state = searchBarState,
+        inputField = inputField,
+        colors = appBarWithSearchColors.searchBarColors,
+      ) {
+        SearchContent(
+          state = searchState,
+          onSelectRecent = { query ->
+            onIntent(HomeIntent.SelectRecentSearch(query))
+            scope.launch { searchBarState.animateToCollapsed() }
+          },
+          onMinSimilarityChange = { value -> onIntent(HomeIntent.SetMinSimilarity(value)) },
         )
+      }
+    },
+  ) { innerPadding ->
+    Box(Modifier.fillMaxSize()) {
+      GalleryGridContent(
+        detections = galleryState.imagesState.detections,
+        uncertainDetections = galleryState.imagesState.uncertainDetections,
+        status = galleryState.imagesState.status,
+        gridState = gridState,
+        searchUris = galleryState.imagesState.searchUris,
+        isSearching = searchState.isSearching,
+        searchQuery = searchState.query,
+        permissionState = permissionState,
+        onOpenAppSettings = onOpenAppSettings,
+        onOpenImage = onOpenImage,
+        onAcceptUncertain = { uri, score ->
+          onIntent(
+            HomeIntent.AcceptUncertain(
+              uri,
+              score,
+            )
+          )
+        },
+        onDeleteUncertain = { uri -> onIntent(HomeIntent.DeleteUncertain(uri)) },
+        animatedVisibilityScope = animatedVisibilityScope,
+        contentPadding = innerPadding,
+      )
+      if (searchState.query.isBlank()) {
+        IndexScrollbar(
+          gridState = gridState,
+          sections = gallerySections,
+          labelAt = galleryLabelAt,
+          modifier = Modifier.fillMaxSize(),
+        )
+      }
     }
+  }
+
+  if (showRationaleDialog) {
+    AlertDialog(
+      onDismissRequest = dismissRationale,
+      title = { Text("Photos access needed") },
+      text = {
+        Text("PhotoRate scans your gallery to find photos with hands. Grant access to continue.")
+      },
+      confirmButton = { TextButton(onClick = confirmRationale) { Text("Grant access") } },
+      dismissButton = { TextButton(onClick = dismissRationale) { Text("Not now") } },
+    )
+  }
 }
 
-private fun Modifier.expandSearchBarOnTap(searchBarState: SearchBarState, scope: CoroutineScope): Modifier = pointerInput(searchBarState) {
+private fun Modifier.expandSearchBarOnTap(
+  searchBarState: SearchBarState,
+  scope: CoroutineScope,
+): Modifier =
+  pointerInput(searchBarState) {
     awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false)
-        val up = waitForUpOrCancellation() ?: return@awaitEachGesture
-        if (up.isConsumed) return@awaitEachGesture
-        if (searchBarState.currentValue != SearchBarValue.Expanded) {
-            scope.launch { searchBarState.animateToExpanded() }
-        }
+      awaitFirstDown(requireUnconsumed = false)
+      val up = waitForUpOrCancellation() ?: return@awaitEachGesture
+      if (up.isConsumed) return@awaitEachGesture
+      if (searchBarState.currentValue != SearchBarValue.Expanded) {
+        scope.launch { searchBarState.animateToExpanded() }
+      }
     }
-}
+  }
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true, widthDp = 411, heightDp = 891)
 @Composable
 private fun HomeScreenPreview() {
-    MaterialTheme {
-        SharedTransitionLayout {
-            AnimatedContent(targetState = true) { _ ->
-                HomeScreenContent(
-                    state = HomeScreenUiState(
-                        gallery = GalleryUiState(
-                            permissionState = GalleryPermissionState.Denied,
-                            imagesState = ImagesState(
-                                status = GalleryStatusCounts(emptyMap()),
-                                detections = emptyList(),
-                                uncertainDetections = emptyList(),
-                                sorting = ImageSorting.Date(isAscending = false),
-                            ),
-                        ),
+  MaterialTheme {
+    SharedTransitionLayout {
+      AnimatedContent(targetState = true) { _ ->
+        HomeScreenContent(
+          state =
+            HomeScreenUiState(
+              gallery =
+                GalleryUiState(
+                  permissionState = GalleryPermissionState.Denied,
+                  imagesState =
+                    ImagesState(
+                      status = GalleryStatusCounts(emptyMap()),
+                      detections = emptyList(),
+                      uncertainDetections = emptyList(),
+                      sorting = ImageSorting.Date(isAscending = false),
                     ),
-                    permissionState = rememberPermissionState(GALLERY_PERMISSION),
-                    animatedVisibilityScope = this,
-                    onOpenSettings = {},
-                    onOpenAppSettings = {},
-                    onOpenImage = {},
-                    onIntent = {},
                 )
-            }
-        }
+            ),
+          permissionState = rememberPermissionState(GALLERY_PERMISSION),
+          animatedVisibilityScope = this,
+          onOpenSettings = {},
+          onOpenAppSettings = {},
+          onOpenImage = {},
+          onIntent = {},
+        )
+      }
     }
+  }
 }

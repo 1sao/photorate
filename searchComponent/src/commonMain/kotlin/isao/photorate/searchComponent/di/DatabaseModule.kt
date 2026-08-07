@@ -18,20 +18,21 @@ import org.koin.core.annotation.Single
 // `shared` iosMain (iOS).
 @Module
 class DatabaseModule {
-    @Single
-    fun provideSearchDb(@Provided driver: SqlDriver): PhotoRateDb = PhotoRateDb(
-        driver,
-        DetectedHandAdapter = DetectedHand.Adapter(
-            scoreAdapter = ScoreAdapter,
-            pointsAdapter = PointsAdapter,
+  @Single
+  fun provideSearchDb(@Provided driver: SqlDriver): PhotoRateDb =
+    PhotoRateDb(
+      driver,
+      DetectedHandAdapter =
+        DetectedHand.Adapter(
+          scoreAdapter = ScoreAdapter,
+          pointsAdapter = PointsAdapter,
         ),
-        GalleryImageAdapter = GalleryImage.Adapter(EnumColumnAdapter()),
-        configAdapter = Config.Adapter(
-            sort_byAdapter = EnumColumnAdapter(),
-            date_header_modeAdapter = EnumColumnAdapter(),
+      GalleryImageAdapter = GalleryImage.Adapter(EnumColumnAdapter()),
+      configAdapter =
+        Config.Adapter(
+          sort_byAdapter = EnumColumnAdapter(),
+          date_header_modeAdapter = EnumColumnAdapter(),
         ),
-        ImageEmbeddingAdapter = ImageEmbedding.Adapter(
-            embeddingAdapter = FloatArrayAdapter,
-        ),
+      ImageEmbeddingAdapter = ImageEmbedding.Adapter(embeddingAdapter = FloatArrayAdapter),
     )
 }

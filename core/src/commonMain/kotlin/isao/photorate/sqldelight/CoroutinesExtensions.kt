@@ -6,13 +6,9 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.withContext
 
 suspend fun Transacter.transactionWithContext(
-    coroutineContext: CoroutineContext,
-    noEnclosing: Boolean = false,
-    body: TransactionWithoutReturn.() -> Unit,
+  coroutineContext: CoroutineContext,
+  noEnclosing: Boolean = false,
+  body: TransactionWithoutReturn.() -> Unit,
 ) {
-    withContext(coroutineContext) {
-        this@transactionWithContext.transaction(noEnclosing) {
-            body()
-        }
-    }
+  withContext(coroutineContext) { this@transactionWithContext.transaction(noEnclosing) { body() } }
 }

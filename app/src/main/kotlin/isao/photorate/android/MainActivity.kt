@@ -14,34 +14,36 @@ import isao.photorate.homeUi.HomeViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 
-class MainActivity :
-    ComponentActivity(),
-    KoinComponent {
+class MainActivity : ComponentActivity(), KoinComponent {
 
-    private val homeViewModel: HomeViewModel by viewModel()
-    private val imageDetailsViewModel: ImageDetailsViewModel by viewModel()
-    private val configViewModel: ConfigViewModel by viewModel()
+  private val homeViewModel: HomeViewModel by viewModel()
+  private val imageDetailsViewModel: ImageDetailsViewModel by viewModel()
+  private val configViewModel: ConfigViewModel by viewModel()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            PhotoRateTheme {
-                PhotoRateNavHost(
-                    homeViewModel = homeViewModel,
-                    imageDetailsViewModel = imageDetailsViewModel,
-                    configViewModel = configViewModel,
-                    onOpenAppSettings = {
-                        startActivity(
-                            Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.fromParts("package", packageName, null),
-                            ),
-                        )
-                    },
-                    appVersionName = BuildConfig.VERSION_NAME,
-                    appVersionCode = BuildConfig.VERSION_CODE,
-                )
-            }
-        }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+      PhotoRateTheme {
+        PhotoRateNavHost(
+          homeViewModel = homeViewModel,
+          imageDetailsViewModel = imageDetailsViewModel,
+          configViewModel = configViewModel,
+          onOpenAppSettings = {
+            startActivity(
+              Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts(
+                  "package",
+                  packageName,
+                  null,
+                ),
+              )
+            )
+          },
+          appVersionName = BuildConfig.VERSION_NAME,
+          appVersionCode = BuildConfig.VERSION_CODE,
+        )
+      }
     }
+  }
 }

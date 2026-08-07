@@ -32,66 +32,74 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-internal fun GalleryPermissionCard(permissionState: PermissionState, onOpenAppSettings: () -> Unit, modifier: Modifier = Modifier) {
-    var wasPermissionRequestedButNoDialogShown by remember { mutableStateOf(false) }
+internal fun GalleryPermissionCard(
+  permissionState: PermissionState,
+  onOpenAppSettings: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  var wasPermissionRequestedButNoDialogShown by remember { mutableStateOf(false) }
 
-    fun requestPermissions() {
-        permissionState.launchPermissionRequest()
-        wasPermissionRequestedButNoDialogShown = true
+  fun requestPermissions() {
+    permissionState.launchPermissionRequest()
+    wasPermissionRequestedButNoDialogShown = true
+  }
+
+  LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { wasPermissionRequestedButNoDialogShown = false }
+
+  // Hack: if no dialog was shown for a while after the request, we guess that the system will never
+  // show it again.
+  val currentOnOpenAppSettings by rememberUpdatedState(onOpenAppSettings)
+  LaunchedEffect(permissionState.status.isGranted, wasPermissionRequestedButNoDialogShown) {
+    if (!wasPermissionRequestedButNoDialogShown) return@LaunchedEffect
+    if (permissionState.status.isGranted) return@LaunchedEffect
+
+    delay(.2.seconds)
+
+    currentOnOpenAppSettings() // As the dialog won't be shown again, open system settings as a next
+    // best thing.
+  }
+
+  Surface(
+    modifier = modifier.fillMaxWidth(),
+    shape = MaterialTheme.shapes.extraLarge,
+    color = MaterialTheme.colorScheme.primaryContainer,
+  ) {
+    Column(Modifier.padding(20.dp)) {
+      Text(
+        text = "Allow photo access",
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onPrimaryContainer,
+      )
+      Spacer(Modifier.height(4.dp))
+      Text(
+        text =
+          "PhotoRate needs access to your gallery to look for scored images. Your photos never leave your device.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onPrimaryContainer,
+      )
+      Spacer(Modifier.height(8.dp))
+      Button(onClick = ::requestPermissions, modifier = Modifier.align(Alignment.End)) {
+        Text("Grant access")
+      }
     }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-        wasPermissionRequestedButNoDialogShown = false
-    }
-
-    // Hack: if no dialog was shown for a while after the request, we guess that the system will never show it again.
-    val currentOnOpenAppSettings by rememberUpdatedState(onOpenAppSettings)
-    LaunchedEffect(permissionState.status.isGranted, wasPermissionRequestedButNoDialogShown) {
-        if (!wasPermissionRequestedButNoDialogShown) return@LaunchedEffect
-        if (permissionState.status.isGranted) return@LaunchedEffect
-
-        delay(.2.seconds)
-
-        currentOnOpenAppSettings() // As the dialog won't be shown again, open system settings as a next best thing.
-    }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer,
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Text(
-                text = "Allow photo access",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "PhotoRate needs access to your gallery to look for scored images. Your photos never leave your device.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = ::requestPermissions, modifier = Modifier.align(Alignment.End)) {
-                Text("Grant access")
-            }
-        }
-    }
+  }
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Preview
 @Composable
 private fun GalleryPermissionCardPreview() {
-    Box(Modifier.padding(32.dp)) {
-        GalleryPermissionCard(
-            permissionState = object : PermissionState {
-                override val permission: String = "permission"
-                override val status: PermissionStatus = PermissionStatus.Denied(shouldShowRationale = false)
-                override fun launchPermissionRequest() {}
-            },
-            onOpenAppSettings = {},
-        )
-    }
+  Box(Modifier.padding(32.dp)) {
+    GalleryPermissionCard(
+      permissionState =
+        object : PermissionState {
+          override val permission: String = "permission"
+          override val status: PermissionStatus =
+            PermissionStatus.Denied(shouldShowRationale = false)
+
+          override fun launchPermissionRequest() {}
+        },
+      onOpenAppSettings = {},
+    )
+  }
 }

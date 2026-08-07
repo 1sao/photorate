@@ -10,7 +10,7 @@ compileSdk = "37"
 arrow = "2.2.3"
 kotlin = "2.4.0"
 android-gradle-plugin = "9.2.1"
-ktlint-gradle = "14.2.0"
+ktfmt-gradle = "0.27.0"
 compose = "1.11.4"
 android-desugaring = "2.1.5"
 androidx-core = "1.19.0"
@@ -90,7 +90,7 @@ android-worker = { module = "androidx.work:work-runtime-ktx", version.ref = "wor
 koin-worker = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koin" }
 
 [plugins]
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
