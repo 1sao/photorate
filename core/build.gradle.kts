@@ -9,9 +9,9 @@ plugins {
 }
 
 // Leaf module. Hosts the cross-cutting DB infrastructure — the sqldelight
-// driver libraries, adapters and coroutine helpers — plus the Kermit logger
-// provider. Feature modules that own .sq schemas depend on this module for the
-// driver + adapter classpath. No databases are generated here.
+// driver libraries (exposed via `api` so schema-owning feature modules inherit
+// the runtime + drivers), adapters and coroutine helpers — plus the Kermit
+// logger provider. No databases are generated here.
 koinCompiler {
     compileSafety = true
 }
@@ -29,7 +29,7 @@ kotlin {
 
         androidResources.enable = true
         // Run commonTest (pure logic: FloatArrayAdapter) on the JVM host,
-        // mirroring photosComponent.
+        // mirroring galleryComponent.
         withHostTestBuilder {}.configure {}
     }
     // Core is consumed by iOS-targeted modules (galleryComponent etc.), so it
@@ -56,7 +56,10 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.annotations)
             implementation(libs.coroutines.core)
-            implementation(libs.sqlDelight.coroutinesExt)
+            // `api` so feature modules that own .sq schemas get the sqldelight
+            // runtime (Transacter, EnumColumnAdapter, asFlow/mapToList) without
+            // re-declaring it.
+            api(libs.sqlDelight.coroutinesExt)
             implementation(libs.touchlab.kermit)
         }
         commonTest.dependencies {
@@ -64,12 +67,14 @@ kotlin {
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.kotlin.test)
+            // JDBC SQLite driver so host tests can exercise real schemas.
+            implementation(libs.sqlDelight.jvm)
         }
         androidMain.dependencies {
-            implementation(libs.sqlDelight.android)
+            api(libs.sqlDelight.android)
         }
         iosMain.dependencies {
-            implementation(libs.sqlDelight.native)
+            api(libs.sqlDelight.native)
             api(libs.touchlab.kermit.simple)
         }
     }

@@ -126,10 +126,15 @@ kotlin {
             implementation(libs.arrow.core)
             implementation(libs.arrow.fx.coroutines)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
-            implementation(projects.photosComponent)
-            implementation(projects.photosInference)
+            implementation(projects.galleryComponent)
             implementation(projects.configComponent)
-            implementation(projects.photosUI)
+            implementation(projects.searchComponent)
+            implementation(projects.core)
+            implementation(projects.photosInference)
+            implementation(projects.homeUi)
+            implementation(projects.galleryUi)
+            implementation(projects.searchUi)
+            implementation(projects.configUi)
             implementation(projects.photosMediaPipe)
         }
         commonTest.dependencies {

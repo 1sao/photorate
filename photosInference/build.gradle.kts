@@ -23,7 +23,7 @@ kotlin {
 
         androidResources.enable = true
         // Run commonTest (pure logic: ClipTokenizer) on the JVM host, mirroring
-        // photosComponent.
+        // galleryComponent.
         withHostTestBuilder {}.configure {}
     }
     // JVM target so the LiteRT provider (photosLiteRT) can run real inference

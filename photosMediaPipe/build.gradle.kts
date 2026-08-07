@@ -34,7 +34,7 @@ kotlin {
 
     // The iOS actuals (ImageRecognizer.ios.kt) link against
     // MediaPipeTasksVision via SwiftTasksVision, the same SwiftPM setup
-    // photosComponent carried before the module split.
+    // galleryComponent carried before the module split.
     swiftPMDependencies {
         swiftPackage(
             url = url("https://github.com/jordond/SwiftTasksVision.git"),

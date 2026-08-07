@@ -1,9 +1,8 @@
 package isao.photorate
 
 import co.touchlab.kermit.Logger
-import isao.photorate.config.ConfigModule
 import isao.photorate.galleryOld.GalleryDataSource
-import isao.photorate.galleryUi.PhotosUIModule
+import isao.photorate.homeUi.HomeUIModule
 import isao.photorate.inference.classify.LandmarkerFactoryProvider
 import isao.photorate.inference.search.AppClipSearchFactory
 import kotlin.time.Clock
@@ -25,23 +24,22 @@ import org.koin.plugin.module.dsl.startKoin
         AppModule::class,
         PlatformModule::class,
         DispatchersModule::class,
-        ConfigModule::class,
     ],
 )
 class MyApp
 
 /**
- * Scans all common components: repositories, use cases, helpers.
+ * Scans all common components that live in the shared module: repositories,
+ * use cases, helpers.
  *
  * `includes` composes the full app graph so this aggregator's scan can resolve
- * cross-module bindings (Logger, PhotoRateDb, GalleryImageRepository from
- * photosComponent) at compile time. The include chain is a tree
- * (AppModule → PhotosUIModule → PhotosComponentModule → di modules), so each
- * module is materialized exactly once at runtime — no module is both listed in
- * [org.koin.core.annotation.KoinApplication] and included elsewhere (that
- * would register its definitions twice and throw `DefinitionOverrideException`).
+ * cross-module bindings (Logger, SqlDriver, the feature databases) at compile
+ * time. The include chain fans out (AppModule → HomeUIModule →
+ * {GalleryUIModule, SearchUIModule, ConfigUIModule} → component modules), and
+ * Koin deduplicates modules included through multiple paths, so each module is
+ * materialized exactly once at runtime.
  */
-@Module(includes = [PhotosUIModule::class])
+@Module(includes = [HomeUIModule::class])
 @ComponentScan("isao.photorate")
 class AppModule
 

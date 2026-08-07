@@ -3,7 +3,12 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.sqlDelight)
     alias(libs.plugins.koin.compiler)
+}
+
+koinCompiler {
+    compileSafety = true
 }
 
 kotlin {
@@ -38,8 +43,17 @@ kotlin {
         }
 
         commonMain.dependencies {
+            implementation(projects.core)
             implementation(libs.koin.core)
             implementation(libs.koin.annotations)
+            implementation(libs.coroutines.core)
         }
+    }
+}
+
+sqldelight {
+    databases.create("PhotoRateDb") {
+        packageName.set("isao.photorate.config.db")
+        dialect("app.cash.sqldelight:sqlite-3-30-dialect:${libs.versions.sqlDelight.get()}")
     }
 }

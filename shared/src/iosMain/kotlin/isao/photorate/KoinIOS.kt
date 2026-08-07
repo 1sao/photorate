@@ -15,6 +15,7 @@ import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import org.koin.core.scope.Scope
+import org.koin.plugin.module.dsl.modules
 
 /**
  * Values provided from Swift before Koin starts. Read by the iOS [PlatformModule].
@@ -25,7 +26,11 @@ internal object IosPlatformConfig {
 
 fun initKoinIos(appInfo: AppInfo, doOnStartup: () -> Unit): KoinApplication {
     IosPlatformConfig.appInfo = appInfo
-    return initKoin()
+    return initKoin {
+        // The iOS SqlDriver (full merged schema) — the feature modules'
+        // `@Provided` driver parameters resolve to this binding.
+        modules(IosDatabaseModule::class)
+    }
 }
 
 @Module

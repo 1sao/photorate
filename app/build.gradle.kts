@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.koin.compiler)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.sqlDelight)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -107,9 +108,17 @@ composeCompiler {
 }
 
 dependencies {
-    implementation(projects.shared) // TODO duplicate?
-    implementation(projects.photosUI)
-    implementation(projects.photosComponent)
+    implementation(projects.shared)
+    implementation(projects.homeUi)
+    implementation(projects.galleryUi)
+    implementation(projects.configUi)
+    // The app owns the main SQLDelight database (its generated `app.db` schema
+    // merges every feature module's tables), so the feature modules' generated
+    // types referenced by that schema must be on this module's classpath.
+    implementation(projects.galleryComponent)
+    implementation(projects.configComponent)
+    implementation(projects.searchComponent)
+    implementation(projects.photosInference)
     implementation(projects.photosMediaPipe)
     // LiteRT on-device verification + dataset tests: they name
     // CompiledModel/TensorBuffer types and the LiteRT factory classes
@@ -128,6 +137,7 @@ dependencies {
     implementation(libs.koin.annotations)
     implementation(libs.android.worker)
     implementation(libs.koin.worker)
+    implementation(libs.sqlDelight.android)
     implementation("androidx.compose.material3:material3:1.4.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.5.0-alpha24")
@@ -160,4 +170,18 @@ dependencies {
     androidTestImplementation("org.tensorflow:tensorflow-lite-api:2.17.0")
     androidTestImplementation("org.tensorflow:tensorflow-lite-gpu-api:2.17.0")
     androidTestImplementation("org.tensorflow:tensorflow-lite-gpu:2.17.0")
+}
+
+// The main database: owns the FULL merged schema (config + gallery + search
+// tables) purely so `PhotoRateDb.Schema` can create the SqlDriver with every
+// table present (see the sqldelight multi-module Slack thread). Feature
+// modules construct their own generated DB classes over that single driver.
+sqldelight {
+    databases.create("PhotoRateDb") {
+        packageName.set("isao.photorate.app.db")
+        dependency(project(":configComponent"))
+        dependency(project(":galleryComponent"))
+        dependency(project(":searchComponent"))
+        dialect("app.cash.sqldelight:sqlite-3-30-dialect:${libs.versions.sqlDelight.get()}")
+    }
 }

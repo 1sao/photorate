@@ -18,6 +18,8 @@ manual wiring.
 
 # Development rules
 
+- **No comments**: only add comments where it's impossible to understand the flow or decisions that
+  led to this code otherwise. Use comments VERY sparingly.
 - **SOLID**: single responsibility per class, dependency inversion at repository boundaries,
   open/closed for new features via interfaces.
 - **Code style**: no magic numbers. No comments unless the why is non-obvious.
@@ -30,7 +32,6 @@ manual wiring.
   plan, confirm with the user before proceeding.
 - **Take slow Internet into account**: adjust large download timeouts accordingly, try proceeding with some other work in parallel while waiting.
 - **Mark important progress/discoveries**: whenever you reach a goalpost, write about it in the chat with a "PROGRESS REPORT" headline; describe what went according to the initial plan and what didn't.
-- **No useless comments**: only add comments / kdocs for non-self-evident code.
 
 # Sandbox
 

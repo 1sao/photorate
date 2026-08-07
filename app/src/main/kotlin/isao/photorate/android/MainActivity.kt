@@ -6,10 +6,11 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import isao.photorate.android.ui.PhotoRateNavHost
 import isao.photorate.android.ui.theme.PhotoRateTheme
 import isao.photorate.configUi.ConfigViewModel
-import isao.photorate.galleryUi.GalleryViewModel
 import isao.photorate.galleryUi.ImageDetailsViewModel
+import isao.photorate.homeUi.HomeViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 
@@ -17,7 +18,7 @@ class MainActivity :
     ComponentActivity(),
     KoinComponent {
 
-    private val galleryViewModel: GalleryViewModel by viewModel()
+    private val homeViewModel: HomeViewModel by viewModel()
     private val imageDetailsViewModel: ImageDetailsViewModel by viewModel()
     private val configViewModel: ConfigViewModel by viewModel()
 
@@ -26,7 +27,7 @@ class MainActivity :
         setContent {
             PhotoRateTheme {
                 PhotoRateNavHost(
-                    galleryViewModel = galleryViewModel,
+                    homeViewModel = homeViewModel,
                     imageDetailsViewModel = imageDetailsViewModel,
                     configViewModel = configViewModel,
                     onOpenAppSettings = {
