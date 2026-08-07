@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,6 +82,7 @@ import coil3.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import isao.photorate.db.SelectUncertainImagesWithScore
 import isao.photorate.galleryRepository.GalleryStatusCounts
@@ -300,9 +300,7 @@ fun SharedTransitionScope.ThumbRatingScreenContent(
                 status = state.imagesState.status,
                 gridState = gridState,
                 searchState = searchState,
-                isGranted = isGranted,
-                denied = denied,
-                onRequestPermission = requestPermission,
+                permissionState = permissionState,
                 onOpenAppSettings = onOpenAppSettings,
                 onOpenImage = onOpenImage,
                 onIntent = onIntent,
@@ -349,9 +347,7 @@ private fun SharedTransitionScope.GalleryGridContent(
     status: GalleryStatusCounts,
     gridState: LazyGridState,
     searchState: SearchUiState,
-    isGranted: Boolean,
-    denied: PermissionStatus.Denied?,
-    onRequestPermission: () -> Unit,
+    permissionState: PermissionState,
     onOpenAppSettings: () -> Unit,
     onOpenImage: (String) -> Unit,
     onIntent: (GalleryIntent) -> Unit,
@@ -375,6 +371,8 @@ private fun SharedTransitionScope.GalleryGridContent(
     // Search ranks every hand image, including ones whose hands fall outside
     // the config score filters (so they're in neither grid list). Render those
     // as plain cards so a real match is never silently missing.
+
+    //TODO drop?
     val leftoverResults =
         if (searchActive) {
             val covered = (visibleDetections.map { it.uri } + visibleUncertainDetections.map { it.uri }).toSet()
@@ -383,9 +381,7 @@ private fun SharedTransitionScope.GalleryGridContent(
             emptyList()
         }
 
-    // The uncertain card is a wide image+controls layout, so it spans the whole
-    // grid row on a phone but only half a row on a tablet (official window size
-    // class API). Falls back to phone-sized when there's no Activity (preview).
+    //TODO use rememberWindowSizeClass
     val windowSizeClass = LocalActivity.current?.let { activity -> calculateWindowSizeClass(activity) }
     val isTablet = remember(windowSizeClass) {
         when (windowSizeClass?.widthSizeClass) {
@@ -407,32 +403,32 @@ private fun SharedTransitionScope.GalleryGridContent(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (!isGranted && !searchActive) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+        if (!permissionState.status.isGranted && !searchActive) {
+            item("permission", span = { GridItemSpan(maxLineSpan) }) {
                 GalleryPermissionCard(
-                    shouldShowRationale = denied?.shouldShowRationale == true,
-                    onGrantClick = onRequestPermission,
+                    permissionState = permissionState,
                     onOpenAppSettings = onOpenAppSettings,
+                    modifier = Modifier.animateItem(),
                 )
             }
         }
 
         when {
             searchActive && searchState.isSearching -> {
-                item(span = { GridItemSpan(maxLineSpan) }) {
+                item("search", span = { GridItemSpan(maxLineSpan) }) {
                     SearchingIndicator(query = searchState.query)
                 }
             }
 
             searchActive && searchState.results.isEmpty() -> {
-                item(span = { GridItemSpan(maxLineSpan) }) {
+                item("no-matches", span = { GridItemSpan(maxLineSpan) }) {
                     NoMatchesCard(query = searchState.query)
                 }
             }
 
             else -> {
                 if (searchActive && visibleDetections.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    item(key = "search-result", span = { GridItemSpan(maxLineSpan) }) {
                         SearchResultsHeader(
                             query = searchState.query,
                             count = visibleDetections.size + visibleUncertainDetections.size,
@@ -440,7 +436,7 @@ private fun SharedTransitionScope.GalleryGridContent(
                     }
                 }
                 if (!searchActive) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
                         ScanStatusCard(status)
                     }
                 }
@@ -453,23 +449,27 @@ private fun SharedTransitionScope.GalleryGridContent(
                         animatedVisibilityScope = animatedVisibilityScope,
                     )
                 }
-                if (leftoverResults.isNotEmpty()) {
-                    items(leftoverResults, key = { it.uri }) { image ->
-                        GalleryImageCard(
-                            item = remember(image.uri) {
-                                GalleryImageItem(uri = image.uri, scores = emptyList())
-                            },
-                            onClick = remember(image.uri) { { onOpenImage(image.uri) } },
-                            animatedVisibilityScope = animatedVisibilityScope,
-                        )
-                    }
-                }
+                //TODO likely isn't needed
+                // if (leftoverResults.isNotEmpty()) {
+                //     items(leftoverResults, key = { it.uri }) { image ->
+                //         GalleryImageCard(
+                //             item = remember(image.uri) {
+                //                 GalleryImageItem(uri = image.uri, scores = emptyList())
+                //             },
+                //             onClick = remember(image.uri) { { onOpenImage(image.uri) } },
+                //             animatedVisibilityScope = animatedVisibilityScope,
+                //         )
+                //     }
+                // }
 
                 // Low-confidence (uncertain) detections, shown in their own
                 // section so the user can review the best-guess scores. Search
                 // results include them too, per the search design.
                 if (visibleUncertainDetections.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    item(
+                        key = "uncertain-header",
+                        span = { GridItemSpan(maxLineSpan) },
+                    ) {
                         UncertainSectionHeader(count = visibleUncertainDetections.size)
                     }
                     items(
@@ -556,37 +556,6 @@ private fun NoMatchesCard(query: String) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-    }
-}
-
-@Composable
-private fun GalleryPermissionCard(shouldShowRationale: Boolean, onGrantClick: () -> Unit, onOpenAppSettings: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.primaryContainer,
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Text(
-                text = "Allow photo access",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "PhotoRate scans your gallery to find photos with hands. Grant access to get started.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(16.dp))
-            Button(onClick = onGrantClick) {
-                Text(if (shouldShowRationale) "Continue" else "Grant access")
-            }
-            Spacer(Modifier.height(4.dp))
-            TextButton(onClick = onOpenAppSettings) {
-                Text("Open settings", color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
         }
     }
 }
