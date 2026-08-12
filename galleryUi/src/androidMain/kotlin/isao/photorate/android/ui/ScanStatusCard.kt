@@ -69,7 +69,7 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
   Surface(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(28.dp),
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    color = MaterialTheme.colorScheme.surfaceContainer,
   ) {
     Column(Modifier.padding(20.dp).animateContentSize()) {
       Text(
