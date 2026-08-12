@@ -50,7 +50,7 @@ ORDER BY dh.score DESC;
 -- within the list is unspecified (the UI sorts it before display).
 -- TODO simplify
 selectImagesWithScores:
-SELECT gi.uri, gi.scannedAt,
+SELECT gi.uri, gi.scannedAt, gi.createdAt, gi.modifiedAt,
   COALESCE(rated.scores, detected.scores) AS scores
 FROM GalleryImage gi
 LEFT JOIN (
@@ -69,14 +69,14 @@ LEFT JOIN (
     GROUP BY imageUri
 ) detected ON detected.imageUri = gi.uri
 WHERE rated.imageUri IS NOT NULL OR detected.imageUri IS NOT NULL
-ORDER BY gi.scannedAt DESC;
+ORDER BY gi.modifiedAt DESC;
 
 -- Uncertain grid view: distinct images whose best-scored hand is only a
 -- low-confidence guess (uncertain tier), with the best guess score per image
 -- so the UI can label the card. Shown separately from the confident grid so
 -- the user can review and (in the future) correct those scores.
 selectUncertainImagesWithScore:
-SELECT gi.uri, gi.scannedAt, MAX(dh.score) AS bestGuessScore
+SELECT gi.uri, gi.scannedAt, gi.modifiedAt, MAX(dh.score) AS bestGuessScore
 FROM GalleryImage gi
 JOIN DetectedHand dh ON dh.imageUri = gi.uri
 WHERE dh.uncertain = 1
@@ -85,8 +85,8 @@ WHERE dh.uncertain = 1
     WHERE dh2.imageUri = gi.uri
       AND dh2.uncertain = 0
   )
-GROUP BY gi.uri, gi.scannedAt
-ORDER BY gi.scannedAt DESC;
+GROUP BY gi.uri, gi.scannedAt, gi.modifiedAt
+ORDER BY gi.modifiedAt DESC;
 
 -- Gallery image CRUD. Real upsert: INSERT OR REPLACE used to delete the
 -- conflicting row, which cascade-deleted the image's DetectedHand and
@@ -121,7 +121,7 @@ updateImageStatus:
 UPDATE GalleryImage SET status = ? WHERE uri = ?;
 
 updateImageDone:
-UPDATE GalleryImage SET status = 'DONE', detectedInMs = ? WHERE uri = ?;
+UPDATE GalleryImage SET status = 'DONE', detectedInMs = ?, scannedAt = ? WHERE uri = ?;
 
 selectAllImages:
 SELECT * FROM GalleryImage;

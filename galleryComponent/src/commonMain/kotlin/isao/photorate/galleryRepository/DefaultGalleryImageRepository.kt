@@ -9,6 +9,7 @@ import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.gallery.db.PhotoRateDb
 import isao.photorate.sqldelight.transactionWithContext
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -67,7 +68,7 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
         createdAt = image.createdAt,
         modifiedAt = image.modifiedAt,
         status = image.status,
-        scannedAt = image.scannedAt, // TODO save scannedAt
+        scannedAt = image.scannedAt,
         detectedInMs = image.detectedInMs,
       )
     }
@@ -86,6 +87,7 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
     withContext(Dispatchers.IO) {
       queries.updateImageDone(
         detectedInMs,
+        Clock.System.now().toEpochMilliseconds(),
         uri,
       )
     }
