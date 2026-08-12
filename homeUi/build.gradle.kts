@@ -35,6 +35,7 @@ kotlin {
     }
 
     commonMain.dependencies {
+      implementation(projects.coreUI)
       implementation(projects.galleryUi)
       implementation(projects.searchUi)
       implementation(projects.configUi)
@@ -62,6 +63,7 @@ kotlin {
       implementation(libs.androidx.core)
       implementation(libs.navigation3.ui)
       implementation(libs.kotlinx.serialization.json)
+      implementation("io.insert-koin:koin-androidx-compose:4.2.2")
       implementation("io.coil-kt.coil3:coil-compose:3.5.0")
       implementation("io.coil-kt.coil3:coil-network-okhttp:3.5.0")
     }

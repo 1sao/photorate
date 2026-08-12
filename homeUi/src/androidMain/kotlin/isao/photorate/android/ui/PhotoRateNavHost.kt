@@ -2,21 +2,28 @@ package isao.photorate.android.ui
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
+import com.example.coreui.composable.LocalSharedTransitionScope
 import isao.photorate.configUi.ConfigViewModel
 import isao.photorate.galleryUi.ImageDetailsIntent
 import isao.photorate.galleryUi.ImageDetailsViewModel
-import isao.photorate.homeUi.HomeViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.serializer
 
 @Serializable
 sealed interface Route : NavKey {
@@ -30,14 +37,14 @@ sealed interface Route : NavKey {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PhotoRateNavHost(
-  homeViewModel: HomeViewModel,
   imageDetailsViewModel: ImageDetailsViewModel,
   configViewModel: ConfigViewModel,
   onOpenAppSettings: () -> Unit,
-  appVersionName: String,
-  appVersionCode: Int,
+  appVersionName: String, // TODO inject as a data class in the place where it is used
+  appVersionCode: Int, // TODO inject as a data class in the place where it is used
 ) {
-  val backStack = rememberNavBackStack(Route.Home)
+  val backStack =
+    rememberSerializable(serializer = serializer()) { NavBackStack<Route>(Route.Home) }
   val scope = rememberCoroutineScope()
 
   SharedTransitionLayout {
@@ -45,21 +52,22 @@ fun PhotoRateNavHost(
       backStack = backStack,
       modifier = Modifier.fillMaxSize(),
       sharedTransitionScope = this,
-      entryProvider = { key: NavKey ->
-        val route = key as Route
-        NavEntry(key) {
+      entryDecorators =
+        listOf(
+          rememberSaveableStateHolderNavEntryDecorator(),
+          rememberLocalSharedTransitionScopeDecorator(this),
+        ),
+      entryProvider = { route: Route ->
+        NavEntry(route) {
           when (route) {
             is Route.Home ->
               HomeScreen(
-                homeViewModel = homeViewModel,
-                animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                 onOpenSettings = { backStack += Route.Config },
                 onOpenAppSettings = onOpenAppSettings,
                 onOpenImage = { uri ->
                   imageDetailsViewModel.onIntent(ImageDetailsIntent.Load(uri))
                   backStack += Route.ImageDetails(uri)
                 },
-                onIntent = homeViewModel::onIntent,
               )
 
             is Route.ImageDetails ->
@@ -74,7 +82,12 @@ fun PhotoRateNavHost(
               ConfigScreen(
                 configViewModel = configViewModel,
                 onBack = { backStack.removeLastOrNull() },
-                onPurgeAndRescan = { scope.launch { homeViewModel.purgeAndRescan() } },
+                onPurgeAndRescan = {
+                  scope.launch {
+                    // TODO rework
+                    //                  homeViewModel.purgeAndRescan()
+                  }
+                },
                 appVersionName = appVersionName,
                 appVersionCode = appVersionCode,
               )
@@ -84,3 +97,16 @@ fun PhotoRateNavHost(
     )
   }
 }
+
+@Composable
+private fun rememberLocalSharedTransitionScopeDecorator(
+  scope: SharedTransitionScope
+): LocalSharedTransitionScopeDecorator =
+  remember(scope) { LocalSharedTransitionScopeDecorator(scope) }
+
+private class LocalSharedTransitionScopeDecorator(scope: SharedTransitionScope) :
+  NavEntryDecorator<Route>(
+    decorate = { entry ->
+      CompositionLocalProvider(LocalSharedTransitionScope provides scope) { entry.Content() }
+    },
+  )

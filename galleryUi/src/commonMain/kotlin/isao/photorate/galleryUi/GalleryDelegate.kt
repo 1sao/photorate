@@ -121,6 +121,7 @@ data class GalleryUiState(
   val permissionState: PermissionState = PermissionState.Denied,
   val imagesState: ImagesState = ImagesState(),
 ) {
+  // TODO remove
   sealed interface PermissionState {
     data object Granted : PermissionState
 
@@ -147,6 +148,10 @@ data class GalleryUiState(
 }
 
 data class GalleryImageItem(val uri: String, val scores: List<Score>, val scannedAt: Long? = null)
+
+sealed interface GalleryIntent {
+  // TODO
+}
 
 private fun GallerySorting.toImageSorting(): ImageSorting =
   when (this) {

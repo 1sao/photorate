@@ -1,9 +1,7 @@
 package isao.photorate.android.ui
 
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,14 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
+import com.example.coreui.composable.LocalSharedTransitionScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
-import isao.photorate.gallery.db.SelectUncertainImagesWithScore
-import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryImageItem
-import isao.photorate.galleryUi.GalleryUiState.ImageSorting
+import isao.photorate.galleryUi.GalleryUiState
 import isao.photorate.inference.classify.Score
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -73,56 +71,47 @@ import java.util.Locale
   ExperimentalMaterial3WindowSizeClassApi::class,
 )
 @Composable
-fun SharedTransitionScope.GalleryGridContent(
-  detections: List<GalleryImageItem>,
-  uncertainDetections: List<SelectUncertainImagesWithScore>,
-  status: GalleryStatusCounts,
+fun GalleryGridContent(
+  state: GalleryUiState,
   gridState: LazyGridState,
-  searchUris: Set<String>?,
-  isSearching: Boolean,
-  searchQuery: String,
   permissionState: PermissionState,
+  modifier: Modifier = Modifier,
+  contentPadding: PaddingValues,
   onOpenAppSettings: () -> Unit,
   onOpenImage: (String) -> Unit,
   onAcceptUncertain: (uri: String, score: Int) -> Unit,
   onDeleteUncertain: (uri: String) -> Unit,
-  animatedVisibilityScope: AnimatedVisibilityScope,
-  contentPadding: PaddingValues,
 ) {
-  val searchActive = searchUris != null
+  val searchActive = state.imagesState.searchUris != null
   val visibleDetections =
-    searchUris?.let { filter -> detections.filter { it.uri in filter } } ?: detections
+    state.imagesState.searchUris?.let { filter ->
+      state.imagesState.detections.filter { it.uri in filter }
+    } ?: state.imagesState.detections
   val visibleUncertainDetections =
-    searchUris?.let { filter -> uncertainDetections.filter { it.uri in filter } }
-      ?: uncertainDetections
-  val noMatches =
-    searchActive &&
-      !isSearching &&
-      visibleDetections.isEmpty() &&
-      visibleUncertainDetections.isEmpty()
+    state.imagesState.searchUris?.let { filter ->
+      state.imagesState.uncertainDetections.filter { it.uri in filter }
+    } ?: state.imagesState.uncertainDetections
+  //  val noMatches =
+  //    searchActive &&
+  //      !isSearching &&
+  //      visibleDetections.isEmpty() &&
+  //      visibleUncertainDetections.isEmpty()
 
-  // TODO use rememberWindowSizeClass
-  val windowSizeClass =
-    LocalActivity.current?.let { activity -> calculateWindowSizeClass(activity) }
+  // TODO Is it safe to throw on null here?
+  // TODO Move somewhere else? LocalWindowSizeClass?
+  // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive ?
   val isTablet =
-    remember(windowSizeClass) {
-      when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Medium,
-        WindowWidthSizeClass.Expanded -> true
-
-        else -> false
-      }
-    }
+    calculateWindowSizeClass(LocalActivity.current!!).widthSizeClass > WindowWidthSizeClass.Compact
 
   LazyVerticalGrid(
     state = gridState,
-    modifier = Modifier.fillMaxSize(),
+    modifier = modifier.fillMaxSize(),
     columns = GridCells.Fixed(2),
     contentPadding =
       PaddingValues(
         start = 16.dp,
         end = 16.dp,
-        top = contentPadding.calculateTopPadding() + 8.dp,
+        top = contentPadding.calculateTopPadding() + 8.dp, // TODO accept contentPadding fully
         bottom = 32.dp,
       ),
     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -139,35 +128,36 @@ fun SharedTransitionScope.GalleryGridContent(
     }
 
     when {
-      searchActive && isSearching -> {
-        item("search", span = { GridItemSpan(maxLineSpan) }) {
-          SearchingIndicator(query = searchQuery)
-        }
-      }
-
-      noMatches -> {
-        item("no-matches", span = { GridItemSpan(maxLineSpan) }) {
-          NoMatchesCard(query = searchQuery)
-        }
-      }
+      //      searchActive && isSearching -> {
+      //        item("search", span = { GridItemSpan(maxLineSpan) }) {
+      //          SearchingIndicator(query = searchQuery)
+      //        }
+      //      }
+      //
+      //      noMatches -> {
+      //        item("no-matches", span = { GridItemSpan(maxLineSpan) }) {
+      //          NoMatchesCard(query = searchQuery)
+      //        }
+      //      }
 
       else -> {
-        if (searchActive && visibleDetections.isNotEmpty()) {
-          item(key = "search-result", span = { GridItemSpan(maxLineSpan) }) {
-            SearchResultsHeader(
-              query = searchQuery,
-              count = visibleDetections.size + visibleUncertainDetections.size,
-            )
-          }
+        //        if (searchActive && visibleDetections.isNotEmpty()) {
+        //          item(key = "search-result", span = { GridItemSpan(maxLineSpan) }) {
+        //            SearchResultsHeader(
+        //              query = searchQuery,
+        //              count = visibleDetections.size + visibleUncertainDetections.size,
+        //            )
+        //          }
+        //        }
+        //        if (!searchActive) {
+        item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
+          ScanStatusCard(state.imagesState.status)
         }
-        if (!searchActive) {
-          item(key = "status", span = { GridItemSpan(maxLineSpan) }) { ScanStatusCard(status) }
-        }
+        //        }
         items(visibleDetections, key = { it.uri }) { item ->
           GalleryImageCard(
             item = item,
             onClick = remember(item.uri) { { onOpenImage(item.uri) } },
-            animatedVisibilityScope = animatedVisibilityScope,
           )
         }
 
@@ -189,8 +179,10 @@ fun SharedTransitionScope.GalleryGridContent(
               bestGuessScore = image.bestGuessScore,
               onClick = remember(image.uri) { { onOpenImage(image.uri) } },
               onAccept = remember { { uri: String, score: Int -> onAcceptUncertain(uri, score) } },
-              onDelete = remember { { uri: String -> onDeleteUncertain(uri) } },
-              animatedVisibilityScope = animatedVisibilityScope,
+              onDelete =
+                remember {
+                  { uri: String -> onDeleteUncertain(uri) }
+                }, // TODO unnecessary remembers?
             )
           }
         }
@@ -199,6 +191,7 @@ fun SharedTransitionScope.GalleryGridContent(
   }
 }
 
+// TODO verify if the search is slow enough to require this
 @Composable
 private fun SearchingIndicator(query: String) {
   Row(
@@ -216,6 +209,7 @@ private fun SearchingIndicator(query: String) {
   }
 }
 
+// TODO consider removing
 @Composable
 private fun SearchResultsHeader(query: String, count: Int) {
   Surface(
@@ -231,6 +225,7 @@ private fun SearchResultsHeader(query: String, count: Int) {
   }
 }
 
+// TODO use
 @Composable
 private fun NoMatchesCard(query: String) {
   Surface(
@@ -256,32 +251,33 @@ private fun NoMatchesCard(query: String) {
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SharedTransitionScope.GalleryImageCard(
+private fun GalleryImageCard(
   item: GalleryImageItem,
   onClick: () -> Unit,
-  animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
-  val sharedState = rememberSharedContentState(key = "image_${item.uri}")
-  Box(
-    modifier =
-      Modifier.fillMaxWidth()
-        .aspectRatio(1f)
-        .clip(RoundedCornerShape(24.dp))
-        .clickable(onClick = onClick)
-  ) {
-    AsyncImage(
-      model = item.uri,
-      contentDescription = null,
-      contentScale = ContentScale.Crop,
+  with(LocalSharedTransitionScope.current) {
+    val sharedState = rememberSharedContentState(key = "image_${item.uri}")
+    Box(
       modifier =
-        Modifier.fillMaxSize()
-          .sharedElement(sharedState, animatedVisibilityScope)
-          .clip(RoundedCornerShape(24.dp)),
-    )
-    RatingStarsOverlay(
-      scores = item.scores,
-      modifier = Modifier.align(Alignment.TopStart),
-    )
+        Modifier.fillMaxWidth()
+          .aspectRatio(1f)
+          .clip(RoundedCornerShape(24.dp))
+          .clickable(onClick = onClick),
+    ) {
+      AsyncImage(
+        model = item.uri,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier =
+          Modifier.fillMaxSize()
+            .sharedElement(sharedState, LocalNavAnimatedContentScope.current)
+            .clip(RoundedCornerShape(24.dp)),
+      )
+      RatingStarsOverlay(
+        scores = item.scores,
+        modifier = Modifier.align(Alignment.TopStart),
+      )
+    }
   }
 }
 
@@ -310,74 +306,74 @@ private fun UncertainSectionHeader(count: Int) {
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SharedTransitionScope.UncertainImageCard(
+private fun UncertainImageCard(
   uri: String,
   bestGuessScore: Score?,
   onClick: () -> Unit,
   onAccept: (String, Int) -> Unit,
   onDelete: (String) -> Unit,
-  animatedVisibilityScope: AnimatedVisibilityScope,
   modifier: Modifier = Modifier,
-) {
-  var selected by remember(uri) { mutableStateOf(bestGuessScore?.score ?: DEFAULT_GUESS_SCORE) }
-  val sharedState = rememberSharedContentState(key = "image_$uri")
-  Surface(
-    modifier = modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-  ) {
-    Row(Modifier.fillMaxWidth()) {
-      AsyncImage(
-        model = uri,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier =
-          Modifier.weight(1f)
-            .aspectRatio(1f)
-            .sharedElement(sharedState, animatedVisibilityScope)
-            .clip(RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick),
-      )
-      Column(
-        modifier = Modifier.weight(1.4f).padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.Center,
-      ) {
-        Text(
-          text = "Best guess",
-          style = MaterialTheme.typography.labelMedium,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
+) =
+  with(LocalSharedTransitionScope.current) {
+    var selected by remember(uri) { mutableStateOf(bestGuessScore?.score ?: DEFAULT_GUESS_SCORE) }
+    val sharedState = rememberSharedContentState(key = "image_$uri")
+    Surface(
+      modifier = modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(24.dp),
+      color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+      Row(Modifier.fillMaxWidth()) {
+        AsyncImage(
+          model = uri,
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier =
+            Modifier.weight(1f)
+              .aspectRatio(1f)
+              .sharedElement(sharedState, LocalNavAnimatedContentScope.current)
+              .clip(RoundedCornerShape(24.dp))
+              .clickable(onClick = onClick),
         )
-        Spacer(Modifier.height(2.dp))
-        UncertainStarSelector(
-          selected = selected,
-          onSelect = { selected = it },
-        )
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          FilledIconButton(onClick = { onAccept(uri, selected) }) {
-            Icon(
-              Icons.Filled.Check,
-              contentDescription = "Accept score $selected",
-            )
-          }
-          FilledTonalIconButton(
-            onClick = { onDelete(uri) },
-            colors =
-              IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-              ),
-          ) {
-            Icon(
-              Icons.Filled.Close,
-              contentDescription = "Mark as no hand",
-            )
+        Column(
+          modifier = Modifier.weight(1.4f).padding(horizontal = 12.dp, vertical = 10.dp),
+          verticalArrangement = Arrangement.Center,
+        ) {
+          Text(
+            text = "Best guess",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+          Spacer(Modifier.height(2.dp))
+          UncertainStarSelector(
+            selected = selected,
+            onSelect = { selected = it },
+          )
+          Spacer(Modifier.height(8.dp))
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledIconButton(onClick = { onAccept(uri, selected) }) {
+              Icon(
+                Icons.Filled.Check,
+                contentDescription = "Accept score $selected",
+              )
+            }
+            FilledTonalIconButton(
+              onClick = { onDelete(uri) },
+              colors =
+                IconButtonDefaults.filledTonalIconButtonColors(
+                  containerColor = MaterialTheme.colorScheme.errorContainer,
+                  contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
+            ) {
+              Icon(
+                Icons.Filled.Close,
+                contentDescription = "Mark as no hand",
+              )
+            }
           }
         }
       }
     }
   }
-}
 
 @Composable
 private fun UncertainStarSelector(selected: Int, onSelect: (Int) -> Unit) {
@@ -400,75 +396,6 @@ private fun UncertainStarSelector(selected: Int, onSelect: (Int) -> Unit) {
 
 /** Fallback preselected score when an uncertain image somehow has no best guess. */
 private const val DEFAULT_GUESS_SCORE = 3
-
-/** Grid item index of the first photo card (after the scan-status card). */
-private const val DETECTION_START_INDEX = 1
-
-/**
- * Builds the scrollbar sections for the plain gallery: one section per group (month+year for date
- * sorting, top score for score sorting) in first-occurrence order along the grid, plus a single
- * uncertain section when best-guess images are shown. The scan-status card (grid item 0) is never a
- * section, so scan status never appears in any scrollbar pill.
- */
-fun buildIndexSections(
-  detections: List<GalleryImageItem>,
-  uncertainDetections: List<SelectUncertainImagesWithScore>,
-  sorting: ImageSorting,
-): List<IndexScrollSection> {
-  val sections = mutableListOf<IndexScrollSection>()
-  val seen = mutableSetOf<Int>()
-  val calendar = Calendar.getInstance()
-  detections.forEachIndexed { index, item ->
-    val key: Int =
-      when (sorting) {
-        is ImageSorting.Score -> item.scores.maxOfOrNull { it.score } ?: return@forEachIndexed
-        is ImageSorting.Date ->
-          item.scannedAt?.let { yearMonthKey(it, calendar) } ?: return@forEachIndexed
-      }
-    if (seen.add(key)) {
-      sections += IndexScrollSection(startIndex = DETECTION_START_INDEX + index)
-    }
-  }
-  if (uncertainDetections.isNotEmpty()) {
-    sections +=
-      IndexScrollSection(
-        startIndex = DETECTION_START_INDEX + detections.size,
-        isUncertain = true,
-      )
-  }
-  return sections
-}
-
-/**
- * Label of the group under grid item [index] for the scrollbar chip: the month+year (date sorting)
- * or top rating (score sorting) of the item, or the best guess of the uncertain item when the index
- * is inside the uncertain section. Indices before the first photo (the scan-status card) and beyond
- * the last item clamp to the nearest group.
- */
-fun indexLabel(
-  index: Int,
-  detections: List<GalleryImageItem>,
-  uncertainDetections: List<SelectUncertainImagesWithScore>,
-  sorting: ImageSorting,
-): String {
-  val uncertainStart = DETECTION_START_INDEX + detections.size
-  val inUncertain = uncertainDetections.isNotEmpty() && index >= uncertainStart
-  return if (inUncertain) {
-    val item = uncertainDetections.getOrNull((index - uncertainStart - 1).coerceAtLeast(0))
-    when (sorting) {
-      is ImageSorting.Score -> item?.bestGuessScore?.score?.let { "$it★" } ?: "?"
-      is ImageSorting.Date -> item?.scannedAt?.let { formatMonthYear(it) } ?: "?"
-    }
-  } else {
-    val clamped =
-      (index - DETECTION_START_INDEX).coerceIn(0, (detections.size - 1).coerceAtLeast(0))
-    val item = detections.getOrNull(clamped)
-    when (sorting) {
-      is ImageSorting.Score -> item?.scores?.maxOfOrNull { it.score }?.let { "$it★" } ?: ""
-      is ImageSorting.Date -> item?.scannedAt?.let { formatMonthYear(it) } ?: ""
-    }
-  }
-}
 
 /** Year*100 + month (1-12): a stable, order-preserving date-group key. */
 private fun yearMonthKey(epochMillis: Long, calendar: Calendar): Int {

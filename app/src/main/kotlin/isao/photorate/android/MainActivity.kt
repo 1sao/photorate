@@ -10,13 +10,11 @@ import isao.photorate.android.ui.PhotoRateNavHost
 import isao.photorate.android.ui.theme.PhotoRateTheme
 import isao.photorate.configUi.ConfigViewModel
 import isao.photorate.galleryUi.ImageDetailsViewModel
-import isao.photorate.homeUi.HomeViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
-  private val homeViewModel: HomeViewModel by viewModel()
   private val imageDetailsViewModel: ImageDetailsViewModel by viewModel()
   private val configViewModel: ConfigViewModel by viewModel()
 
@@ -25,10 +23,10 @@ class MainActivity : ComponentActivity(), KoinComponent {
     setContent {
       PhotoRateTheme {
         PhotoRateNavHost(
-          homeViewModel = homeViewModel,
           imageDetailsViewModel = imageDetailsViewModel,
           configViewModel = configViewModel,
           onOpenAppSettings = {
+            // TODO extract to a util, consider not passing it down the current lengthy hierarchy.
             startActivity(
               Intent(
                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

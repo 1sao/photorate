@@ -9,6 +9,7 @@ import org.koin.core.annotation.Single
  * App-wide rescan request bus. Screens outside the gallery (e.g. Settings, after purging all stored
  * data) emit a request; HomeUi's HomeViewModel collects it and re-runs the full scan.
  */
+// TODO delete and implement proper module separation.
 @Single
 class RescanTrigger {
   private val _requests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

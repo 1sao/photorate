@@ -12,7 +12,7 @@ kotlin {
   android {
     // Unique per-module namespace required by AGP
     // (AndroidManifest merger).
-    namespace = "isao.photorate.galleryui"
+    namespace = "isao.photorate.coreui"
     compileSdk = libs.versions.compileSdk.get().toInt()
     minSdk = libs.versions.minSdk.get().toInt()
 
@@ -34,13 +34,6 @@ kotlin {
     }
 
     commonMain.dependencies {
-      implementation(projects.coreUI)
-      implementation(projects.galleryComponent)
-      implementation(projects.configComponent)
-      implementation(projects.photosInference)
-      implementation(libs.koin.core)
-      implementation(libs.koin.annotations)
-      implementation(libs.koin.viewmodel)
       implementation(libs.coroutines.core)
       implementation(libs.androidx.lifecycle.viewmodel.compose)
     }
@@ -55,7 +48,6 @@ kotlin {
       implementation("androidx.compose.material:material-icons-core:1.6.0")
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.androidx.lifecycle.compose)
-      implementation(libs.navigation3.ui)
       implementation("com.google.accompanist:accompanist-permissions:0.37.3")
       implementation(libs.androidx.core)
       implementation("io.coil-kt.coil3:coil-compose:3.5.0")

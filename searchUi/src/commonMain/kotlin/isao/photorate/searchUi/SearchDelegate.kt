@@ -41,6 +41,7 @@ interface SearchDelegate : AutoCloseable {
   override fun close()
 }
 
+// TODO make searchUi part of galleryUi
 @Factory
 class DefaultSearchDelegate(
   private val searchImages: SearchImagesUseCase,
