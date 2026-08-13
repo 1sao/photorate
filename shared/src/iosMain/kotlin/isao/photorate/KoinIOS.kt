@@ -1,6 +1,7 @@
 package isao.photorate
 
 import co.touchlab.kermit.Logger
+import isao.photorate.core.AppInfo
 import isao.photorate.imageRecognition.classify.LandmarkModel
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.mediapipe.IosMediaPipeHandLandmarkerFactory
@@ -12,28 +13,16 @@ import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import org.koin.core.scope.Scope
+import org.koin.dsl.module
 import org.koin.plugin.module.dsl.modules
 
-/** Values provided from Swift before Koin starts. Read by the iOS [PlatformModule]. */
-internal object IosPlatformConfig {
-  lateinit var appInfo: AppInfo
-}
-
-fun initKoinIos(appInfo: AppInfo, doOnStartup: () -> Unit): KoinApplication {
-  IosPlatformConfig.appInfo = appInfo
-  return initKoin {
-    // The iOS SqlDriver (full merged schema) — the
-    // feature modules'
-    // `@Provided` driver parameters resolve to this
-    // binding.
-    modules(IosDatabaseModule::class)
-  }
+fun initKoinIos(appInfo: AppInfo, doOnStartup: () -> Unit): KoinApplication = initKoin {
+  modules(IosDatabaseModule::class)
+  modules(module { single { appInfo } })
 }
 
 @Module
 actual class PlatformModule {
-
-  @Single actual fun provideAppInfo(): AppInfo = IosPlatformConfig.appInfo
 
   /**
    * iOS ships only the MediaPipe pipeline (the ONNX runtime is not wired for iOS yet), so it is

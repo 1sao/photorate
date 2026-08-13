@@ -25,4 +25,8 @@ var koin: Koin_coreKoin {
 
 class IosAppInfo: AppInfo {
     let appId: String = Bundle.main.bundleIdentifier!
+    let versionName: String =
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? ""
+    let versionCode: Int32 =
+        Int32(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") ?? 0
 }

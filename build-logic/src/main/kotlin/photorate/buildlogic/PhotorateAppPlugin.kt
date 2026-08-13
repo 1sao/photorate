@@ -65,6 +65,7 @@ class PhotorateAppPlugin : Plugin<Project> {
 
       dependencies {
         add("implementation", project(":shared"))
+        add("implementation", project(":core"))
         add("implementation", project(":core:ui"))
         add("implementation", project(":feature:home:homeUi"))
         // The merged main database now lives in :shared (shared/androidMain

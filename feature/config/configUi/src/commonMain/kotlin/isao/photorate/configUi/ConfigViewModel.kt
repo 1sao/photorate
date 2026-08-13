@@ -2,12 +2,12 @@ package isao.photorate.configUi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import isao.photorate.config.AppVersionInfo
 import isao.photorate.config.ConfigRepository
 import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.FeatureFlagRepository
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
+import isao.photorate.core.AppInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,10 +32,10 @@ sealed interface ConfigIntent {
 class ConfigViewModel(
   private val configRepository: ConfigRepository,
   private val featureFlagRepository: FeatureFlagRepository,
-  @Provided val appVersionInfo: AppVersionInfo,
+  @Provided private val appInfo: AppInfo,
 ) : ViewModel() {
 
-  private val _uiState = MutableStateFlow(ConfigUiState())
+  private val _uiState = MutableStateFlow(ConfigUiState(appInfo = appInfo))
   val uiState: StateFlow<ConfigUiState> = _uiState.asStateFlow()
 
   init {
@@ -73,4 +73,5 @@ data class ConfigUiState(
   val config: GalleryConfig = GalleryConfig(),
   val sections: List<ConfigSection> = defaultConfigSections,
   val devModeEnabled: Boolean = false,
+  val appInfo: AppInfo = AppInfo.Empty,
 )

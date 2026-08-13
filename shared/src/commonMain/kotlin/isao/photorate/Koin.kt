@@ -1,6 +1,7 @@
 package isao.photorate
 
 import co.touchlab.kermit.Logger
+import isao.photorate.core.AppInfo
 import isao.photorate.homeUi.HomeUIModule
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
@@ -52,16 +53,14 @@ class DispatchersModule {
 }
 
 /**
- * Platform-specific providers: app info, the hand-landmark model seam and the CLIP search factory.
- * Each platform source set provides an [actual] implementation. The landmarker seam
+ * Platform-specific providers: the hand-landmark model seam and the CLIP search factory. Each
+ * platform source set provides an [actual] implementation. The landmarker seam
  * ([LandmarkerFactoryProvider]) is the single place that picks the active on-device model — swap
  * its [isao.photorate.imageRecognition.classify.LandmarkModel] there to switch LiteRT / MediaPipe
  * without touching the scan pipeline.
  */
 @Module
 expect class PlatformModule() {
-  @Single fun provideAppInfo(): AppInfo
-
   @Single fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider
 
   @Single fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory

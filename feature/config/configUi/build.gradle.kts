@@ -5,6 +5,7 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
+      implementation(projects.core)
       implementation(projects.core.ui)
       implementation(projects.feature.config.configComponent)
     }

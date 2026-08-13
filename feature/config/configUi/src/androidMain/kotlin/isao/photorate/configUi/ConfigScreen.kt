@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import isao.photorate.config.AppVersionInfo
 import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
@@ -47,7 +46,6 @@ fun ConfigScreen(
     onBack = onBack,
     onIntent = viewModel::onIntent,
     onPurgeAndRescan = onPurgeAndRescan,
-    appVersionInfo = viewModel.appVersionInfo,
   )
 }
 
@@ -58,7 +56,6 @@ fun ConfigScreenContent(
   onBack: () -> Unit,
   onIntent: (ConfigIntent) -> Unit,
   onPurgeAndRescan: () -> Unit = {},
-  appVersionInfo: AppVersionInfo = AppVersionInfo("", 0),
 ) {
   val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -127,8 +124,8 @@ fun ConfigScreenContent(
       item(key = "purge-rescan") { PurgeAndRescanRow(onClick = { showPurgeDialog = true }) }
       item(key = "version-footer") {
         VersionFooter(
-          versionName = appVersionInfo.versionName,
-          versionCode = appVersionInfo.versionCode,
+          versionName = uiState.appInfo.versionName,
+          versionCode = uiState.appInfo.versionCode,
         )
       }
     }

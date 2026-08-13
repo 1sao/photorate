@@ -4,7 +4,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import isao.photorate.app.db.PhotoRateDb
-import isao.photorate.config.AppVersionInfo
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.scope.Scope
@@ -31,6 +30,4 @@ class AndroidDatabaseModule {
           }
         },
     )
-
-  @Single fun provideAppVersionInfo(): AppVersionInfo = AndroidPlatformConfig.appVersionInfo
 }
