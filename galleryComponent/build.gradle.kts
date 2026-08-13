@@ -1,6 +1,8 @@
 plugins {
   id("photorate.component")
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.sqlDelight)
+  alias(libs.plugins.skie)
 }
 
 kotlin {

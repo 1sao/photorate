@@ -8,13 +8,15 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * Convention plugin for KMP data/domain modules (core, *Component). Applies the shared KMP + Koin
  * compiler setup and the common koin-core/koin-annotations/coroutines-core dependency trio.
+ *
+ * Modules that own SQLDelight schemas or need Skie ObjC export apply those plugins themselves:
+ * sqldelight crashes the IDE sync when the plugin is applied without any `databases.create(...)`
+ * (SQLDelight 2.3.2).
  */
 class PhotorateComponentPlugin : Plugin<Project> {
   override fun apply(project: Project) =
     with(project) {
       applyKmpConventions(expectActualClasses = true)
-      plugins.apply("app.cash.sqldelight")
-      plugins.apply("co.touchlab.skie")
 
       val sourceSets = extensions.getByType<KotlinMultiplatformExtension>().sourceSets
       sourceSets.getByName("commonMain").dependencies {

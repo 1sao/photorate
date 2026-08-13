@@ -1,4 +1,7 @@
-plugins { id("photorate.component") }
+plugins {
+  id("photorate.component")
+  alias(libs.plugins.sqlDelight)
+}
 
 kotlin {
   android { namespace = "isao.photorate.config" }

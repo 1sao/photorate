@@ -1,4 +1,8 @@
-plugins { id("photorate.component") }
+plugins {
+  id("photorate.component")
+  alias(libs.plugins.sqlDelight)
+  alias(libs.plugins.skie)
+}
 
 kotlin {
   android { namespace = "isao.photorate.searchcomponent" }
