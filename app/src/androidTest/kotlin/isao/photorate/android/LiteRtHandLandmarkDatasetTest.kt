@@ -9,10 +9,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import isao.photorate.galleryComponent.classify.LandmarkRaterByThumb
-import isao.photorate.inference.classify.HandGestureClassifier
-import isao.photorate.inference.classify.HandLandmarkerOptions
-import isao.photorate.inference.classify.Score
-import isao.photorate.photoslitert.AndroidLiteRtHandLandmarkerFactory
+import isao.photorate.imageRecognition.classify.HandGestureClassifier
+import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
+import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.litert.AndroidLiteRtHandLandmarkerFactory
 import java.nio.ByteBuffer
 import kotlin.math.min
 import org.junit.Assert.assertEquals

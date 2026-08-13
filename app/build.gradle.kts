@@ -11,7 +11,7 @@ android {
   // The LiteRT conversions (ml/litert/converted: RTMDet/RTMPose hand models
   // + the MobileCLIP-S1 combined tflite) and the shared CLIP tokenizer ship
   // as app assets; the ONNX source models (ml/original_models, 514 MB) are
-  // not shipped while the photosOnnx provider is unplugged.
+  // not shipped while the imageRecognitionComponentOnnx provider is unplugged.
   sourceSets {
     getByName("main") {
       assets.directories.add(
@@ -92,12 +92,15 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   // LiteRT on-device verification + dataset tests: they name
   // CompiledModel/TensorBuffer types and the LiteRT factory classes
-  // (photosLiteRT keeps its litert dependency `implementation`, so it
+  // (imageRecognitionComponentLiteRt keeps its litert dependency `implementation`, so it
   // doesn't leak here). Production code never names LiteRT types.
-  androidTestImplementation(projects.photosLiteRT)
+  androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
   // The dataset tests name the inference contracts directly
   // (HandGestureClassifier, AppClipSearchFactory, ...).
-  androidTestImplementation(projects.photosInference)
+  androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
+  // The MediaPipe dataset tests import the factory classes + detectFromBitmap
+  // (main-scope code never names MediaPipe types, so the provider is test-only).
+  androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentMediaPipe)
   androidTestImplementation(libs.litert)
   // Raw TFLite interpreter for running the extracted hand landmark model
   // directly on crops (bypassing the palm-detector stage) in detection-gap
@@ -115,18 +118,4 @@ dependencies {
   androidTestImplementation(libs.tensorflow.lite.api)
   androidTestImplementation(libs.tensorflow.lite.gpu.api)
   androidTestImplementation(libs.tensorflow.lite.gpu)
-}
-
-// The main database: owns the FULL merged schema (config + gallery + search
-// tables) purely so `PhotoRateDb.Schema` can create the SqlDriver with every
-// table present (see the sqldelight multi-module Slack thread). Feature
-// modules construct their own generated DB classes over that single driver.
-sqldelight {
-  databases.create("PhotoRateDb") {
-    packageName.set("isao.photorate.app.db")
-    dependency(project(":configComponent"))
-    dependency(project(":galleryComponent"))
-    dependency(project(":searchComponent"))
-    dialect(libs.sqlDelight.dialect.get().toString())
-  }
 }

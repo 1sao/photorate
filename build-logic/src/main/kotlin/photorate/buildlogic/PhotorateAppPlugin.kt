@@ -3,7 +3,6 @@ package photorate.buildlogic
 import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
 /**
@@ -19,7 +18,6 @@ class PhotorateAppPlugin : Plugin<Project> {
       plugins.apply("org.jetbrains.kotlin.plugin.compose")
       plugins.apply("io.insert-koin.compiler.plugin")
       plugins.apply("org.jetbrains.kotlin.plugin.serialization")
-      plugins.apply("app.cash.sqldelight")
 
       extensions.configure<ApplicationExtension>("android") {
         namespace = "isao.photorate.android"
@@ -67,18 +65,15 @@ class PhotorateAppPlugin : Plugin<Project> {
 
       dependencies {
         add("implementation", project(":shared"))
-        add("implementation", project(":coreUI"))
-        add("implementation", project(":homeUi"))
-        add("implementation", project(":galleryUi"))
-        add("implementation", project(":configUi"))
-        // The app owns the main SQLDelight database (its generated `app.db` schema
-        // merges every feature module's tables), so the feature modules' generated
-        // types referenced by that schema must be on this module's classpath.
-        add("implementation", project(":galleryComponent"))
-        add("implementation", project(":configComponent"))
-        add("implementation", project(":searchComponent"))
-        add("implementation", project(":photosInference"))
-        add("implementation", project(":photosMediaPipe"))
+        add("implementation", project(":core:ui"))
+        add("implementation", project(":feature:home:homeUi"))
+        // The merged main database now lives in :shared (shared/androidMain
+        // AndroidDatabaseModule); these implementation deps stay because the
+        // manifest references BootSystemGalleryVersionChecker (galleryComponent)
+        // and the instrumented tests use the generated feature types.
+        add("implementation", project(":feature:gallery:galleryComponent"))
+        add("implementation", project(":feature:config:configComponent"))
+        add("implementation", project(":feature:search:searchComponent"))
         libs.requireBundle("app-ui").forEach { add("implementation", it) }
         add("implementation", libs.requireLibrary("kotlinx-dateTime"))
         add("coreLibraryDesugaring", libs.requireLibrary("android-desugaring"))

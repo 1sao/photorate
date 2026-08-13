@@ -1,0 +1,5 @@
+-- `shared`'s `PhotoRateDb` owns no tables of its own: its generated schema is
+-- the full merge of the feature modules' tables (configComponent,
+-- galleryComponent, searchComponent via `dependency(...)`). It exists so
+-- `PhotoRateDb.Schema` can create the SqlDriver with every table present; the
+-- feature modules construct their own generated DB classes over that driver.

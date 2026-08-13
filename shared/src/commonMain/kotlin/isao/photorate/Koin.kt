@@ -1,10 +1,9 @@
 package isao.photorate
 
 import co.touchlab.kermit.Logger
-import isao.photorate.galleryOld.GalleryDataSource
 import isao.photorate.homeUi.HomeUIModule
-import isao.photorate.inference.classify.LandmarkerFactoryProvider
-import isao.photorate.inference.search.AppClipSearchFactory
+import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
+import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -53,11 +52,11 @@ class DispatchersModule {
 }
 
 /**
- * Platform-specific providers: the hand-landmark model seam, gallery datasource and app info. Each
- * platform source set provides an [actual] implementation. The landmarker seam
+ * Platform-specific providers: app info, the hand-landmark model seam and the CLIP search factory.
+ * Each platform source set provides an [actual] implementation. The landmarker seam
  * ([LandmarkerFactoryProvider]) is the single place that picks the active on-device model — swap
- * its [isao.photorate.inference.classify.LandmarkModel] there to switch MediaPipe / ONNX without
- * touching the scan pipeline.
+ * its [isao.photorate.imageRecognition.classify.LandmarkModel] there to switch LiteRT / MediaPipe
+ * without touching the scan pipeline.
  */
 @Module
 expect class PlatformModule() {
@@ -66,8 +65,6 @@ expect class PlatformModule() {
   @Single fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider
 
   @Single fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory
-
-  @Single fun provideGalleryDataSource(scope: Scope): GalleryDataSource
 }
 
 fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}): KoinApplication {

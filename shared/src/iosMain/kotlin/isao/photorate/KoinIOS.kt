@@ -1,14 +1,11 @@
 package isao.photorate
 
 import co.touchlab.kermit.Logger
-import isao.photorate.galleryOld.GalleryDataSource
-import isao.photorate.galleryOld.IosGalleryDataSource
-import isao.photorate.inference.classify.DefaultLandmarkerFactoryProvider
-import isao.photorate.inference.classify.LandmarkModel
-import isao.photorate.inference.classify.LandmarkerFactoryProvider
-import isao.photorate.inference.search.AppClipSearch
-import isao.photorate.inference.search.AppClipSearchFactory
-import isao.photorate.photosMediaPipe.IosMediaPipeHandLandmarkerFactory
+import isao.photorate.imageRecognition.classify.LandmarkModel
+import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
+import isao.photorate.imageRecognition.mediapipe.IosMediaPipeHandLandmarkerFactory
+import isao.photorate.imageRecognition.search.AppClipSearch
+import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import org.koin.core.Koin
 import org.koin.core.KoinApplication
 import org.koin.core.annotation.Module
@@ -59,9 +56,6 @@ actual class PlatformModule {
       override fun createFromOptions(options: AppClipSearchFactory.Options): AppClipSearch =
         error("MobileCLIP search not implemented on iOS yet")
     }
-
-  @Single
-  actual fun provideGalleryDataSource(scope: Scope): GalleryDataSource = IosGalleryDataSource()
 }
 
 // Access from Swift to create a logger

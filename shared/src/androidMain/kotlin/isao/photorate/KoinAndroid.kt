@@ -1,20 +1,41 @@
 package isao.photorate
 
-import isao.photorate.galleryOld.AndroidGalleryDataSource
-import isao.photorate.galleryOld.GalleryDataSource
-import isao.photorate.inference.classify.DefaultLandmarkerFactoryProvider
-import isao.photorate.inference.classify.LandmarkModel
-import isao.photorate.inference.classify.LandmarkerFactoryProvider
-import isao.photorate.inference.search.AppClipSearchFactory
-import isao.photorate.photosMediaPipe.AndroidMediaPipeHandLandmarkerFactory
-import isao.photorate.photoslitert.AndroidLiteRtAppClipSearchFactory
-import isao.photorate.photoslitert.AndroidLiteRtHandLandmarkerFactory
+import android.app.Application
+import isao.photorate.config.AppVersionInfo
+import isao.photorate.imageRecognition.classify.LandmarkModel
+import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
+import isao.photorate.imageRecognition.litert.AndroidLiteRtAppClipSearchFactory
+import isao.photorate.imageRecognition.litert.AndroidLiteRtHandLandmarkerFactory
+import isao.photorate.imageRecognition.mediapipe.AndroidMediaPipeHandLandmarkerFactory
+import isao.photorate.imageRecognition.search.AppClipSearchFactory
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
+import org.koin.core.KoinApplication
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.scope.Scope
+import org.koin.plugin.module.dsl.modules
+
+/** Values provided from MainApp before Koin starts. Read by [AndroidDatabaseModule]. */
+internal object AndroidPlatformConfig {
+  lateinit var appVersionInfo: AppVersionInfo
+}
 
 object AndroidAppInfo : AppInfo {
   override val appId: String = "isao.photorate"
+}
+
+fun initKoinAndroid(
+  app: Application,
+  versionName: String,
+  versionCode: Int,
+): KoinApplication {
+  AndroidPlatformConfig.appVersionInfo = AppVersionInfo(versionName, versionCode)
+  return initKoin {
+    androidContext(app)
+    workManagerFactory()
+    modules(AndroidDatabaseModule::class)
+  }
 }
 
 @Module
@@ -24,9 +45,9 @@ actual class PlatformModule {
 
   /**
    * The active Android hand-landmark model is LiteRT (the CompiledModel pipeline running the
-   * RTMDet + RTMPose conversions on GPU, CPU fallback). The ONNX provider (photosOnnx) is unplugged
-   * for now. Switch [LandmarkModel.LITERT] to [LandmarkModel.MEDIAPIPE] to run the MediaPipe
-   * pipeline instead.
+   * RTMDet + RTMPose conversions on GPU, CPU fallback). The ONNX provider
+   * (imageRecognitionComponentOnnx) is unplugged for now. Switch [LandmarkModel.LITERT] to
+   * [LandmarkModel.MEDIAPIPE] to run the MediaPipe pipeline instead.
    */
   @Single
   actual fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider =
@@ -42,8 +63,4 @@ actual class PlatformModule {
   @Single
   actual fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory =
     AndroidLiteRtAppClipSearchFactory(scope.get())
-
-  @Single
-  actual fun provideGalleryDataSource(scope: Scope): GalleryDataSource =
-    AndroidGalleryDataSource(scope.get())
 }

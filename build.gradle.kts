@@ -29,6 +29,12 @@ fun KtfmtExtension.applyProjectStyle() {
 configure<KtfmtExtension> { applyProjectStyle() }
 
 subprojects {
+  if (!file("build.gradle.kts").exists()) {
+    // Group directories (feature, component, etc.) are virtual projects with no
+    // build file or tasks; skip convention wiring so `check`/ktfmt lookups don't fail.
+    return@subprojects
+  }
+
   apply(plugin = rootProject.libs.plugins.ktfmt.get().pluginId)
 
   // ktfmt-gradle 0.27.0 skips src/androidMain sources unless

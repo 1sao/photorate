@@ -7,9 +7,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import isao.photorate.android.LiteRtClipSearchDatasetTest.Companion.DECODE_MIN_DIM
-import isao.photorate.inference.search.AppClipSearchFactory
-import isao.photorate.inference.search.cosineSimilarity
-import isao.photorate.photoslitert.AndroidLiteRtAppClipSearchFactory
+import isao.photorate.imageRecognition.litert.AndroidLiteRtAppClipSearchFactory
+import isao.photorate.imageRecognition.search.AppClipSearchFactory
+import isao.photorate.imageRecognition.search.cosineSimilarity
 import java.io.ByteArrayOutputStream
 import kotlin.math.min
 import org.junit.Assert.assertEquals
@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 /**
  * On-device MobileCLIP-S1 search verification over the dataset in plans/samples/search (exposed as
  * androidTest assets) — the LiteRT mirror of the ONNX MobileCLIP test (now in the unplugged
- * photosOnnx module):
+ * imageRecognitionComponentOnnx module):
  *
  * 1. Every image must be the TOP-1 match for its own description (what the app's search does when
  *    the user types a query).

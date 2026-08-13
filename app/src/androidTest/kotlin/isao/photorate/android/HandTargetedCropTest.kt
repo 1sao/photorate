@@ -8,10 +8,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import isao.photorate.galleryComponent.classify.LandmarkRaterByThumb
-import isao.photorate.inference.classify.HandGestureClassifier
-import isao.photorate.inference.classify.HandLandmarkerOptions
-import isao.photorate.photosMediaPipe.AndroidMediaPipeHandLandmarkerFactory
-import isao.photorate.photosMediaPipe.detectFromBitmap
+import isao.photorate.imageRecognition.classify.HandGestureClassifier
+import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
+import isao.photorate.imageRecognition.mediapipe.AndroidMediaPipeHandLandmarkerFactory
+import isao.photorate.imageRecognition.mediapipe.detectFromBitmap
 import java.nio.ByteBuffer
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -138,8 +138,9 @@ class HandTargetedCropTest {
     }
   }
 
-  private fun dumpPoints(hand: isao.photorate.inference.classify.LandmarkedImage.Hand): String =
-    hand.points.joinToString(";") { p -> "${p.x},${p.y},${p.z}" }
+  private fun dumpPoints(
+    hand: isao.photorate.imageRecognition.classify.LandmarkedImage.Hand
+  ): String = hand.points.joinToString(";") { p -> "${p.x},${p.y},${p.z}" }
 
   private fun decode(bytes: ByteArray, maxDim: Int): Bitmap? =
     try {

@@ -13,9 +13,9 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.Environment
 import com.google.ai.edge.litert.LiteRtException
-import isao.photorate.photoslitert.CompiledModelRunner
-import isao.photorate.photoslitert.LiteRtRtmModels
-import isao.photorate.photoslitert.MathOps
+import isao.photorate.imageRecognition.litert.CompiledModelRunner
+import isao.photorate.imageRecognition.litert.LiteRtRtmModels
+import isao.photorate.imageRecognition.litert.MathOps
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

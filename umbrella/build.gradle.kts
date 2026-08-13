@@ -20,13 +20,13 @@ kotlin {
         linkerOpts("-lsqlite3")
         export(project(":shared"))
         export(project(":core"))
-        export(project(":galleryComponent"))
-        export(project(":configComponent"))
-        export(project(":searchComponent"))
-        export(project(":homeUi"))
-        export(project(":galleryUi"))
-        export(project(":searchUi"))
-        export(project(":configUi"))
+        export(project(":feature:gallery:galleryComponent"))
+        export(project(":feature:config:configComponent"))
+        export(project(":feature:search:searchComponent"))
+        export(project(":feature:home:homeUi"))
+        export(project(":feature:gallery:galleryUi"))
+        export(project(":feature:search:searchUi"))
+        export(project(":feature:config:configUi"))
         export(libs.touchlab.kermit.simple)
         if (it.name == "iosArm64" || it.name == "iosSimulatorArm64") {
           // shared links kmplitert (photosLiteRT) on the arm64 iOS targets;
@@ -83,13 +83,13 @@ kotlin {
     commonMain.dependencies {
       api(project(":shared"))
       api(project(":core"))
-      api(project(":galleryComponent"))
-      api(project(":configComponent"))
-      api(project(":searchComponent"))
-      api(project(":homeUi"))
-      api(project(":galleryUi"))
-      api(project(":searchUi"))
-      api(project(":configUi"))
+      api(project(":feature:gallery:galleryComponent"))
+      api(project(":feature:config:configComponent"))
+      api(project(":feature:search:searchComponent"))
+      api(project(":feature:home:homeUi"))
+      api(project(":feature:gallery:galleryUi"))
+      api(project(":feature:search:searchUi"))
+      api(project(":feature:config:configUi"))
     }
     iosMain.dependencies { api(libs.touchlab.kermit.simple) }
   }

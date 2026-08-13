@@ -2,7 +2,10 @@
 
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCacheApi
 
-plugins { id("photorate.shared") }
+plugins {
+  id("photorate.shared")
+  id("app.cash.sqldelight")
+}
 
 version = "1.2"
 
@@ -100,11 +103,14 @@ kotlin {
       // publishes none),
       // so it stays out of the
       // iosX64-only classpath.
-      implementation(projects.photosLiteRT)
+      implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
       implementation(compose.components.resources)
       implementation(libs.compose.runtime)
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.sqlDelight.android)
+      // initKoinAndroid's androidContext() lives in koin-android
+      // (workManagerFactory is already here via koin-worker).
+      implementation(libs.koin.android)
     }
     iosMain.dependencies {
       implementation(libs.sqlDelight.native)
@@ -116,7 +122,25 @@ kotlin {
     // source sets (the
     // framework linkerOpts above resolve the dylibs it
     // links against).
-    getByName("iosArm64Main").dependencies { implementation(projects.photosLiteRT) }
-    getByName("iosSimulatorArm64Main").dependencies { implementation(projects.photosLiteRT) }
+    getByName("iosArm64Main").dependencies {
+      implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+    }
+    getByName("iosSimulatorArm64Main").dependencies {
+      implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+    }
+  }
+}
+
+// The main database: owns the FULL merged schema (config + gallery + search
+// tables) purely so `PhotoRateDb.Schema` can create the SqlDriver with every
+// table present (see the sqldelight multi-module Slack thread). Feature
+// modules construct their own generated DB classes over that single driver.
+sqldelight {
+  databases.create("PhotoRateDb") {
+    packageName.set("isao.photorate.app.db")
+    dependency(project(":feature:config:configComponent"))
+    dependency(project(":feature:gallery:galleryComponent"))
+    dependency(project(":feature:search:searchComponent"))
+    dialect(libs.sqlDelight.dialect.get().toString())
   }
 }
