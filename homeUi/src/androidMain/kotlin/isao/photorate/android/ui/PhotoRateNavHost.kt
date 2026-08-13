@@ -18,7 +18,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.coreui.composable.LocalSharedTransitionScope
-import isao.photorate.configUi.ConfigViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
@@ -35,7 +34,6 @@ sealed interface Route : NavKey {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PhotoRateNavHost(
-  configViewModel: ConfigViewModel,
   onOpenAppSettings: () -> Unit,
   appVersionName: String, // TODO inject as a data class in the place where it is used
   appVersionCode: Int, // TODO inject as a data class in the place where it is used
@@ -73,7 +71,6 @@ fun PhotoRateNavHost(
 
             is Route.Config ->
               ConfigScreen(
-                configViewModel = configViewModel,
                 onBack = { backStack.removeLastOrNull() },
                 onPurgeAndRescan = {
                   scope.launch {

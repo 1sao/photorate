@@ -51,6 +51,7 @@ kotlin {
       implementation("androidx.compose.material:material-icons-core:1.6.0")
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.androidx.lifecycle.compose)
+      implementation("io.insert-koin:koin-androidx-compose:4.2.2")
       implementation(libs.androidx.core)
     }
   }
