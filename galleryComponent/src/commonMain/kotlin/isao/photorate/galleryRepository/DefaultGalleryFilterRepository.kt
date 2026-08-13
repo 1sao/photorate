@@ -13,7 +13,7 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class DefaultGalleryFilterRepository(private val db: PhotoRateDb) : GalleryFilterRepository {
-
+  // TODO inject specific queries.
   private val queries
     get() = db.galleryImageQueries
 

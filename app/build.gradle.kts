@@ -1,56 +1,11 @@
 plugins {
-  alias(libs.plugins.android.application)
-  alias(libs.plugins.compose.compiler)
-  alias(libs.plugins.koin.compiler)
-  alias(libs.plugins.kotlin.serialization)
-  alias(libs.plugins.sqlDelight)
+  id("photorate.app")
   id("com.google.gms.google-services")
   id("com.google.firebase.crashlytics")
 }
 
 android {
-  namespace = "isao.photorate.android"
-  compileSdk = libs.versions.compileSdk.get().toInt()
-  defaultConfig {
-    applicationId = "isao.photorate"
-    minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.targetSdk.get().toInt()
-    versionCode = 1
-    versionName = "1.0"
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-  }
-
-  signingConfigs {
-    getByName("debug") {
-      storeFile = file("debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
-  }
-
-  buildTypes {
-    // AGP's debug buildType already uses the "debug"
-    // signingConfig by default.
-    getByName("release") {
-      isMinifyEnabled = false
-      proguardFiles(
-        getDefaultProguardFile("proguard-android-optimize.txt"),
-        "proguard-rules.pro",
-      )
-    }
-  }
-  compileOptions { isCoreLibraryDesugaringEnabled = true }
-  lint {
-    warningsAsErrors = false
-    abortOnError = true
-  }
-
-  buildFeatures {
-    compose = true
-    buildConfig = true
-  }
-
+  // AGP 9 built-in Kotlin toolchain (set here; not exposed via the public DSL).
   kotlin { jvmToolchain(11) }
 
   // The LiteRT conversions (ml/litert/converted: RTMDet/RTMPose hand models
@@ -128,19 +83,13 @@ composeCompiler {
 }
 
 dependencies {
-  implementation(projects.shared)
-  implementation(projects.coreUI)
-  implementation(projects.homeUi)
-  implementation(projects.galleryUi)
-  implementation(projects.configUi)
-  // The app owns the main SQLDelight database (its generated `app.db` schema
-  // merges every feature module's tables), so the feature modules' generated
-  // types referenced by that schema must be on this module's classpath.
-  implementation(projects.galleryComponent)
-  implementation(projects.configComponent)
-  implementation(projects.searchComponent)
-  implementation(projects.photosInference)
-  implementation(projects.photosMediaPipe)
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.analytics)
+  implementation(libs.firebase.crashlytics)
+
+  // junit-ktx brings androidx.test.ext:junit + core transitively.
+  androidTestImplementation(libs.androidx.test.junit)
+  androidTestImplementation(libs.androidx.runner)
   // LiteRT on-device verification + dataset tests: they name
   // CompiledModel/TensorBuffer types and the LiteRT factory classes
   // (photosLiteRT keeps its litert dependency `implementation`, so it
@@ -149,48 +98,23 @@ dependencies {
   // The dataset tests name the inference contracts directly
   // (HandGestureClassifier, AppClipSearchFactory, ...).
   androidTestImplementation(projects.photosInference)
-  androidTestImplementation("com.google.ai.edge.litert:litert:2.1.6")
-  implementation(libs.bundles.app.ui)
-  implementation(libs.kotlinx.dateTime)
-  coreLibraryDesugaring(libs.android.desugaring)
-  implementation(libs.koin.core)
-  implementation(libs.koin.android)
-  implementation(libs.koin.annotations)
-  implementation(libs.android.worker)
-  implementation(libs.koin.worker)
-  implementation(libs.sqlDelight.android)
-  implementation("androidx.compose.material3:material3:1.4.0")
-  implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
-  implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.5.0-alpha24")
-  implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-  // Navigation3 (type-safe, stable) hosts the gallery / details / config
-  // destinations; routes are @Serializable sealed types.
-  implementation(libs.navigation3.ui)
-  implementation(libs.kotlinx.serialization.json)
-
-  implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
-  implementation("com.google.firebase:firebase-analytics")
-  implementation("com.google.firebase:firebase-crashlytics")
-
-  // junit-ktx brings androidx.test.ext:junit + core transitively.
-  androidTestImplementation(libs.androidx.test.junit)
-  androidTestImplementation(libs.androidx.runner)
+  androidTestImplementation(libs.litert)
   // Raw TFLite interpreter for running the extracted hand landmark model
   // directly on crops (bypassing the palm-detector stage) in detection-gap
   // experiments. Test-APK-only; the app itself uses MediaPipe Tasks.
   // 2.17.0 ships 16KB-page-aligned native libs (2.16.x fails to dlopen on
   // modern arm64 emulators with 16KB pages); it is also the newest version
   // published on Maven Central.
-  androidTestImplementation("org.tensorflow:tensorflow-lite:2.17.0")
+  androidTestImplementation(libs.tensorflow.lite)
   // Classic TFLite GPU delegate (GLES 3.1 compute) — feasibility probe for
   // the on-device GPU verification, since the litert CompiledModel GPU path
   // fails on OpenCL-less devices (see LiteRtOnDeviceVerificationTest).
   // The Delegate/DelegateFactory/RuntimeFlavor classes live in
   // tensorflow-lite-api; the -gpu-api carries the GpuDelegateFactory; the
   // -gpu AAR carries only the native delegate implementation.
-  androidTestImplementation("org.tensorflow:tensorflow-lite-api:2.17.0")
-  androidTestImplementation("org.tensorflow:tensorflow-lite-gpu-api:2.17.0")
-  androidTestImplementation("org.tensorflow:tensorflow-lite-gpu:2.17.0")
+  androidTestImplementation(libs.tensorflow.lite.api)
+  androidTestImplementation(libs.tensorflow.lite.gpu.api)
+  androidTestImplementation(libs.tensorflow.lite.gpu)
 }
 
 // The main database: owns the FULL merged schema (config + gallery + search
@@ -203,6 +127,6 @@ sqldelight {
     dependency(project(":configComponent"))
     dependency(project(":galleryComponent"))
     dependency(project(":searchComponent"))
-    dialect("app.cash.sqldelight:sqlite-3-30-dialect:${libs.versions.sqlDelight.get()}")
+    dialect(libs.sqlDelight.dialect.get().toString())
   }
 }

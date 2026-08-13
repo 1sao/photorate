@@ -30,6 +30,9 @@ dependencyResolutionManagement {
 
 plugins { id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0") }
 
+// Convention plugins (photorate.component / photorate.ui).
+includeBuild("build-logic")
+
 include(
   ":app",
   ":shared",
