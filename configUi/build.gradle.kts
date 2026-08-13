@@ -34,6 +34,7 @@ kotlin {
     }
 
     commonMain.dependencies {
+      implementation(projects.coreUI)
       implementation(projects.configComponent)
       implementation(libs.koin.core)
       implementation(libs.koin.annotations)

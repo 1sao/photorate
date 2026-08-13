@@ -56,6 +56,7 @@ kotlin {
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.androidx.lifecycle.compose)
       implementation(libs.navigation3.ui)
+      implementation("io.insert-koin:koin-androidx-compose:4.2.2")
       implementation("com.google.accompanist:accompanist-permissions:0.37.3")
       implementation(libs.androidx.core)
       implementation("io.coil-kt.coil3:coil-compose:3.5.0")

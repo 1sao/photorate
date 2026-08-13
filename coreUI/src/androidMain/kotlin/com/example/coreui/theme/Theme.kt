@@ -1,4 +1,4 @@
-package isao.photorate.android.ui.theme
+package com.example.coreui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

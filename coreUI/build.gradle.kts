@@ -48,6 +48,7 @@ kotlin {
       implementation("androidx.compose.material:material-icons-core:1.6.0")
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.androidx.lifecycle.compose)
+      implementation(libs.navigation3.ui)
       implementation("com.google.accompanist:accompanist-permissions:0.37.3")
       implementation(libs.androidx.core)
       implementation("io.coil-kt.coil3:coil-compose:3.5.0")

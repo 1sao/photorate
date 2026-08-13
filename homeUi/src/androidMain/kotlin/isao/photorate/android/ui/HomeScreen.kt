@@ -4,7 +4,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coreui.composable.PhotoRatePreview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
@@ -99,11 +99,11 @@ fun HomeScreenContent(
   }
 }
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Preview(showBackground = true, widthDp = 411, heightDp = 891)
 @Composable
 private fun HomeScreenPreview() {
-  MaterialTheme {
+  PhotoRatePreview {
     HomeScreenContent(
       state =
         HomeScreenUiState(

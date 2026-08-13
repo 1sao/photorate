@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coreui.composable.PhotoRatePreview
 import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
@@ -225,7 +226,7 @@ fun ConfigScreenContent(
 )
 @Composable
 private fun ConfigScreenPreview() {
-  MaterialTheme {
+  PhotoRatePreview {
     ConfigScreenContent(
       uiState =
         ConfigUiState(

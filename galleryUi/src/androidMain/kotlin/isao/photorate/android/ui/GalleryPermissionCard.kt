@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.example.coreui.composable.PhotoRatePreview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.PermissionStatus
@@ -55,8 +56,8 @@ internal fun GalleryPermissionCard(
 
     delay(.2.seconds)
 
-    currentOnOpenAppSettings() // As the dialog won't be shown again, open system settings as a next
-    // best thing.
+    // As the dialog won't be shown again, open system settings as the next best thing.
+    currentOnOpenAppSettings()
   }
 
   Surface(
@@ -89,17 +90,19 @@ internal fun GalleryPermissionCard(
 @Preview
 @Composable
 private fun GalleryPermissionCardPreview() {
-  Box(Modifier.padding(32.dp)) {
-    GalleryPermissionCard(
-      permissionState =
-        object : PermissionState {
-          override val permission: String = "permission"
-          override val status: PermissionStatus =
-            PermissionStatus.Denied(shouldShowRationale = false)
+  PhotoRatePreview {
+    Box(Modifier.padding(32.dp)) {
+      GalleryPermissionCard(
+        permissionState =
+          object : PermissionState {
+            override val permission: String = "permission"
+            override val status: PermissionStatus =
+              PermissionStatus.Denied(shouldShowRationale = false)
 
-          override fun launchPermissionRequest() {}
-        },
-      onOpenAppSettings = {},
-    )
+            override fun launchPermissionRequest() {}
+          },
+        onOpenAppSettings = {},
+      )
+    }
   }
 }

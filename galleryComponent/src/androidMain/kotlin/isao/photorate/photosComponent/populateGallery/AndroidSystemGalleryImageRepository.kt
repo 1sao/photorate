@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
           MediaStore.Images.Media.HEIGHT,
           MediaStore.Images.Media.MIME_TYPE,
         )
-      context.contentResolver.query(Uri.parse(uri), projection, null, null, null)?.use { cursor ->
+      context.contentResolver.query(uri.toUri(), projection, null, null, null)?.use { cursor ->
         if (!cursor.moveToFirst()) return@withContext null
         fun textColumn(column: String): String? {
           val index = cursor.getColumnIndex(column)
@@ -65,7 +66,7 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
           height = intColumn(MediaStore.Images.Media.HEIGHT),
           mimeType = textColumn(MediaStore.Images.Media.MIME_TYPE),
         )
-      } ?: null
+      }
     }
 
   override suspend fun getAllImages(): List<GalleryImage> =
@@ -127,7 +128,7 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
                 status = GalleryImageStatus.PENDING,
                 scannedAt = null,
                 detectedInMs = null,
-              )
+              ),
             )
           }
         }

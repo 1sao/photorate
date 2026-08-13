@@ -97,11 +97,13 @@ fun GalleryGridContent(
   //      visibleDetections.isEmpty() &&
   //      visibleUncertainDetections.isEmpty()
 
-  // TODO Is it safe to throw on null here?
   // TODO Move somewhere else? LocalWindowSizeClass?
   // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive ?
+  // Previews have no Activity; fall back to the phone layout there.
   val isTablet =
-    calculateWindowSizeClass(LocalActivity.current!!).widthSizeClass > WindowWidthSizeClass.Compact
+    LocalActivity.current?.let {
+      calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
+    } ?: false
 
   LazyVerticalGrid(
     state = gridState,

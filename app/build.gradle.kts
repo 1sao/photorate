@@ -129,6 +129,7 @@ composeCompiler {
 
 dependencies {
   implementation(projects.shared)
+  implementation(projects.coreUI)
   implementation(projects.homeUi)
   implementation(projects.galleryUi)
   implementation(projects.configUi)

@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.example.coreui.composable.PhotoRatePreview
 import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.gallery.db.GalleryImageStatus.DONE
 import isao.photorate.gallery.db.GalleryImageStatus.FAILED
@@ -58,12 +59,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-/**
- * Scan status rendered as a full-width grid item (instead of a dialog): one counter (label above
- * animated count) per status. Pending, Processing and Done share a single row of three; the Failed
- * counter is hidden while there are no errors and, once it appears, the four counters split into
- * two rows of two.
- */
+// TODO cleanup
 @Composable
 fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modifier) {
   Surface(
@@ -96,7 +92,6 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
   }
 }
 
-/** One row of counters; every column shares the row width equally. */
 @Composable
 private fun CounterRow(statuses: List<GalleryImageStatus>, statusCounts: GalleryStatusCounts) {
   Row(
@@ -144,8 +139,7 @@ private fun StatusValue(count: Long, color: Color, modifier: Modifier = Modifier
           val target = latest.value
           if (target == displayed) {
             if (hasTick) {
-              // Settled: land with a small overshoot and let the
-              // spring bounce it to rest.
+              // Settled: land with a small overshoot and let the spring bounce it to rest.
               scale.snapTo(1.12f)
               scale.animateTo(
                 targetValue = 1f,
@@ -257,7 +251,7 @@ private val GalleryImageStatus.title
 @Preview(showBackground = true, widthDp = 411)
 @Composable
 private fun ScanStatusCardPreview() {
-  MaterialTheme {
+  PhotoRatePreview {
     val counts by rememberPreviewGalleryStatusCounts()
     ScanStatusCard(counts)
   }
