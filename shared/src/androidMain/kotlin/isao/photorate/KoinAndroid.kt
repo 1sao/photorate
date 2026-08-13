@@ -1,7 +1,10 @@
 package isao.photorate
 
 import android.app.Application
+import isao.photorate.configUi.ConfigNavModule
 import isao.photorate.core.AppInfo
+import isao.photorate.galleryUi.GalleryNavModule
+import isao.photorate.homeUi.HomeNavModule
 import isao.photorate.imageRecognition.classify.LandmarkModel
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.litert.AndroidLiteRtAppClipSearchFactory
@@ -28,6 +31,12 @@ fun initKoinAndroid(app: Application, appInfo: AppInfo): KoinApplication = initK
   workManagerFactory()
   modules(AndroidDatabaseModule::class)
   modules(module { single { appInfo } })
+  // Navigation3 entries, provided per feature module (androidMain): the Koin graph root is
+  // where the annotated modules are already aggregated, so entries ride the same assembly.
+  modules(HomeNavModule, GalleryNavModule, ConfigNavModule)
+  // The navigation intent handlers live at the graph root so compile-safety can validate the
+  // screens' koinInject calls against them.
+  modules(AppNavigationModule::class)
 }
 
 @Module

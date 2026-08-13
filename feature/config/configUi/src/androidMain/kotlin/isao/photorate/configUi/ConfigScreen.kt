@@ -31,21 +31,23 @@ import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.navigation.IntentHandler
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun ConfigScreen(
   viewModel: ConfigViewModel = koinViewModel(),
-  onBack: () -> Unit,
-  onPurgeAndRescan: () -> Unit,
+  onNavigationIntent: (ConfigNavigationIntent) -> Unit =
+    koinInject<IntentHandler<ConfigNavigationIntent>>()::handle,
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
   ConfigScreenContent(
     uiState = uiState,
-    onBack = onBack,
+    onBack = { onNavigationIntent(ConfigNavigationIntent.Back) },
     onIntent = viewModel::onIntent,
-    onPurgeAndRescan = onPurgeAndRescan,
+    onPurgeAndRescan = { onNavigationIntent(ConfigNavigationIntent.PurgeAndRescan) },
   )
 }
 

@@ -16,6 +16,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.navigation.IntentHandler
 import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GALLERY_PERMISSION
 import isao.photorate.galleryUi.GalleryGridContent
@@ -24,13 +25,14 @@ import isao.photorate.galleryUi.GalleryUiState.ImageSorting
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.galleryUi.GalleryUiState.PermissionState as GalleryPermissionState
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
   viewModel: HomeViewModel = koinViewModel(),
-  onOpenSettings: () -> Unit,
-  onOpenImage: (String) -> Unit,
+  onNavigationIntent: (HomeNavigationIntent) -> Unit =
+    koinInject<IntentHandler<HomeNavigationIntent>>()::handle,
 ) {
   val screenState by viewModel.uiState.collectAsStateWithLifecycle()
   val galleryPermissionState = rememberPermissionState(GALLERY_PERMISSION)
@@ -38,9 +40,8 @@ fun HomeScreen(
   HomeScreenContent(
     state = screenState,
     permissionState = galleryPermissionState,
-    onOpenSettings = onOpenSettings,
-    onOpenImage = onOpenImage,
     onIntent = viewModel::onIntent,
+    onNavigationIntent = onNavigationIntent,
   )
 }
 
@@ -53,9 +54,8 @@ fun HomeScreen(
 fun HomeScreenContent(
   state: HomeScreenUiState,
   permissionState: PermissionState,
-  onOpenSettings: () -> Unit,
-  onOpenImage: (String) -> Unit,
   onIntent: (HomeIntent) -> Unit,
+  onNavigationIntent: (HomeNavigationIntent) -> Unit,
 ) {
   val galleryState = state.gallery
   val searchState = state.search
@@ -69,7 +69,7 @@ fun HomeScreenContent(
       TopBar(
         state = state,
         scrollBehavior = scrollBehavior,
-        onOpenSettings = onOpenSettings,
+        onOpenSettings = { onNavigationIntent(HomeNavigationIntent.OpenSettings) },
         onIntent = onIntent,
       )
     },
@@ -79,7 +79,7 @@ fun HomeScreenContent(
       gridState = gridState,
       permissionState = permissionState,
       modifier = Modifier.fillMaxSize(),
-      onOpenImage = onOpenImage,
+      onOpenImage = { uri -> onNavigationIntent(HomeNavigationIntent.OpenImage(uri)) },
       onAcceptUncertain = { uri, score ->
         onIntent(
           HomeIntent.AcceptUncertain(
@@ -115,9 +115,8 @@ private fun HomeScreenPreview() {
             )
         ),
       permissionState = rememberPermissionState(GALLERY_PERMISSION),
-      onOpenSettings = {},
-      onOpenImage = {},
       onIntent = {},
+      onNavigationIntent = {},
     )
   }
 }

@@ -45,21 +45,24 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.navigation.IntentHandler
 import isao.photorate.imageRecognition.classify.Score
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ImageDetailsScreen(
   uri: String,
   viewModel: ImageDetailsViewModel = koinViewModel { parametersOf(uri) },
-  onBack: () -> Unit,
+  onNavigationIntent: (GalleryNavigationIntent) -> Unit =
+    koinInject<IntentHandler<GalleryNavigationIntent>>()::handle,
 ) {
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   ImageDetailsScreenContent(
     uri = uri,
     state = state,
-    onBack = onBack,
+    onBack = { onNavigationIntent(GalleryNavigationIntent.Back) },
     onIntent = viewModel::onIntent,
   )
 }

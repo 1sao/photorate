@@ -19,6 +19,7 @@ kotlin {
     androidMain.dependencies {
       implementation(libs.kotlinx.serialization.json)
       implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+      implementation(libs.koin.compose.navigation3)
     }
   }
 }

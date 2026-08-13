@@ -108,6 +108,10 @@ kotlin {
       implementation(libs.compose.runtime)
       implementation(libs.androidx.lifecycle.viewmodel)
       implementation(libs.sqlDelight.android)
+      // AppNavigationModule (navigation intent handlers) references IntentHandler.
+      implementation(projects.core.ui)
+      // AppNavigationModule's dispatcher lambdas type against the navigation3 back stack.
+      implementation(libs.navigation3.ui)
       // initKoinAndroid's androidContext() lives in koin-android
       // (workManagerFactory is already here via koin-worker).
       implementation(libs.koin.android)

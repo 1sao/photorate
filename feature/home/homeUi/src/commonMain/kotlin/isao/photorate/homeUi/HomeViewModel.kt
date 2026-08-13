@@ -69,13 +69,23 @@ class HomeViewModel(
 
   init {
     addCloseable(searchDelegate)
-    viewModelScope.launch { rescanTrigger.requests.collect { galleryDelegate.rescan() } }
+    viewModelScope.launch {
+      rescanTrigger.requests.collect { request ->
+        when (request) {
+          RescanTrigger.Request.Rescan -> galleryDelegate.rescan()
+          RescanTrigger.Request.PurgeAndRescan -> {
+            galleryDelegate.deleteAllScans()
+            galleryDelegate.rescan()
+          }
+        }
+      }
+    }
     viewModelScope.launch { galleryDelegate.rescan() }
   }
 
   fun onIntent(intent: HomeIntent) {
     when (intent) {
-      HomeIntent.Rescan -> viewModelScope.launch { galleryDelegate.rescan() }
+      HomeIntent.Rescan -> rescanTrigger.request()
       HomeIntent.ClearSearch -> {
         searchDelegate.clearSearch()
         galleryDelegate.setSearchFilter(null)
@@ -100,13 +110,6 @@ class HomeViewModel(
 
       is HomeIntent.DeleteUncertain ->
         viewModelScope.launch { galleryDelegate.deleteUncertain(intent.uri) }
-    }
-  }
-
-  fun purgeAndRescan() {
-    viewModelScope.launch {
-      galleryDelegate.deleteAllScans()
-      rescanTrigger.request()
     }
   }
 
