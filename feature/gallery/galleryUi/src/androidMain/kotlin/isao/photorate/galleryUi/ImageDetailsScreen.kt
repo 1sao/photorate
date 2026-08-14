@@ -1,25 +1,23 @@
 package isao.photorate.galleryUi
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,25 +27,23 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
@@ -55,6 +51,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.composable.SharedContentKey
 import isao.photorate.coreUi.composable.interpolate
 import isao.photorate.coreUi.composable.rememberOpenImageInGallery
 import isao.photorate.imageRecognition.classify.Score
@@ -81,7 +78,7 @@ fun ImageDetailsScreenContent2(
   onBack: () -> Unit,
   onIntent: (ImageDetailsIntent) -> Unit,
 ) {
-  val imageKey = "image_${state.imageUri}"
+  val imageKey = SharedContentKey.Image(state.imageUri).value
 
   val imageRequest =
     ImageRequest.Builder(LocalContext.current)
@@ -95,66 +92,157 @@ fun ImageDetailsScreenContent2(
       Modifier.sharedBounds(
         LocalSharedTransitionScope.current.rememberSharedContentState(key = imageKey),
         LocalNavAnimatedContentScope.current,
-        //        enter = EnterTransition.None,
+        enter = EnterTransition.None,
         exit = fadeOut(snap()),
         resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-        //        renderInOverlayDuringTransition = false,
-        //        resizeMode = scaleToBounds(ContentScale.Crop, Center),
+        zIndexInOverlay = -1f,
         clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(24.dp)),
       )
     }
-  val sharedElementModifier = navSharedElement
 
-  Box(Modifier.fillMaxSize()) {
-    Column(modifier = Modifier) {
-      ImageSection(
-        state = state,
-        imageRequest = imageRequest,
-        sharedElementModifier = sharedElementModifier,
-        onBack = onBack,
-        onIntent = onIntent,
-      )
-      Spacer(Modifier.height(16.dp))
-      RatingSection(
-        scores = state.scores,
-        hasUserRating = state.hasUserRating,
-        uncertain = state.uncertain,
-        onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
-        onRemoveClick = {},
-        modifier = Modifier.padding(horizontal = 16.dp),
+  // All bottom sections share one bounds so they slide down as a single sheet on pop.
+  val bottomSheetSharedBounds =
+    with(LocalSharedTransitionScope.current) {
+      Modifier.sharedBounds(
+        rememberSharedContentState(SharedContentKey.BottomSheet.value),
+        LocalNavAnimatedContentScope.current,
+        exit = slideOutVertically(targetOffsetY = { it }),
       )
     }
 
-    TopBar(state = state, onBack = onBack)
-  }
-  //    }
-  //  }
+  // The background follows the navigation transition's own animation: animateColor is a
+  // child animation of the nav transition, so the fade stays in sync with its actual
+  // progress (normal and predictive-back transitions included) without hardcoded durations.
+  val navTransition = LocalNavAnimatedContentScope.current.transition
+  val backgroundColor =
+    navTransition
+      .animateColor { state ->
+        when (state) {
+          EnterExitState.Visible -> MaterialTheme.colorScheme.surfaceDim
+          EnterExitState.PreEnter,
+          EnterExitState.PostExit -> Color.Transparent
+        }
+      }
+      .value
 
-  //  Scaffold(
-  //    Modifier.fillMaxSize(),
-  //    topBar = { TopBar(state = state, onBack = onBack) },
-  //    contentWindowInsets = WindowInsets(),
-  //  ) {
-  //
-  //  }
+  var showRemoveDialog by remember { mutableStateOf(false) }
+
+  Scaffold(
+    modifier = Modifier.fillMaxSize(),
+    containerColor = backgroundColor,
+    topBar = {
+      TopBar(
+        state = state,
+        onBack = onBack,
+        backgroundColor = backgroundColor,
+      )
+    },
+    contentWindowInsets = WindowInsets(),
+  ) { innerPadding ->
+    Column(
+      modifier =
+        Modifier.fillMaxSize()
+          // The top edge is unpadded so the image can scroll under the rounded toolbar;
+          // the top padding keeps the image clear of the toolbar until it is scrolled.
+          .padding(
+            top = innerPadding.calculateTopPadding(),
+            bottom = innerPadding.calculateBottomPadding(),
+          )
+          .verticalScroll(rememberScrollState()),
+    ) {
+      ImageSection(
+        state = state,
+        imageRequest = imageRequest,
+        sharedElementModifier = navSharedElement,
+      )
+      Spacer(Modifier.height(SECTION_SPACING))
+      Column(
+        modifier =
+          Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(SECTION_CORNER_RADIUS))
+            .then(bottomSheetSharedBounds),
+      ) {
+        RatingSection(
+          scores = state.scores,
+          hasUserRating = state.hasUserRating,
+          uncertain = state.uncertain,
+          onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
+          onRemoveClick = { showRemoveDialog = true },
+          modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        Spacer(Modifier.height(SECTION_SPACING))
+        state.details?.let { details ->
+          MetadataSection(
+            details = details,
+            modifier = Modifier.padding(horizontal = 16.dp),
+          )
+        }
+        Spacer(Modifier.height(SECTION_SPACING))
+      }
+    }
+  }
+
+  if (showRemoveDialog) {
+    AlertDialog(
+      onDismissRequest = { showRemoveDialog = false },
+      title = { Text("Remove this photo?") },
+      text = {
+        Text(
+          "PhotoRate will forget this photo and its rating. " +
+            "The photo itself stays in your device gallery.",
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showRemoveDialog = false
+            onIntent(ImageDetailsIntent.DeleteImage)
+            onBack()
+          },
+        ) {
+          Text("Remove")
+        }
+      },
+      dismissButton = { TextButton(onClick = { showRemoveDialog = false }) { Text("Cancel") } },
+    )
+  }
 }
 
 @Composable
 internal fun TopBar(
   state: ImageDetailsUiState,
-  modifier: Modifier = Modifier,
   onBack: () -> Unit,
-) =
-  with(LocalSharedTransitionScope.current) {
+  backgroundColor: Color,
+  modifier: Modifier = Modifier,
+) {
+  val sharedBounds =
+    with(LocalSharedTransitionScope.current) {
+      Modifier.sharedBounds(
+        rememberSharedContentState(SharedContentKey.Toolbar.value),
+        LocalNavAnimatedContentScope.current,
+        enter = slideInVertically(tween(TOOLBAR_ANIM_MS)) { -it } + fadeIn(tween(TOOLBAR_ANIM_MS)),
+        exit = slideOutVertically(tween(TOOLBAR_ANIM_MS)) { -it } + fadeOut(tween(TOOLBAR_ANIM_MS)),
+      )
+    }
+  Box(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        // The rounded bottom edge masks whatever scrolls underneath, so the image keeps
+        // rounded corners while it is behind the toolbar.
+        .clip(
+          RoundedCornerShape(
+            bottomStart = IMAGE_CORNER_RADIUS,
+            bottomEnd = IMAGE_CORNER_RADIUS,
+          ),
+        )
+        .background(backgroundColor)
+        .then(sharedBounds),
+  ) {
     TopAppBar(
       title = {
         // Intentionally empty
       },
-      modifier =
-        modifier.sharedBounds(
-          rememberSharedContentState("image_app_bar"),
-          LocalNavAnimatedContentScope.current,
-        ),
       navigationIcon = {
         IconButton(onClick = onBack) {
           Icon(
@@ -175,12 +263,13 @@ internal fun TopBar(
       },
       colors =
         TopAppBarDefaults.topAppBarColors(
-          containerColor = Color.Black.copy(alpha = .15f),
-          navigationIconContentColor = Color.White,
-          actionIconContentColor = Color.White,
+          containerColor = Color.Transparent,
+          navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+          actionIconContentColor = MaterialTheme.colorScheme.onSurface,
         ),
     )
   }
+}
 
 @Composable
 internal fun ImageSection(
@@ -188,228 +277,26 @@ internal fun ImageSection(
   imageRequest: ImageRequest,
   modifier: Modifier = Modifier,
   sharedElementModifier: Modifier = Modifier,
-  onBack: () -> Unit,
-  onIntent: (ImageDetailsIntent) -> Unit,
 ) {
-  AsyncImage(
-    model = imageRequest,
-    contentDescription = "Image",
-    placeholder = null,
-    //    contentScale = ContentScale.Inside.interpolate(ContentScale.Crop),
-    contentScale = ContentScale.Inside.interpolate(),
+  Box(
     modifier =
       modifier
         .padding(16.dp)
         .clip(RoundedCornerShape(24.dp))
         .then(sharedElementModifier)
         .clip(RoundedCornerShape(IMAGE_CORNER_RADIUS)),
-  )
-}
-
-@Composable
-internal fun FullScreenImageSection(
-  imageRequest: ImageRequest,
-  modifier: Modifier = Modifier,
-  sharedElementModifier: Modifier = Modifier,
-) {
-  Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+  ) {
     AsyncImage(
       model = imageRequest,
       contentDescription = "Image",
-      modifier = Modifier.then(sharedElementModifier),
-      contentScale = ContentScale.Inside,
+      placeholder = null,
+      contentScale = ContentScale.Inside.interpolate(),
+      modifier = Modifier.fillMaxSize(),
     )
-  }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable // TODO cleanup
-fun ImageDetailsScreenContent(
-  state: ImageDetailsUiState,
-  uri: String,
-  onBack: () -> Unit,
-  onIntent: (ImageDetailsIntent) -> Unit,
-) {
-  with(LocalSharedTransitionScope.current) {
-    var fullScreen by remember { mutableStateOf(false) }
-    // Sections start hidden so their enter animation plays when the screen
-    // opens (AnimatedVisibility only animates on a visible-state change).
-    var sectionsShown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { sectionsShown = true }
-
-    var showRemoveDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-
-    // System back exits full-screen mode before popping the route.
-    BackHandler(enabled = fullScreen) { fullScreen = false }
-
-    val sharedImageState = rememberSharedContentState(key = "image_$uri")
-    // While the shared-element transition runs, the photo renders in the
-    // transition overlay — above the floating top bar — so the buttons are
-    // hidden until the morph lands, then fade back in.
-    val transitionActive = isTransitionActive
-
-    // Reusable photo-viewer interaction: pinch zoom, clamped pan, double-tap.
-    //    val zoomState = rememberPhotoZoomState()
-
-    val imageAspect =
-      state.details?.let { details ->
-        val w = details.width ?: return@let null
-        val h = details.height ?: return@let null
-        if (h > 0) w / h.toFloat() else null
-      } ?: 1f
-
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-      BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-        val scrollState = rememberScrollState()
-        // Captured so the sizes stay usable inside the nested layout lambdas.
-        val viewportHeight = maxHeight
-        val viewportWidth = maxWidth
-        // A very tall photo would push the rating below the fold, so the
-        // image height is capped and the rating below always peeks out.
-        val maxImageHeight = viewportHeight * IMAGE_MAX_HEIGHT_FRACTION
-        val fittedHeight =
-          ((viewportWidth - IMAGE_HORIZONTAL_PADDING * 2) / imageAspect).coerceAtMost(
-            maxImageHeight,
-          )
-        val imageIsTall =
-          (viewportWidth - IMAGE_HORIZONTAL_PADDING * 2) / imageAspect > maxImageHeight
-
-        // Full-screen mode morphs the fitted card into the viewport instead
-        // of jumping: height, horizontal padding and corner radius all
-        // animate together.
-        val animatedHeight by
-          animateDpAsState(
-            targetValue = if (fullScreen) viewportHeight else fittedHeight,
-            animationSpec = tween(IMAGE_TOGGLE_ANIM_MS),
-            label = "imageHeight",
-          )
-        val animatedHPadding by
-          animateDpAsState(
-            targetValue = if (fullScreen) 0.dp else IMAGE_HORIZONTAL_PADDING,
-            animationSpec = tween(IMAGE_TOGGLE_ANIM_MS),
-            label = "imageHPadding",
-          )
-        val animatedCorner by
-          animateDpAsState(
-            targetValue = if (fullScreen) 0.dp else IMAGE_CORNER_RADIUS,
-            animationSpec = tween(IMAGE_TOGGLE_ANIM_MS),
-            label = "imageCorner",
-          )
-        // Fit rect of the photo inside its (animated) container, fed to the
-        // zoom state so panning can't reveal empty space around the image.
-        val contentWidth = (viewportWidth - animatedHPadding * 2).value
-        val contentHeight = animatedHeight.value
-        val drawnContent =
-          if (contentHeight <= 0f || contentWidth / contentHeight > imageAspect) {
-            IntSize((contentHeight * imageAspect).toInt(), contentHeight.toInt())
-          } else {
-            IntSize(contentWidth.toInt(), (contentWidth / imageAspect).toInt())
-          }
-        // LaunchedEffect(drawnContent) { zoomState.updateContentSize(drawnContent) }
-
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-          Box(
-            modifier =
-              Modifier.fillMaxWidth()
-                .height(animatedHeight)
-                .padding(horizontal = animatedHPadding)
-                .sharedElement(sharedImageState, LocalNavAnimatedContentScope.current)
-                .clip(RoundedCornerShape(animatedCorner))
-                .clickable { fullScreen = !fullScreen },
-          ) {
-            AsyncImage(
-              model = uri,
-              contentDescription = null,
-              // The full photo must be visible (no crop) so the dev-mode
-              // landmark overlay lines up with the actual pixels.
-              contentScale = ContentScale.Fit,
-              modifier = Modifier.matchParentSize(),
-            )
-            if (state.devModeEnabled && state.landmarkHands.isNotEmpty()) {
-              LandmarkOverlay(
-                hands = state.landmarkHands,
-                modifier = Modifier.matchParentSize(),
-              )
-            }
-          }
-
-          AnimatedVisibility(
-            visible = sectionsShown && !fullScreen,
-            enter =
-              fadeIn(tween(SECTION_ANIM_ENTER_MS)) +
-                slideInVertically(tween(SECTION_ANIM_ENTER_MS)) { it },
-            exit =
-              fadeOut(tween(SECTION_ANIM_EXIT_MS)) +
-                slideOutVertically(tween(SECTION_ANIM_EXIT_MS)) { it },
-          ) {
-            Column {
-              // The rating tucks under the photo's bottom edge when the
-              // photo is tall, keeping the section above the fold; once
-              // the user scrolls down it settles back into place.
-              val ratingOverlap by
-                animateDpAsState(
-                  targetValue =
-                    if (imageIsTall && scrollState.value <= 0f) {
-                      RATING_OVERLAP
-                    } else {
-                      0.dp
-                    },
-                  animationSpec = tween(SECTION_ANIM_ENTER_MS),
-                  label = "ratingOverlap",
-                )
-              Spacer(Modifier.height(16.dp))
-              RatingSection(
-                scores = state.scores,
-                hasUserRating = state.hasUserRating,
-                uncertain = state.uncertain,
-                onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
-                onRemoveClick = { showRemoveDialog = true },
-                modifier = Modifier.padding(horizontal = 16.dp).offset(y = -ratingOverlap),
-              )
-              Spacer(Modifier.height(12.dp))
-              state.details?.let { details ->
-                MetadataSection(
-                  details = details,
-                  modifier = Modifier.padding(horizontal = 16.dp),
-                )
-              }
-              Spacer(Modifier.height(24.dp))
-            }
-          }
-        }
-
-        ImageDetailsTopBar(
-          visible = !fullScreen && !transitionActive,
-          onBack = onBack,
-          onOpenInGallery = { openImageInGallery(context, uri) },
-          modifier = Modifier.align(Alignment.TopCenter),
-        )
-      }
-    }
-
-    if (showRemoveDialog) {
-      AlertDialog(
-        onDismissRequest = { showRemoveDialog = false },
-        title = { Text("Remove this photo?") },
-        text = {
-          Text(
-            "PhotoRate will forget this photo and its rating. " +
-              "The photo itself stays in your device gallery.",
-          )
-        },
-        confirmButton = {
-          TextButton(
-            onClick = {
-              showRemoveDialog = false
-              onIntent(ImageDetailsIntent.DeleteImage)
-              onBack()
-            },
-          ) {
-            Text("Remove")
-          }
-        },
-        dismissButton = { TextButton(onClick = { showRemoveDialog = false }) { Text("Cancel") } },
+    if (state.devModeEnabled && state.landmarkHands.isNotEmpty()) {
+      LandmarkOverlay(
+        hands = state.landmarkHands,
+        modifier = Modifier.matchParentSize(),
       )
     }
   }
@@ -431,20 +318,14 @@ private fun ImageDetailsScreenPreview() {
   }
 }
 
-/**
- * Fraction of the viewport the details photo may occupy before the rating below is allowed to
- * overlap it.
- */
-private const val IMAGE_MAX_HEIGHT_FRACTION = 0.62f
-
 /** Same corner radius as the gallery grid cards, so the shared element looks identical. */
 private val IMAGE_CORNER_RADIUS = 24.dp
-private val IMAGE_HORIZONTAL_PADDING = 16.dp
 
-/** How far the rating card tucks under a tall photo, keeping it above the fold. */
-private val RATING_OVERLAP = 24.dp
-private const val SECTION_ANIM_ENTER_MS = 280
-private const val SECTION_ANIM_EXIT_MS = 220
+/** Corner radius of the bottom sections container (matches the sections' surfaces). */
+private val SECTION_CORNER_RADIUS = 28.dp
 
-/** Duration of the fitted → full-screen image morph (and back). */
-private const val IMAGE_TOGGLE_ANIM_MS = 280
+/** Gap between the image and each section. */
+private val SECTION_SPACING = 24.dp
+
+/** Duration of the toolbar slide during the navigation transition. */
+private const val TOOLBAR_ANIM_MS = 220

@@ -1,6 +1,7 @@
 package isao.photorate.galleryUi
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.snap
@@ -59,6 +60,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
+import isao.photorate.coreUi.composable.SharedContentKey
 import isao.photorate.imageRecognition.classify.Score
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -108,15 +110,25 @@ fun GalleryGridContent(
         calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
       } ?: false
 
-    // Anchor for image details bottom sheet transition
-    val sharedTransitionModifier =
+    // Anchors for the image details transitions: the bottom sections slide down
+    // into the bottom one, the top bar slides up into the top one.
+    val bottomSheetTransitionModifier =
       with(LocalSharedTransitionScope.current) {
         Modifier.sharedBounds(
-          rememberSharedContentState("bottom_sheet"),
+          rememberSharedContentState(SharedContentKey.BottomSheet.value),
           LocalNavAnimatedContentScope.current,
         )
       }
-    Box(Modifier.width(100.dp).then(sharedTransitionModifier).align(Alignment.BottomCenter))
+    Box(Modifier.width(100.dp).then(bottomSheetTransitionModifier).align(Alignment.BottomCenter))
+
+    val toolbarTransitionModifier =
+      with(LocalSharedTransitionScope.current) {
+        Modifier.sharedBounds(
+          rememberSharedContentState(SharedContentKey.Toolbar.value),
+          LocalNavAnimatedContentScope.current,
+        )
+      }
+    Box(Modifier.width(100.dp).then(toolbarTransitionModifier).align(Alignment.TopCenter))
 
     LazyVerticalGrid(
       state = gridState,
@@ -271,7 +283,7 @@ private fun GalleryImageCard(
   onClick: () -> Unit,
 ) {
   with(LocalSharedTransitionScope.current) {
-    val sharedState = rememberSharedContentState(key = "image_${item.uri}")
+    val sharedState = rememberSharedContentState(key = SharedContentKey.Image(item.uri).value)
     Box(
       modifier =
         Modifier.fillMaxWidth()
@@ -279,7 +291,7 @@ private fun GalleryImageCard(
           .clip(RoundedCornerShape(24.dp))
           .clickable(onClick = onClick),
     ) {
-      val imageKey = "image_${item.uri}"
+      val imageKey = SharedContentKey.Image(item.uri).value
       val imageRequest =
         ImageRequest.Builder(LocalContext.current)
           .data(item.uri)
@@ -298,6 +310,7 @@ private fun GalleryImageCard(
               LocalNavAnimatedContentScope.current,
               resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
               enter = fadeIn(snap()),
+              exit = ExitTransition.None,
             )
             .clip(RoundedCornerShape(24.dp)),
       )
@@ -344,7 +357,7 @@ private fun UncertainImageCard(
 ) =
   with(LocalSharedTransitionScope.current) {
     var selected by remember(uri) { mutableStateOf(bestGuessScore?.score ?: DEFAULT_GUESS_SCORE) }
-    val sharedState = rememberSharedContentState(key = "image_$uri")
+    val sharedState = rememberSharedContentState(key = SharedContentKey.Image(uri).value)
     Surface(
       modifier = modifier.fillMaxWidth(),
       shape = RoundedCornerShape(24.dp),
