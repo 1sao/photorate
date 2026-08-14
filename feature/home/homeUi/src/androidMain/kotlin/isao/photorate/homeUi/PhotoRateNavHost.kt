@@ -1,8 +1,12 @@
 package isao.photorate.homeUi
 
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -79,6 +83,18 @@ fun PhotoRateNavHost() {
           }
         }
       },
+      popTransitionSpec = {
+        ContentTransform(
+          fadeIn(
+            spring(
+              dampingRatio = 1.0f, // reflects material3 motionScheme.defaultEffectsSpec()
+              stiffness = 1600.0f, // reflects material3 motionScheme.defaultEffectsSpec()
+            ),
+          ),
+          scaleOut(targetScale = 0.7f),
+        )
+      },
+      //      predictivePopTransitionSpec = defaultPredictivePopTransitionSpec()
     )
   }
 }

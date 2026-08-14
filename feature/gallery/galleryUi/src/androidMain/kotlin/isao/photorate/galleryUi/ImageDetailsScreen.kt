@@ -3,7 +3,9 @@ package isao.photorate.galleryUi
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,10 +24,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,8 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.composable.interpolate
+import isao.photorate.coreUi.composable.rememberOpenImageInGallery
 import isao.photorate.imageRecognition.classify.Score
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -56,12 +68,158 @@ fun ImageDetailsScreen(
   onBack: () -> Unit,
 ) {
   val state by viewModel.uiState.collectAsStateWithLifecycle()
-  ImageDetailsScreenContent(
-    uri = uri,
+  ImageDetailsScreenContent2(
     state = state,
     onBack = onBack,
     onIntent = viewModel::onIntent,
   )
+}
+
+@Composable
+fun ImageDetailsScreenContent2(
+  state: ImageDetailsUiState,
+  onBack: () -> Unit,
+  onIntent: (ImageDetailsIntent) -> Unit,
+) {
+  val imageKey = "image_${state.imageUri}"
+
+  val imageRequest =
+    ImageRequest.Builder(LocalContext.current)
+      .data(state.imageUri)
+      .placeholderMemoryCacheKey(imageKey)
+      .memoryCacheKey(imageKey)
+      .build()
+
+  val navSharedElement =
+    with(LocalSharedTransitionScope.current) {
+      Modifier.sharedBounds(
+        LocalSharedTransitionScope.current.rememberSharedContentState(key = imageKey),
+        LocalNavAnimatedContentScope.current,
+        //        enter = EnterTransition.None,
+        exit = fadeOut(snap()),
+        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+        //        renderInOverlayDuringTransition = false,
+        //        resizeMode = scaleToBounds(ContentScale.Crop, Center),
+        clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(24.dp)),
+      )
+    }
+  val sharedElementModifier = navSharedElement
+
+  Box(Modifier.fillMaxSize()) {
+    Column(modifier = Modifier) {
+      ImageSection(
+        state = state,
+        imageRequest = imageRequest,
+        sharedElementModifier = sharedElementModifier,
+        onBack = onBack,
+        onIntent = onIntent,
+      )
+      Spacer(Modifier.height(16.dp))
+      RatingSection(
+        scores = state.scores,
+        hasUserRating = state.hasUserRating,
+        uncertain = state.uncertain,
+        onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
+        onRemoveClick = {},
+        modifier = Modifier.padding(horizontal = 16.dp),
+      )
+    }
+
+    TopBar(state = state, onBack = onBack)
+  }
+  //    }
+  //  }
+
+  //  Scaffold(
+  //    Modifier.fillMaxSize(),
+  //    topBar = { TopBar(state = state, onBack = onBack) },
+  //    contentWindowInsets = WindowInsets(),
+  //  ) {
+  //
+  //  }
+}
+
+@Composable
+internal fun TopBar(
+  state: ImageDetailsUiState,
+  modifier: Modifier = Modifier,
+  onBack: () -> Unit,
+) =
+  with(LocalSharedTransitionScope.current) {
+    TopAppBar(
+      title = {
+        // Intentionally empty
+      },
+      modifier =
+        modifier.sharedBounds(
+          rememberSharedContentState("image_app_bar"),
+          LocalNavAnimatedContentScope.current,
+        ),
+      navigationIcon = {
+        IconButton(onClick = onBack) {
+          Icon(
+            // TODO using Icons is no longer recommended, replace with fonts
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Back",
+          )
+        }
+      },
+      actions = {
+        val openGallery = rememberOpenImageInGallery(state.imageUri)
+        IconButton(onClick = openGallery) {
+          Icon(
+            imageVector = isao.photorate.coreUi.icon.Icons.openInNew,
+            contentDescription = "Open in gallery",
+          )
+        }
+      },
+      colors =
+        TopAppBarDefaults.topAppBarColors(
+          containerColor = Color.Black.copy(alpha = .15f),
+          navigationIconContentColor = Color.White,
+          actionIconContentColor = Color.White,
+        ),
+    )
+  }
+
+@Composable
+internal fun ImageSection(
+  state: ImageDetailsUiState,
+  imageRequest: ImageRequest,
+  modifier: Modifier = Modifier,
+  sharedElementModifier: Modifier = Modifier,
+  onBack: () -> Unit,
+  onIntent: (ImageDetailsIntent) -> Unit,
+) {
+  AsyncImage(
+    model = imageRequest,
+    contentDescription = "Image",
+    placeholder = null,
+    //    contentScale = ContentScale.Inside.interpolate(ContentScale.Crop),
+    contentScale = ContentScale.Inside.interpolate(),
+    modifier =
+      modifier
+        .padding(16.dp)
+        .clip(RoundedCornerShape(24.dp))
+        .then(sharedElementModifier)
+        .clip(RoundedCornerShape(IMAGE_CORNER_RADIUS)),
+  )
+}
+
+@Composable
+internal fun FullScreenImageSection(
+  imageRequest: ImageRequest,
+  modifier: Modifier = Modifier,
+  sharedElementModifier: Modifier = Modifier,
+) {
+  Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    AsyncImage(
+      model = imageRequest,
+      contentDescription = "Image",
+      modifier = Modifier.then(sharedElementModifier),
+      contentScale = ContentScale.Inside,
+    )
+  }
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -261,9 +419,12 @@ fun ImageDetailsScreenContent(
 @Composable
 private fun ImageDetailsScreenPreview() {
   PhotoRatePreview {
-    ImageDetailsScreenContent(
-      uri = "content://preview/1",
-      state = ImageDetailsUiState(scores = listOf(Score.FIVE)),
+    ImageDetailsScreenContent2(
+      state =
+        ImageDetailsUiState(
+          scores = listOf(Score.FIVE),
+          imageUri = "content://preview/1",
+        ),
       onBack = {},
       onIntent = {},
     )

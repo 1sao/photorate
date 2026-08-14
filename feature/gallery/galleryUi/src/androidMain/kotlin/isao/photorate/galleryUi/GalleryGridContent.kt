@@ -2,6 +2,9 @@ package isao.photorate.galleryUi
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,9 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
@@ -78,116 +83,128 @@ fun GalleryGridContent(
   onOpenImage: (String) -> Unit,
   onAcceptUncertain: (uri: String, score: Int) -> Unit,
   onDeleteUncertain: (uri: String) -> Unit,
-) {
-  val searchActive = state.imagesState.searchUris != null
-  val visibleDetections =
-    state.imagesState.searchUris?.let { filter ->
-      state.imagesState.detections.filter { it.uri in filter }
-    } ?: state.imagesState.detections
-  val visibleUncertainDetections =
-    state.imagesState.searchUris?.let { filter ->
-      state.imagesState.uncertainDetections.filter { it.uri in filter }
-    } ?: state.imagesState.uncertainDetections
-  //  val noMatches =
-  //    searchActive &&
-  //      !isSearching &&
-  //      visibleDetections.isEmpty() &&
-  //      visibleUncertainDetections.isEmpty()
+) =
+  Box(modifier.fillMaxSize()) {
+    val searchActive = state.imagesState.searchUris != null
+    val visibleDetections =
+      state.imagesState.searchUris?.let { filter ->
+        state.imagesState.detections.filter { it.uri in filter }
+      } ?: state.imagesState.detections
+    val visibleUncertainDetections =
+      state.imagesState.searchUris?.let { filter ->
+        state.imagesState.uncertainDetections.filter { it.uri in filter }
+      } ?: state.imagesState.uncertainDetections
+    //  val noMatches =
+    //    searchActive &&
+    //      !isSearching &&
+    //      visibleDetections.isEmpty() &&
+    //      visibleUncertainDetections.isEmpty()
 
-  // TODO Move somewhere else? LocalWindowSizeClass?
-  // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive ?
-  // Previews have no Activity; fall back to the phone layout there.
-  val isTablet =
-    LocalActivity.current?.let {
-      calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
-    } ?: false
+    // TODO Move somewhere else? LocalWindowSizeClass?
+    // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive ?
+    // Previews have no Activity; fall back to the phone layout there.
+    val isTablet =
+      LocalActivity.current?.let {
+        calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
+      } ?: false
 
-  LazyVerticalGrid(
-    state = gridState,
-    modifier = modifier.fillMaxSize(),
-    columns = GridCells.Fixed(2),
-    contentPadding =
-      PaddingValues(
-        start = 16.dp,
-        end = 16.dp,
-        top = contentPadding.calculateTopPadding() + 8.dp, // TODO accept contentPadding fully
-        bottom = 32.dp,
-      ),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp),
-  ) {
-    if (!permissionState.status.isGranted && !searchActive) {
-      item("permission", span = { GridItemSpan(maxLineSpan) }) {
-        GalleryPermissionCard(
-          permissionState = permissionState,
-          modifier = Modifier.animateItem(),
+    // Anchor for image details bottom sheet transition
+    val sharedTransitionModifier =
+      with(LocalSharedTransitionScope.current) {
+        Modifier.sharedBounds(
+          rememberSharedContentState("bottom_sheet"),
+          LocalNavAnimatedContentScope.current,
         )
       }
-    }
+    Box(Modifier.width(100.dp).then(sharedTransitionModifier).align(Alignment.BottomCenter))
 
-    when {
-      //      searchActive && isSearching -> {
-      //        item("search", span = { GridItemSpan(maxLineSpan) }) {
-      //          SearchingIndicator(query = searchQuery)
-      //        }
-      //      }
-      //
-      //      noMatches -> {
-      //        item("no-matches", span = { GridItemSpan(maxLineSpan) }) {
-      //          NoMatchesCard(query = searchQuery)
-      //        }
-      //      }
-
-      else -> {
-        //        if (searchActive && visibleDetections.isNotEmpty()) {
-        //          item(key = "search-result", span = { GridItemSpan(maxLineSpan) }) {
-        //            SearchResultsHeader(
-        //              query = searchQuery,
-        //              count = visibleDetections.size + visibleUncertainDetections.size,
-        //            )
-        //          }
-        //        }
-        //        if (!searchActive) {
-        item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
-          ScanStatusCard(state.imagesState.status)
-        }
-        //        }
-        items(visibleDetections, key = { it.uri }) { item ->
-          GalleryImageCard(
-            item = item,
-            onClick = remember(item.uri) { { onOpenImage(item.uri) } },
+    LazyVerticalGrid(
+      state = gridState,
+      modifier = Modifier.fillMaxSize(),
+      columns = GridCells.Fixed(2),
+      contentPadding =
+        PaddingValues(
+          start = 16.dp,
+          end = 16.dp,
+          top = contentPadding.calculateTopPadding() + 8.dp, // TODO accept contentPadding fully
+          bottom = 32.dp,
+        ),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      if (!permissionState.status.isGranted && !searchActive) {
+        item("permission", span = { GridItemSpan(maxLineSpan) }) {
+          GalleryPermissionCard(
+            permissionState = permissionState,
+            modifier = Modifier.animateItem(),
           )
         }
+      }
 
-        if (visibleUncertainDetections.isNotEmpty()) {
-          item(
-            key = "uncertain-header",
-            span = { GridItemSpan(maxLineSpan) },
-          ) {
-            UncertainSectionHeader(count = visibleUncertainDetections.size)
+      when {
+        //      searchActive && isSearching -> {
+        //        item("search", span = { GridItemSpan(maxLineSpan) }) {
+        //          SearchingIndicator(query = searchQuery)
+        //        }
+        //      }
+        //
+        //      noMatches -> {
+        //        item("no-matches", span = { GridItemSpan(maxLineSpan) }) {
+        //          NoMatchesCard(query = searchQuery)
+        //        }
+        //      }
+
+        else -> {
+          //        if (searchActive && visibleDetections.isNotEmpty()) {
+          //          item(key = "search-result", span = { GridItemSpan(maxLineSpan) }) {
+          //            SearchResultsHeader(
+          //              query = searchQuery,
+          //              count = visibleDetections.size + visibleUncertainDetections.size,
+          //            )
+          //          }
+          //        }
+          //        if (!searchActive) {
+          item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
+            ScanStatusCard(state.imagesState.status)
           }
-          items(
-            items = visibleUncertainDetections,
-            key = { "uncertain_${it.uri}" },
-            span = { GridItemSpan(if (isTablet) maxLineSpan / 2 else maxLineSpan) },
-          ) { image ->
-            UncertainImageCard(
-              modifier = Modifier.animateItem(),
-              uri = image.uri,
-              bestGuessScore = image.bestGuessScore,
-              onClick = remember(image.uri) { { onOpenImage(image.uri) } },
-              onAccept = remember { { uri: String, score: Int -> onAcceptUncertain(uri, score) } },
-              onDelete =
-                remember {
-                  { uri: String -> onDeleteUncertain(uri) }
-                }, // TODO unnecessary remembers?
+          //        }
+          items(visibleDetections, key = { it.uri }) { item ->
+            GalleryImageCard(
+              item = item,
+              onClick = remember(item.uri) { { onOpenImage(item.uri) } },
             )
+          }
+
+          if (visibleUncertainDetections.isNotEmpty()) {
+            item(
+              key = "uncertain-header",
+              span = { GridItemSpan(maxLineSpan) },
+            ) {
+              UncertainSectionHeader(count = visibleUncertainDetections.size)
+            }
+            items(
+              items = visibleUncertainDetections,
+              key = { "uncertain_${it.uri}" },
+              span = { GridItemSpan(if (isTablet) maxLineSpan / 2 else maxLineSpan) },
+            ) { image ->
+              UncertainImageCard(
+                modifier = Modifier.animateItem(),
+                uri = image.uri,
+                bestGuessScore = image.bestGuessScore,
+                onClick = remember(image.uri) { { onOpenImage(image.uri) } },
+                onAccept =
+                  remember { { uri: String, score: Int -> onAcceptUncertain(uri, score) } },
+                onDelete =
+                  remember {
+                    { uri: String -> onDeleteUncertain(uri) }
+                  }, // TODO unnecessary remembers?
+              )
+            }
           }
         }
       }
     }
   }
-}
 
 // TODO verify if the search is slow enough to require this
 @Composable
@@ -262,13 +279,26 @@ private fun GalleryImageCard(
           .clip(RoundedCornerShape(24.dp))
           .clickable(onClick = onClick),
     ) {
+      val imageKey = "image_${item.uri}"
+      val imageRequest =
+        ImageRequest.Builder(LocalContext.current)
+          .data(item.uri)
+          .placeholderMemoryCacheKey(imageKey)
+          .memoryCacheKey(imageKey)
+          .build()
       AsyncImage(
-        model = item.uri,
+        model = imageRequest,
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier =
           Modifier.fillMaxSize()
-            .sharedElement(sharedState, LocalNavAnimatedContentScope.current)
+            .clip(RoundedCornerShape(24.dp))
+            .sharedBounds(
+              sharedState,
+              LocalNavAnimatedContentScope.current,
+              resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+              enter = fadeIn(snap()),
+            )
             .clip(RoundedCornerShape(24.dp)),
       )
       RatingStarsOverlay(

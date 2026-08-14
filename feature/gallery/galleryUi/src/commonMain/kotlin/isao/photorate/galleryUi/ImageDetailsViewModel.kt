@@ -20,10 +20,6 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
 
-/**
- * Possible user actions on the image-details screen, funneled through
- * [ImageDetailsViewModel.onIntent].
- */
 sealed interface ImageDetailsIntent {
   /** Replaces the image's detections with a single hand carrying [score]. */
   data class SetScore(val score: Int) : ImageDetailsIntent
@@ -43,7 +39,7 @@ class ImageDetailsViewModel(
   private val galleryImageRepository: GalleryImageRepository,
 ) : ViewModel() {
 
-  private val _uiState = MutableStateFlow(ImageDetailsUiState())
+  private val _uiState = MutableStateFlow(ImageDetailsUiState(imageUri = uri))
   val uiState: StateFlow<ImageDetailsUiState> = _uiState.asStateFlow()
 
   init {
@@ -130,6 +126,7 @@ class ImageDetailsViewModel(
 }
 
 data class ImageDetailsUiState(
+  val imageUri: String,
   /** Distinct scores shown (user rating when present, otherwise detected). */
   val scores: List<Score> = emptyList(),
   /** True when the shown scores are the user's own rating. */
