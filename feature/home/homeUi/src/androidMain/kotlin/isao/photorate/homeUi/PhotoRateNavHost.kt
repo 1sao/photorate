@@ -1,12 +1,11 @@
 package isao.photorate.homeUi
 
-import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,9 +15,10 @@ import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.metadata
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import isao.photorate.configUi.ConfigScreen
@@ -55,46 +55,42 @@ fun PhotoRateNavHost() {
           rememberViewModelStoreNavEntryDecorator(),
           rememberLocalSharedTransitionScopeDecorator(this),
         ),
-      entryProvider = { route: Route ->
-        NavEntry(route) {
-          when (route) {
-            is Route.Home ->
-              HomeScreen(
-                onOpenSettings = { backStack += Route.Config },
-                onOpenImage = { uri -> backStack += Route.ImageDetails(uri) },
-              )
-
-            is Route.ImageDetails ->
-              ImageDetailsScreen(
-                uri = route.uri,
-                onBack = { backStack.removeLastOrNull() },
-              )
-
-            is Route.Config ->
-              ConfigScreen(
-                onBack = { backStack.removeLastOrNull() },
-                onPurgeAndRescan = {
-                  scope.launch {
-                    // TODO rework
-                    //                  homeViewModel.purgeAndRescan()
-                  }
-                },
-              )
+      entryProvider =
+        entryProvider {
+          entry<Route.Home> {
+            HomeScreen(
+              onOpenSettings = { backStack += Route.Config },
+              onOpenImage = { uri -> backStack += Route.ImageDetails(uri) },
+            )
           }
-        }
-      },
-      popTransitionSpec = {
-        ContentTransform(
-          fadeIn(
-            spring(
-              dampingRatio = 1.0f, // reflects material3 motionScheme.defaultEffectsSpec()
-              stiffness = 1600.0f, // reflects material3 motionScheme.defaultEffectsSpec()
-            ),
-          ),
-          scaleOut(targetScale = 0.7f),
-        )
-      },
-      //      predictivePopTransitionSpec = defaultPredictivePopTransitionSpec()
+          entry<Route.ImageDetails>(
+            metadata =
+              metadata {
+                put(NavDisplay.PopTransitionKey) {
+                  EnterTransition.None togetherWith ExitTransition.None
+                }
+                put(NavDisplay.PredictivePopTransitionKey) {
+                  EnterTransition.None togetherWith ExitTransition.None
+                }
+              },
+          ) { route ->
+            ImageDetailsScreen(
+              uri = route.uri,
+              onBack = { backStack.removeLastOrNull() },
+            )
+          }
+          entry<Route.Config> {
+            ConfigScreen(
+              onBack = { backStack.removeLastOrNull() },
+              onPurgeAndRescan = {
+                scope.launch {
+                  // TODO rework
+                  //                  homeViewModel.purgeAndRescan()
+                }
+              },
+            )
+          }
+        },
     )
   }
 }

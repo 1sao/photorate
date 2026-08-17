@@ -1,6 +1,5 @@
 package isao.photorate.galleryUi
 
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.imageRecognition.classify.Score
 
 /**
@@ -47,16 +44,8 @@ internal fun RatingSection(
   onRemoveClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val sharedTransitionModifier =
-    with(LocalSharedTransitionScope.current) {
-      Modifier.sharedBounds(
-        rememberSharedContentState("bottom_sheet"),
-        LocalNavAnimatedContentScope.current,
-        exit = slideOutVertically(targetOffsetY = { it }),
-      )
-    }
   Surface(
-    modifier = modifier.fillMaxWidth().then(sharedTransitionModifier),
+    modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(28.dp),
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
   ) {
