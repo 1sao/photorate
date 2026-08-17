@@ -19,7 +19,6 @@ import coil3.request.ImageRequest
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
-import isao.photorate.coreUi.composable.interpolate
 import isao.photorate.imageRecognition.classify.Score
 
 @Composable
@@ -53,7 +52,7 @@ internal fun ImageSection(
       model = imageRequest,
       contentDescription = null,
       placeholder = null,
-      contentScale = ContentScale.Inside.interpolate(),
+      contentScale = ContentScale.FillWidth,
       modifier = Modifier.fillMaxSize(),
     )
     if (state.devModeEnabled && state.landmarkHands.isNotEmpty()) {

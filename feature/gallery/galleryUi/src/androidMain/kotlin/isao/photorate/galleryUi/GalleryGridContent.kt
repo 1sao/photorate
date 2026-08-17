@@ -263,17 +263,12 @@ private fun GalleryImageCard(
   onClick: () -> Unit,
 ) {
   with(LocalSharedTransitionScope.current) {
-    val sharedState = rememberSharedContentState(key = imageSharedContentKey(item.uri))
     Box(
       modifier = Modifier.fillMaxWidth().aspectRatio(1f).clickable(onClick = onClick),
     ) {
       val imageKey = imageSharedContentKey(item.uri)
       val imageRequest =
-        ImageRequest.Builder(LocalContext.current)
-          .data(item.uri)
-          .placeholderMemoryCacheKey(imageKey)
-          .memoryCacheKey(imageKey)
-          .build()
+        ImageRequest.Builder(LocalContext.current).data(item.uri).memoryCacheKey(imageKey).build()
       AsyncImage(
         model = imageRequest,
         contentDescription = null,
@@ -281,7 +276,7 @@ private fun GalleryImageCard(
         modifier =
           Modifier.fillMaxSize()
             .sharedBounds(
-              sharedState,
+              rememberSharedContentState(key = imageKey),
               LocalNavAnimatedContentScope.current,
               resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
               enter = fadeIn(snap()),
