@@ -1,4 +1,4 @@
-package isao.photorate.galleryUi
+package isao.photorate.galleryUi.details
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,14 +14,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.galleryComponent.populateGallery.SystemImageDetails
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
-internal fun MetadataSection(details: SystemImageDetails, modifier: Modifier = Modifier) {
+internal fun DetailsMetadataSection(details: SystemImageDetails, modifier: Modifier = Modifier) {
   Surface(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(28.dp),
@@ -76,3 +78,24 @@ private fun formatBytes(bytes: Long): String =
     bytes >= 1_024 -> "%.1f KB".format(Locale.US, bytes / 1_024.0)
     else -> "$bytes B"
   }
+
+@Preview(showBackground = true, widthDp = 411)
+@Composable
+private fun DetailsMetadataSectionPreview() {
+  PhotoRatePreview {
+    DetailsMetadataSection(
+      details =
+        SystemImageDetails(
+          uri = "content://preview/1",
+          displayName = "IMG_0001.jpg",
+          dateTakenEpochSeconds = 1_700_000_000,
+          dateAddedEpochSeconds = 1_700_000_100,
+          dateModifiedEpochSeconds = 1_700_000_200,
+          sizeBytes = 2_500_000,
+          width = 3024,
+          height = 4032,
+          mimeType = "image/jpeg",
+        ),
+    )
+  }
+}

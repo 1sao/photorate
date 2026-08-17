@@ -1,4 +1,4 @@
-package isao.photorate.galleryUi
+package isao.photorate.galleryUi.details
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,18 +28,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.galleryUi.RatingStar
+import isao.photorate.galleryUi.StarColors
 import isao.photorate.imageRecognition.classify.Score
 
-/**
- * The rating card on the details screen: shows the current score(s), a star selector to set the
- * user's own rating, and the "remove from PhotoRate" action.
- */
 @Composable
 internal fun RatingSection(
-  scores: List<Score>,
-  hasUserRating: Boolean,
-  uncertain: Boolean,
+  state: ImageDetailsUiState,
   onSetScore: (Int) -> Unit,
   onRemoveClick: () -> Unit,
   modifier: Modifier = Modifier,
@@ -56,7 +54,7 @@ internal fun RatingSection(
         fontWeight = FontWeight.SemiBold,
       )
       Spacer(Modifier.height(8.dp))
-      if (scores.isEmpty()) {
+      if (state.scores.isEmpty()) {
         Text(
           text = "Not rated",
           style = MaterialTheme.typography.bodyMedium,
@@ -64,7 +62,7 @@ internal fun RatingSection(
         )
       } else {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-          scores.forEach { score ->
+          state.scores.forEach { score ->
             RatingStar(
               fraction = score.score / 5f,
               size = 22.dp,
@@ -75,14 +73,14 @@ internal fun RatingSection(
         Text(
           text =
             when {
-              hasUserRating -> "Your rating"
-              uncertain -> "Best guess — review this rating"
-              scores.size > 1 -> "${scores.size} hands rated"
+              state.hasUserRating -> "Your rating"
+              state.uncertain -> "Best guess — review this rating"
+              state.scores.size > 1 -> "${state.scores.size} hands rated"
               else -> "Detected rating"
             },
           style = MaterialTheme.typography.bodySmall,
           color =
-            if (uncertain) MaterialTheme.colorScheme.error
+            if (state.uncertain) MaterialTheme.colorScheme.error
             else MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
@@ -95,7 +93,7 @@ internal fun RatingSection(
       )
       Spacer(Modifier.height(8.dp))
       StarRatingSelector(
-        selected = scores.maxOfOrNull { it.score } ?: 0,
+        selected = state.scores.maxOfOrNull { it.score } ?: 0,
         onSelect = onSetScore,
       )
       Spacer(Modifier.height(4.dp))
@@ -140,5 +138,21 @@ private fun StarRatingSelector(selected: Int, onSelect: (Int) -> Unit) {
         )
       }
     }
+  }
+}
+
+@Preview(showBackground = true, widthDp = 411)
+@Composable
+private fun RatingSectionPreview() {
+  PhotoRatePreview {
+    RatingSection(
+      state =
+        ImageDetailsUiState(
+          scores = listOf(Score.FIVE),
+          imageUri = "content://preview/1",
+        ),
+      onSetScore = {},
+      onRemoveClick = {},
+    )
   }
 }

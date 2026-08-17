@@ -23,7 +23,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import isao.photorate.configUi.ConfigScreen
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
-import isao.photorate.galleryUi.ImageDetailsScreen
+import isao.photorate.galleryUi.details.ImageDetailsScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer

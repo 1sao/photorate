@@ -1,4 +1,4 @@
-package isao.photorate.galleryUi
+package isao.photorate.galleryUi.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package isao.photorate.galleryUi
+package isao.photorate.galleryUi.details
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
