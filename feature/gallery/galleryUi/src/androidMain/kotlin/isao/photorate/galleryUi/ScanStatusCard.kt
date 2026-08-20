@@ -175,8 +175,8 @@ private fun StatusValue(count: Long, color: Color, modifier: Modifier = Modifier
   Row(
     modifier =
       modifier.animateContentSize().graphicsLayer {
-        scaleX = scale.value
-        scaleY = scale.value
+        //        scaleX = scale.value
+        //        scaleY = scale.value
       },
     horizontalArrangement = Arrangement.Center,
     verticalAlignment = Alignment.CenterVertically,

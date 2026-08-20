@@ -36,6 +36,7 @@ gradlePlugin {
 dependencies {
   implementation(libs.agp)
   implementation(libs.kotlin.gradle.plugin)
+  implementation(libs.kotlin.compose.compiler.gradle.plugin)
   implementation(libs.koin.compiler.gradle.plugin)
   // Convention plugins apply these by id (plugins.apply) — they must be on
   // the build-logic classpath or runtime resolution fails / is ambiguous.

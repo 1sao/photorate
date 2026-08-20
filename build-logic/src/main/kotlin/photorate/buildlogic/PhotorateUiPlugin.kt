@@ -2,7 +2,9 @@ package photorate.buildlogic
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
@@ -15,6 +17,12 @@ class PhotorateUiPlugin : Plugin<Project> {
     with(project) {
       applyKmpConventions(expectActualClasses = false)
       plugins.apply("org.jetbrains.kotlin.plugin.compose")
+
+      extensions.configure<ComposeCompilerGradlePluginExtension> {
+        stabilityConfigurationFiles.add(
+          rootProject.layout.projectDirectory.file("app/compose_stability.conf"),
+        )
+      }
 
       val sourceSets = extensions.getByType<KotlinMultiplatformExtension>().sourceSets
       sourceSets.getByName("commonMain").dependencies {
