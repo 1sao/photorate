@@ -1,9 +1,12 @@
 package isao.photorate.homeUi
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.Composable
@@ -16,6 +19,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.composable.StatusBarBackground
 import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GALLERY_PERMISSION
 import isao.photorate.galleryUi.GalleryGridContent
@@ -63,33 +67,41 @@ fun HomeScreenContent(
   val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
 
   val gridState = rememberLazyGridState()
-  Scaffold(
-    modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
-    topBar = {
-      TopBar(
-        state = state,
-        scrollBehavior = scrollBehavior,
-        onOpenSettings = onOpenSettings,
-        onIntent = onIntent,
-      )
-    },
-  ) { innerPadding ->
-    GalleryGridContent(
-      state = galleryState,
-      gridState = gridState,
-      permissionState = permissionState,
-      modifier = Modifier.fillMaxSize(),
-      onOpenImage = onOpenImage,
-      onAcceptUncertain = { uri, score ->
-        onIntent(
-          HomeIntent.AcceptUncertain(
-            uri,
-            score,
-          )
+
+  Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+      modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+      topBar = {
+        TopBar(
+          state = state,
+          scrollBehavior = scrollBehavior,
+          onOpenSettings = onOpenSettings,
+          onIntent = onIntent,
         )
       },
-      onDeleteUncertain = { uri -> onIntent(HomeIntent.DeleteUncertain(uri)) },
-      contentPadding = innerPadding,
+    ) { innerPadding ->
+      GalleryGridContent(
+        state = galleryState,
+        gridState = gridState,
+        permissionState = permissionState,
+        modifier = Modifier.fillMaxSize(),
+        onOpenImage = onOpenImage,
+        onAcceptUncertain = { uri, score ->
+          onIntent(
+            HomeIntent.AcceptUncertain(
+              uri,
+              score,
+            ),
+          )
+        },
+        onDeleteUncertain = { uri -> onIntent(HomeIntent.DeleteUncertain(uri)) },
+        contentPadding = innerPadding,
+      )
+    }
+
+    StatusBarBackground(
+      color = MaterialTheme.colorScheme.surfaceContainerHigh,
+      modifier = Modifier.fillMaxWidth(),
     )
   }
 }
