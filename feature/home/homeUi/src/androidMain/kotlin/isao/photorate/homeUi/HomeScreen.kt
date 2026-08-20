@@ -61,9 +61,6 @@ fun HomeScreenContent(
   onOpenImage: (String) -> Unit,
   onIntent: (HomeIntent) -> Unit,
 ) {
-  val galleryState = state.gallery
-  val searchState = state.search
-
   val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
 
   val gridState = rememberLazyGridState()
@@ -81,7 +78,7 @@ fun HomeScreenContent(
       },
     ) { innerPadding ->
       GalleryGridContent(
-        state = galleryState,
+        state = state.gallery,
         gridState = gridState,
         permissionState = permissionState,
         modifier = Modifier.fillMaxSize(),
@@ -107,7 +104,7 @@ fun HomeScreenContent(
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
-@Preview(showBackground = true, widthDp = 411, heightDp = 891)
+@Preview
 @Composable
 private fun HomeScreenPreview() {
   PhotoRatePreview {

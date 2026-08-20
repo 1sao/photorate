@@ -162,12 +162,7 @@ fun ConfigScreenContent(
   }
 }
 
-@Preview(
-  name = "Settings screen",
-  showBackground = true,
-  widthDp = 411,
-  heightDp = 891,
-)
+@Preview
 @Composable
 private fun ConfigScreenPreview() {
   PhotoRatePreview {
