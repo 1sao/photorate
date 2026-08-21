@@ -79,7 +79,7 @@ private fun formatBytes(bytes: Long): String =
     else -> "$bytes B"
   }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun DetailsMetadataSectionPreview() {
   PhotoRatePreview {

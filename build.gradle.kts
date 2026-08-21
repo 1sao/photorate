@@ -1,6 +1,7 @@
 import com.ncorti.ktfmt.gradle.KtfmtExtension
 import com.ncorti.ktfmt.gradle.TrailingCommaManagementStrategy
 import com.ncorti.ktfmt.gradle.tasks.KtfmtFormatTask
+import groovy.lang.Closure
 
 plugins {
   alias(libs.plugins.ktfmt) apply false
@@ -14,6 +15,7 @@ plugins {
   alias(libs.plugins.android.lint) apply false
   id("com.google.gms.google-services") version "4.5.0" apply false
   id("com.google.firebase.crashlytics") version "3.0.7" apply false
+  idea
 }
 
 apply(plugin = rootProject.libs.plugins.ktfmt.get().pluginId)
@@ -64,6 +66,67 @@ subprojects {
     }
 
   afterEvaluate { tasks.named("check") { dependsOn(tasks.getByName("ktfmtCheck")) } }
+}
+
+// ── KMP redirect-module source attachment ──────────────────────────────
+//
+// A hopefully temporary fix for Android Studio not picking up correct sources for some libs.
+//
+// AndroidX publishes some libraries as KMP "redirect" modules: the top-level
+// artifact (e.g. material3) carries only empty placeholder variants and delegates
+// to a -android companion artifact (e3→material3-android) for the real AAR +
+// sources.  IntelliJ resolves the empty androidSourcesElements variant of the
+// redirect and shows auto-decompiled stubs.
+//
+// We resolve the platform-specific source JARs explicitly and wire them into
+// IntelliJ's project-level library table so Ctrl+click lands on real source.
+val kmpRedirectSourceJars by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+
+dependencies {
+  add(
+    "kmpRedirectSourceJars",
+    "androidx.compose.material3:material3-android:${rootProject.libs.versions.compose.material3.get()}:sources",
+  )
+  // Add other KMP redirect modules here as needed.
+}
+
+idea.project {
+  ipr.withXml(
+    object : Closure<Any?>(this) {
+      override fun call(vararg args: Any?): Any? {
+        val xmlProvider = args[0] as XmlProvider
+        val root = xmlProvider.asNode()
+        val libraryTable = root.appendNode("component", mapOf("name" to "libraryTable"))
+
+        try {
+          kmpRedirectSourceJars.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+            val jar = artifact.file
+            if (jar.exists()) {
+              val library =
+                libraryTable.appendNode(
+                  "library",
+                  mapOf(
+                    "name" to "kmp-redirect-sources",
+                    "type" to "SOURCES",
+                  ),
+                )
+              val classes = library.appendNode("CLASSES")
+              classes.appendNode(
+                "root",
+                mapOf("url" to "jar://${jar.absolutePath}!/"),
+              )
+            }
+          }
+        } catch (e: Exception) {
+          logger.warn("Failed to resolve KMP redirect source JARs: ${e.message}")
+        }
+        return null
+      }
+    },
+  )
 }
 
 tasks.register<KtfmtFormatTask>("ktfmtPrecommit") {
