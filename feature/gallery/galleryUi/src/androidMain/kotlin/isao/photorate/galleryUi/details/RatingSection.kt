@@ -30,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.PhotoRatePreview
-import isao.photorate.galleryUi.RatingStar
 import isao.photorate.galleryUi.StarColors
 import isao.photorate.imageRecognition.classify.Score
 
@@ -48,47 +47,9 @@ internal fun RatingSection(
   ) {
     Column(Modifier.padding(20.dp)) {
       Text(
-        text = "Rating",
+        text = "Change rating",
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
-      )
-      Spacer(Modifier.height(8.dp))
-      if (state.scores.isEmpty()) {
-        Text(
-          text = "Not rated",
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-          state.scores.forEach { score ->
-            RatingStar(
-              fraction = score.score / 5f,
-              size = 22.dp,
-            )
-          }
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-          text =
-            when {
-              state.hasUserRating -> "Your rating"
-              state.uncertain -> "Best guess — review this rating"
-              state.scores.size > 1 -> "${state.scores.size} hands rated"
-              else -> "Detected rating"
-            },
-          style = MaterialTheme.typography.bodySmall,
-          color =
-            if (state.uncertain) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
-
-      Spacer(Modifier.height(16.dp))
-      Text(
-        text = "Change rating",
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
       Spacer(Modifier.height(8.dp))
       StarRatingSelector(
@@ -97,7 +58,7 @@ internal fun RatingSection(
       )
       Spacer(Modifier.height(4.dp))
       Text(
-        text = "Your rating stays on top of the detected scores, which are kept for statistics.",
+        text = "Change the rating by selecting an appropriate number of stars.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
