@@ -24,12 +24,6 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
   private val queries
     get() = db.galleryImageQueries
 
-  private val embeddingQueries
-    get() = db.imageEmbeddingQueries
-
-  private val detectedHandQueries
-    get() = db.detectedHandQueries
-
   override fun getImages(): Flow<List<GalleryImage>> =
     queries.selectAllImages().asFlow().mapToList(Dispatchers.IO)
 
@@ -93,23 +87,6 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
     }
   }
 
-  // TODO should be a usecase
-  override suspend fun markNoHand(uri: String) {
-    // One transaction so a rejection can't leave partial
-    // state (e.g. hands
-    // gone but status still DONE-with-detections). All
-    // three statements
-    // live on the same SQLDelight queries object.
-    db.transactionWithContext(Dispatchers.IO) {
-      detectedHandQueries.deleteRealHandsForImage(uri)
-      embeddingQueries.deleteEmbedding(uri)
-      queries.updateImageStatus(
-        GalleryImageStatus.DONE,
-        uri,
-      )
-    }
-  }
-
   override suspend fun reconcileOrphans(currentValidUris: Set<String>) {
     db.transactionWithContext(Dispatchers.IO) {
       val storedUris = queries.selectAllUris().executeAsList().toSet()
@@ -119,10 +96,6 @@ class DefaultGalleryImageRepository(private val db: PhotoRateDb) : GalleryImageR
 
       queries.deleteByUris(orphaned)
     }
-  }
-
-  override suspend fun deleteImage(uri: String) {
-    withContext(Dispatchers.IO) { queries.deleteImage(uri) }
   }
 
   override suspend fun deleteAll() {

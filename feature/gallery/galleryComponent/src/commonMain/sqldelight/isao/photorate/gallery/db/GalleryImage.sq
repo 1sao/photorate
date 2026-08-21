@@ -16,6 +16,7 @@ CREATE TABLE GalleryImage (
 countsByStatus:
 SELECT status, COUNT(*) AS count
 FROM GalleryImage
+WHERE status != 'IGNORED'
 GROUP BY status;
 
 -- Single status count, if you just need one number (e.g. a badge).
@@ -39,6 +40,7 @@ JOIN config c ON c.id = 1
 WHERE dh.score >= c.min_score
   AND dh.score <= c.max_score
   AND dh.bboxAreaFraction >= c.min_bboxAreaFraction
+  AND gi.status != 'IGNORED'
 ORDER BY dh.score DESC;
 
 -- Grid view with per-image scores, join-based rewrite of
@@ -68,7 +70,8 @@ LEFT JOIN (
       AND bboxAreaFraction >= (SELECT min_bboxAreaFraction FROM config WHERE id = 1)
     GROUP BY imageUri
 ) detected ON detected.imageUri = gi.uri
-WHERE rated.imageUri IS NOT NULL OR detected.imageUri IS NOT NULL
+WHERE (rated.imageUri IS NOT NULL OR detected.imageUri IS NOT NULL)
+  AND gi.status != 'IGNORED'
 ORDER BY gi.modifiedAt DESC;
 
 -- Uncertain grid view: distinct images whose best-scored hand is only a
@@ -80,6 +83,7 @@ SELECT gi.uri, gi.scannedAt, gi.modifiedAt, MAX(dh.score) AS bestGuessScore
 FROM GalleryImage gi
 JOIN DetectedHand dh ON dh.imageUri = gi.uri
 WHERE dh.uncertain = 1
+  AND gi.status != 'IGNORED'
   AND NOT EXISTS (
     SELECT 1 FROM DetectedHand dh2
     WHERE dh2.imageUri = gi.uri

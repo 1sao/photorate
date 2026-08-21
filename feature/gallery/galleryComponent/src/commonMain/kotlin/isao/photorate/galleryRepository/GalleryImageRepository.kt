@@ -21,16 +21,7 @@ interface GalleryImageRepository {
 
   suspend fun markDone(uri: String, detectedInMs: Long)
 
-  /**
-   * Atomically rejects an image's detections: removes its real hands and CLIP embedding and marks
-   * it DONE, so it behaves like a scanned image with no hand (and drops out of search). Used by the
-   * uncertain review's delete.
-   */
-  suspend fun markNoHand(uri: String)
-
   suspend fun reconcileOrphans(currentValidUris: Set<String>)
-
-  suspend fun deleteImage(uri: String)
 
   suspend fun deleteAll()
 

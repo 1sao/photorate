@@ -2,6 +2,7 @@ package isao.photorate.galleryUi
 
 import isao.photorate.config.ConfigRepository
 import isao.photorate.config.GallerySorting
+import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.gallery.db.SelectUncertainImagesWithScore
 import isao.photorate.galleryComponent.classify.LandmarkPendingImagesUseCase
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
@@ -109,7 +110,7 @@ class DefaultGalleryDelegate(
   }
 
   override suspend fun deleteUncertain(uri: String) {
-    runCatching { galleryImageRepository.markNoHand(uri) }
+    runCatching { galleryImageRepository.updateStatus(uri, GalleryImageStatus.IGNORED) }
   }
 
   override suspend fun deleteAllScans() {

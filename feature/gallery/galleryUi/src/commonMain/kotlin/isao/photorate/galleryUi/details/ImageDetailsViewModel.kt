@@ -3,6 +3,7 @@ package isao.photorate.galleryUi.details
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import isao.photorate.config.FeatureFlagRepository
+import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
 import isao.photorate.galleryComponent.populateGallery.SystemGalleryImageRepository
 import isao.photorate.galleryComponent.populateGallery.SystemImageDetails
@@ -110,17 +111,12 @@ class ImageDetailsViewModel(
     }
   }
 
-  /**
-   * Removes the image from the app: deletes its DB row (hands and embedding cascade) so it leaves
-   * the gallery grid. The file stays in the device gallery — the caller navigates back once this
-   * completes.
-   */
-  // TODO hide instead to track history
   private fun deleteImage() {
     if (uri.isBlank()) return
     viewModelScope.launch {
-      // Same as setScore: the caller pops the route right after this intent.
-      withContext(NonCancellable) { runCatching { galleryImageRepository.deleteImage(uri) } }
+      withContext(NonCancellable) {
+        runCatching { galleryImageRepository.updateStatus(uri, GalleryImageStatus.IGNORED) }
+      }
     }
   }
 }

@@ -5,4 +5,5 @@ enum class GalleryImageStatus {
   PROCESSING, // TODO remove
   DONE,
   FAILED,
+  IGNORED,
 }

@@ -46,6 +46,7 @@ import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.gallery.db.GalleryImageStatus.DONE
 import isao.photorate.gallery.db.GalleryImageStatus.FAILED
+import isao.photorate.gallery.db.GalleryImageStatus.IGNORED
 import isao.photorate.gallery.db.GalleryImageStatus.PENDING
 import isao.photorate.gallery.db.GalleryImageStatus.PROCESSING
 import isao.photorate.galleryRepository.GalleryStatusCounts
@@ -236,6 +237,7 @@ private val GalleryImageStatus.color
       FAILED -> Color(0xFFF44336)
       PROCESSING -> Color(0xFF2196F3)
       DONE -> Color(0xFF4CAF50)
+      IGNORED -> Color(0xFF9E9E9E)
     }
 
 private val GalleryImageStatus.title
@@ -245,6 +247,7 @@ private val GalleryImageStatus.title
       FAILED -> "Failed"
       PROCESSING -> "Processing"
       DONE -> "Done"
+      IGNORED -> "Ignored"
     }
 
 @Preview(showBackground = true, widthDp = 411)
