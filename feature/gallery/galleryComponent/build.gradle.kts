@@ -14,6 +14,7 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       implementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
+      implementation(projects.feature.tracking.trackingComponentApi)
       implementation(projects.feature.config.configComponent)
       implementation(projects.core)
       implementation(libs.touchlab.kermit)

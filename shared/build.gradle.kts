@@ -104,6 +104,7 @@ kotlin {
       // so it stays out of the
       // iosX64-only classpath.
       implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+      implementation(projects.feature.tracking.trackingComponentFirebase)
       implementation(compose.components.resources)
       implementation(libs.compose.runtime)
       implementation(libs.androidx.lifecycle.viewmodel)

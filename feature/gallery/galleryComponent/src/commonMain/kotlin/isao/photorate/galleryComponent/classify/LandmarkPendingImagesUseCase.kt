@@ -14,6 +14,7 @@ import isao.photorate.imageRecognition.classify.LandmarkedImage
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.classify.heightPx
 import isao.photorate.imageRecognition.classify.widthPx
+import isao.photorate.tracking.CrashReporter
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -38,18 +39,15 @@ import org.koin.core.annotation.Provided
 class LandmarkPendingImagesUseCase(
   private val galleryImageRepository: GalleryImageRepository,
   private val detectedHandRepository: DetectedHandRepository,
-  // The seam is bound by the root PlatformModule (shared) — the leaf
-  // module cannot see it, so mark it external.
   @Provided private val landmarkerFactoryProvider: LandmarkerFactoryProvider,
   private val imageLoader: LandmarkImageLoader,
   private val landmarkRaterProvider: LandmarkRaterProvider,
+  @Provided private val crashReporter: CrashReporter,
   private val log: Logger,
 ) {
   suspend operator fun invoke() =
     withContext(Dispatchers.Default) {
-      // TODO creating landmarker for
-      // nothing if there are no
-      // images
+      // TODO creating landmarker for nothing if there are no images
       val model = landmarkerFactoryProvider.defaultModel
       val options = model.defaultOptions
       landmarkerFactoryProvider.factoryFor(model).createFromOptions(options).use { landmarker ->
@@ -86,10 +84,6 @@ class LandmarkPendingImagesUseCase(
       image.uri,
       GalleryImageStatus.PROCESSING,
     )
-    // This run is authoritative: drop the previous real
-    // detections (the
-    // GalleryImage upsert no longer cascade-deletes
-    // them), keeping user ratings.
     detectedHandRepository.deleteRealHandsForImage(image.uri)
 
     val candidate =
@@ -110,6 +104,7 @@ class LandmarkPendingImagesUseCase(
       landmarker.detect(candidate)
     }
       .getOrElse { error ->
+        crashReporter.logNonFatal(error, "landmark_failed", mapOf("uri" to image.uri))
         log.e { "Landmarking failed for uri: ${image.uri}. Reason: $error" }
         galleryImageRepository.updateStatus(
           image.uri,

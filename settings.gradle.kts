@@ -50,6 +50,8 @@ include(
   ":feature:imageRecognition:imageRecognitionComponentLiteRt",
   ":feature:imageRecognition:imageRecognitionComponentMediaPipe",
   ":feature:imageRecognition:imageRecognitionComponentOnnx",
+  ":feature:tracking:trackingComponentApi",
+  ":feature:tracking:trackingComponentFirebase",
 )
 
 rootProject.name = "PhotoRate"
