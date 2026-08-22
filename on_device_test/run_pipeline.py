@@ -1,18 +1,9 @@
 #!/usr/bin/env python3
-"""RTMPose-only v5 — no sparse model, tightened gestures.
+"""Run the rtmpose_only_v5 pipeline on on_device_test images and dump detailed features.
 
-Gesture set after user decisions:
-  - OK_SIGN  (3): a CLOSED CIRCLE made with thumb + index that faces the
-    camera — thumb tip touches index tip AND both fingers are bent into a
-    ring (bent/straight curl ratio > 1) with near-round projected shape
-    (circularity). Everything else (folded hands, holding) is NOT an OK sign.
-  - ROCK     (5): index + pinky extended, middle curled.
-  - THUMBS   (1-5 by thumb angle): fingers curled, thumb away.
-  - OPEN_PALM and PEACE are DROPPED (2-score images were false positives).
-
-The pipeline mirrors the app: RTMDet boxes -> multi-rotation RTMPose search ->
-classify. No sparse landmark model, no presence gate — the gesture classifier
-itself is the gate (non-gesture hands are filtered).
+Reports per-image: gesture, score, kp_mean, and whether it matches expectations.
+For uncertain_rejected and user_corrections images, dumps the full feature set
+to understand why each was scored as it was.
 """
 import cv2
 import math
@@ -21,11 +12,14 @@ import onnxruntime as ort
 import sys
 from pathlib import Path
 
-SAMPLES = Path(__file__).resolve().parent.parent / "samples"
-MODELS = Path(__file__).resolve().parent.parent.parent / "onnx" / "models"
+HERE = Path(__file__).resolve().parent
+MODELS = HERE.parent / "onnx" / "models"
+IMAGES = HERE / "images"
+
 RTMDET = MODELS / "rtmdet_n_hand.onnx"
 PALM = MODELS / "palm_detection_full.onnx"
 RTMPOSE = MODELS / "rtmpose_hand.onnx"
+
 MIN_DET = 0.25
 MIN_RTMPOSE_KP = 0.3
 BOX_EXPANSION = 1.2
@@ -40,25 +34,17 @@ sess_rtm = ort.InferenceSession(str(RTMDET), providers=["CPUExecutionProvider"])
 sess_palm = ort.InferenceSession(str(PALM), providers=["CPUExecutionProvider"])
 sess_rtmp = ort.InferenceSession(str(RTMPOSE), providers=["CPUExecutionProvider"])
 
-# OK-sign circle thresholds (tuned from ok_circle_features.py: real OK signs
-# have thumb_curl >= 1.09, index_curl >= 1.17, circularity >= 0.55, and both
-# ring dimensions substantial (w >= 0.62, h >= 0.36) — a circle facing the
-# camera. no_score folded/holding hands sit at curl ~1.00-1.12, circ <= 0.24,
-# or a degenerate sliver ring (w=0.05, h=1.60 -> not facing the camera).
+# OK-sign thresholds (from rtmpose_only_v5.py)
 OK_MIN_THUMB_CURL = 1.08
 OK_MIN_INDEX_CURL = 1.15
 OK_MIN_CIRCULARITY = 0.40
 OK_MIN_RING_SIDE = 0.25
-OK_MIN_SPREAD = 0.10
-MAX_EXTENT_RATIO = 2.9
-MAX_THUMB_LEN = 2.0
-MAX_ROCK_SPREAD = 1.0
-MIN_ROCK_SPREAD = 0.25
-MIN_ROCK_THUMB_LEN = 0.2
 
 
 def decode_640(path):
     img = cv2.imread(str(path))
+    if img is None:
+        return None
     ih, iw = img.shape[:2]
     s = max(min(ih, iw) // DECODE_MIN_DIM, 1)
     if s > 1:
@@ -83,9 +69,9 @@ def rtmdet_boxes(img):
     boxes, scores = boxes[m], scores[m]
     dets = []
     for o, s in zip(boxes, scores):
-        x1 = max(int(o[0] / ratio), 0);
+        x1 = max(int(o[0] / ratio), 0)
         y1 = max(int(o[1] / ratio), 0)
-        x2 = min(int(o[2] / ratio), iw);
+        x2 = min(int(o[2] / ratio), iw)
         y2 = min(int(o[3] / ratio), ih)
         if x2 > x1 and y2 > y1 and x2 - x1 >= 8 and y2 - y1 >= 8:
             dets.append((x1, y1, x2, y2, float(s)))
@@ -122,7 +108,7 @@ def rotate_and_crop_square(img, cx, cy, side, degree):
     xs = [cx_p + hw * cos_t - hh * sin_t, cx_p - hw * cos_t - hh * sin_t,
           cx_p - hw * cos_t + hh * sin_t, cx_p + hw * cos_t + hh * sin_t]
     ys = [cy_p + hw * sin_t + hh * cos_t, cy_p - hw * sin_t + hh * cos_t,
-          cy_p - hw * sin_t - hh * cos_t, cy_p + hw * sin_t - hh * cos_t]
+          cy_p - hw * sin_t - hh * cos_t, cy_p + hw * sin_t + hh * cos_t]
     min_x, max_x = int(min(xs)), int(max(xs)) + 1
     min_y, max_y = int(min(ys)), int(max(ys)) + 1
     cxx, cyy = (min_x + max_x) // 2, (min_y + max_y) // 2
@@ -218,7 +204,6 @@ def shoelace_area(poly):
 
 
 def ok_circle(p, hs):
-    """The thumb+index loop must be a real ring facing the camera."""
     ring = [p[2], p[3], p[4], p[8], p[7], p[6]]
     area = shoelace_area(ring)
     perim = sum(dist(ring[i], ring[(i + 1) % len(ring)]) for i in range(len(ring)))
@@ -245,10 +230,12 @@ def ok_circle(p, hs):
     }
 
 
-def classify(p):
+def classify_with_features(p):
+    """Returns (gesture, score, features_dict) where features_dict contains
+    the raw measurements used for classification."""
     hs = dist(p[0], p[9])
     if hs <= 0:
-        return None
+        return None, None, {}
     thumb_len = dist(p[2], p[4]) / hs
     thumb_index = dist(p[4], p[8]) / hs
     idx_ext = is_extended(p, 6, 8)
@@ -260,81 +247,72 @@ def classify(p):
     tdir = vec(p[2], p[4])
     idir = vec(p[5], p[8])
     tf_angle = angle_between(tdir, idir)
-    # Landmark sanity: reject degenerate keypoint clouds where points are
-    # scattered implausibly far (extent > 3.5x hand size = garbage landmarks,
-    # e.g. media/147 at 6.1x). Real hands never exceed ~3x.
+    # tip direction for thumb angle (like the Kotlin code)
+    tip_d = vec(p[3], p[4])
+    tip_angle = abs(math.degrees(math.atan2(tip_d[0], -tip_d[1])))
+    feats = {
+        "hs": hs,
+        "thumb_len": thumb_len,
+        "thumb_index": thumb_index,
+        "idx_ext": idx_ext,
+        "mid_ext": mid_ext,
+        "ring_ext": ring_ext,
+        "pink_ext": pink_ext,
+        "spread": spread,
+        "tf_angle": tf_angle,
+        "tip_angle": tip_angle,
+    }
+    # Landmark geometry sanity: extent ratio and point spread
     xs = [pp[0] for pp in p]
     ys = [pp[1] for pp in p]
     extent = max(max(xs) - min(xs), max(ys) - min(ys))
-    if extent / hs > MAX_EXTENT_RATIO:
-        return None
+    feats["extent_ratio"] = extent / hs if hs > 0 else 0.0
+    # wrist-to-MCP straightness check
+    feats["wrist_mcp_dist"] = dist(p[0], p[9])
+    # All points clustering: std dev of distances from centroid
+    cx = sum(xs) / len(xs)
+    cy = sum(ys) / len(ys)
+    dists_from_center = [math.hypot(x - cx, y - cy) for x, y in zip(xs, ys)]
+    mean_d = sum(dists_from_center) / len(dists_from_center)
+    std_d = math.sqrt(sum((d - mean_d) ** 2 for d in dists_from_center) / len(dists_from_center))
+    feats["point_spread"] = std_d / hs if hs > 0 else 0.0
 
-    # OK sign: closed circle of thumb+index facing the camera. Both fingers
-    # must be bent into a ring (curl well above 1 = straight), the projected
-    # ring must be near-round, and BOTH ring dimensions must be substantial
-    # (a thin sliver is an edge-on/parallel loop, not a camera-facing circle).
-    # Remaining fingers extended. The spread gate rejects degenerate shapes
-    # (straight lines, overlapping points) where the OK geometry is satisfied
-    # by accident — real OK signs have spread > 0.1 (media/174,175 at
-    # spread 0.04-0.05 are straight-line FPs).
-    if thumb_index < 0.2 and mid_ext and ring_ext and pink_ext and spread > OK_MIN_SPREAD:
+    if thumb_index < 0.2 and mid_ext and ring_ext and pink_ext:
         ring = ok_circle(p, hs)
+        feats.update({f"ring_{k}": v for k, v in ring.items()})
         if ring["thumb_curl"] >= OK_MIN_THUMB_CURL and \
                 ring["index_curl"] >= OK_MIN_INDEX_CURL and \
                 ring["circularity"] >= OK_MIN_CIRCULARITY and \
                 min(ring["ring_w"], ring["ring_h"]) >= OK_MIN_RING_SIDE:
-            return ("OK_SIGN", 3)
-
-    # ROCK: index + pinky extended, middle curled. The spread gates reject
-    # degenerate detections where points are implausibly scattered (spread > 1.0
-    # = media/131 at 1.34) or where the "extended" fingers are too close
-    # together to be a real rock sign (spread < 0.25 = media/130 at 0.09,
-    # media/249 at 0.20). Real rock signs have spread > 0.5. The thumb_len
-    # gate rejects detections where the thumb is essentially invisible
-    # (thumb_len < 0.2 = media/271 at 0.19).
-    # When spread is high (>0.5) and ring is also extended, the hand is
-    # likely an open palm or holding gesture (all fingers splayed), not a
-    # rock sign. Real rock signs have ring curled. media/249 at deg=180
-    # has ring=True + spread=0.793; real ROCK samples have ring=False.
-    ring_ext = is_extended(p, 14, 16)
-    if idx_ext and pink_ext and not mid_ext and spread > MIN_ROCK_SPREAD and spread < MAX_ROCK_SPREAD and thumb_len > MIN_ROCK_THUMB_LEN and not (
-            ring_ext and spread > 0.5):
-        return ("ROCK", 5)
-
-    # THUMBS: fingers curled, thumb away. Thumb rotation from up = score.
-    # The score direction is the IP->TIP segment (kp3->kp4), not the MCP->TIP
-    # vector used for the tf_angle gate: the CMC/MCP joints are noisy (low kp
-    # confidence) and the thumb is often curved, so the tip segment is where
-    # the pointing lives. Keeps all THUMBS-5 reads, fixes 1_tuna's borderline
-    # 147.7/153 deg angle to its label's ONE (mirrors the app classifier).
-    # thumb_len > 2.0 is physically impossible for a real hand (media/267 at
-    # 2.01 is a garbage detection).
+            return ("OK_SIGN", 3, feats)
+    if idx_ext and pink_ext and not mid_ext:
+        return ("ROCK", 5, feats)
     all_curled = not (idx_ext or mid_ext or ring_ext or pink_ext)
-    if all_curled and thumb_len > 0.25 and thumb_len < MAX_THUMB_LEN and tf_angle > 85:
-        tip_dx, tip_dy = vec(p[3], p[4])
-        angle = abs(math.degrees(math.atan2(tip_dx, -tip_dy)))
-        score = 5 if angle < 24 else 4 if angle < 70 else 3 if angle < 110 else 2 if angle < 165 else 1
-        return ("THUMBS", score)
-    return None
+    if all_curled and thumb_len > 0.25 and tf_angle > 85:
+        angle = tip_angle
+        score = 5 if angle < 40 else 4 if angle < 70 else 3 if angle < 110 else 2 if angle < 150 else 1
+        return ("THUMBS", score, feats)
+    # Unclassified — return features only
+    return None, None, feats
 
 
-def run_pipeline(img, boxes, use_palm=True):
-    """Mirror AndroidOnnxHandLandmarker.rtmposeFallback EXACTLY:
-    - unclassified hands are skipped (never become imageSpace/bestRotated)
-    - deg 0 classified hands -> imageSpace (best kp)
-    - other rotations -> bestRotated (THUMBS preferred, highest score, kp tie)
-    - winner = imageSpace if kp >= MIN_RTMPOSE_KP, else bestRotated, else imageSpace
-    """
+def run_pipeline_detailed(img, boxes, use_palm=True):
+    """Run the full pipeline with detailed features per box."""
     iw, ih = img.shape[1], img.shape[0]
-    per_box = []
+    results = []
     for box in boxes[:MAX_HANDS]:
+        box_area = (box[2] - box[0]) * (box[3] - box[1])
+        img_area = iw * ih
+        bbox_area_pct = box_area / img_area * 100 if img_area > 0 else 0
         if box[4] < MIN_DET:
-            per_box.append(("det<0.25", None))
+            results.append(
+                {"status": "det<0.25", "det_score": box[4], "bbox_area_pct": bbox_area_pct})
             continue
         palm_deg = palm_rotation(img, box[:4]) if use_palm else None
         candidates = sorted(set([0, 90, 180, 270] + ([palm_deg] if use_palm else [])))
         image_space = None
         best_rotated = None
+        best_rotated_feats = {}
         for factor in FALLBACK_FACTORS:
             cx, cy, side = expand_square(box[:4], iw, ih, factor)
             for deg in candidates:
@@ -344,87 +322,132 @@ def run_pipeline(img, boxes, use_palm=True):
                 kps = rtmpose_landmarks(crop)
                 kp_mean = float(kps[:, 2].mean())
                 p = [(float(kps[i, 0]), float(kps[i, 1])) for i in range(21)]
-                cl = classify(p)
+                cl, score, feats = classify_with_features(p)
                 if cl is None:
                     continue
-                entry = {"kp_mean": kp_mean, "deg": deg, "cls": cl}
+                entry = {"kp_mean": kp_mean, "deg": deg, "cls": (cl, score), "feats": feats,
+                         "factor": factor}
                 if deg == 0:
                     if image_space is None or kp_mean > image_space["kp_mean"]:
                         image_space = entry
-                    # Early exit (mirrors the app's rtmposeRating): a confident
-                    # upright read on the 1.2x crop is the guaranteed winner.
                     if factor == BOX_EXPANSION and image_space["kp_mean"] >= MIN_RTMPOSE_KP:
                         break
                     continue
                 if best_rotated is None:
                     best_rotated = entry
-                elif cl[0] == "THUMBS" and best_rotated["cls"][0] != "THUMBS":
+                    best_rotated_feats = feats
+                elif cl == "THUMBS" and (
+                best_rotated["cls"][0] if best_rotated else None) != "THUMBS":
                     best_rotated = entry
-                elif cl[0] != "THUMBS" and best_rotated["cls"][0] == "THUMBS":
+                    best_rotated_feats = feats
+                elif cl != "THUMBS" and (
+                best_rotated["cls"][0] if best_rotated else None) == "THUMBS":
                     pass
-                elif cl[0] == "THUMBS":
-                    if cl[1] > best_rotated["cls"][1] or (
-                            cl[1] == best_rotated["cls"][1] and kp_mean > best_rotated["kp_mean"]):
+                elif cl == "THUMBS":
+                    if score > best_rotated["cls"][1] or (
+                            score == best_rotated["cls"][1] and kp_mean > best_rotated["kp_mean"]):
                         best_rotated = entry
+                        best_rotated_feats = feats
                 elif kp_mean > best_rotated["kp_mean"]:
                     best_rotated = entry
+                    best_rotated_feats = feats
             if factor == BOX_EXPANSION and image_space is not None and image_space[
                 "kp_mean"] >= MIN_RTMPOSE_KP:
                 break
         winner = None
         if image_space is not None and image_space["kp_mean"] >= MIN_RTMPOSE_KP:
             winner = image_space
-        elif best_rotated is not None and best_rotated["kp_mean"] >= MIN_RTMPOSE_KP:
+        elif best_rotated is not None:
             winner = best_rotated
-        elif image_space is not None:
+        else:
             winner = image_space
         if winner is None:
-            per_box.append(("no-kps", None))
+            # Still get features from best read for analysis
+            cx, cy, side = expand_square(box[:4], iw, ih)
+            crop = rotate_and_crop_square(img, cx, cy, side, 0)
+            feats_only = {}
+            if crop is not None:
+                kps = rtmpose_landmarks(crop)
+                kp_mean = float(kps[:, 2].mean())
+                p = [(float(kps[i, 0]), float(kps[i, 1])) for i in range(21)]
+                _, _, feats_only = classify_with_features(p)
+            results.append(
+                {"status": "unrated", "det_score": box[4], "bbox_area_pct": bbox_area_pct,
+                 "feats": feats_only})
             continue
-        cl = winner["cls"]
-        label = f"{winner['kp_mean']:.2f}@{winner['deg']}"
-        label += f"/{cl[0]}-{cl[1]}" if cl else "/unrated"
-        per_box.append((label, winner))
-    return per_box
+        cl, score = winner["cls"]
+        results.append({
+            "status": f"{cl}-{score}",
+            "gesture": cl,
+            "score": score,
+            "kp_mean": winner["kp_mean"],
+            "deg": winner["deg"],
+            "det_score": box[4],
+            "bbox_area_pct": bbox_area_pct,
+            "feats": winner.get("feats", {}),
+        })
+    return results
 
 
 def main():
-    for use_palm in (True, False):
-        print(f"\n{'=' * 90}\n  use_palm = {use_palm}\n{'=' * 90}")
-        print(f"{'sample':<38} {'RTMPose-only v5':<44}")
-        correct = 0
-        total_scored = 0
-        false_positives = []
-        misses = []
-        for f in sorted(SAMPLES.rglob("*.jpg")):
-            rel = str(f.relative_to(SAMPLES))
-            score_dir = rel.split("/")[0]
-            if score_dir == "search":
-                continue
+    categories = {
+        "confident_kept": "expected: hand detected",
+        "uncertain_kept": "expected: could be filtered (user says still invalid)",
+        "uncertain_rejected": "expected: NO hand detected / filtered out",
+        "user_corrections": "expected: correct score (match user verdict)",
+    }
+    user_verdicts = {
+        "42": 5,  # confirmed
+        "66": 4,  # downgraded
+        "147": 2,  # major downgrade
+        "148": 3,  # confirmed
+        "3484": 4,  # downgraded
+    }
+
+    for cat, desc in categories.items():
+        cat_dir = IMAGES / cat
+        if not cat_dir.exists():
+            continue
+        print(f"\n{'=' * 120}")
+        print(f"  {cat}/ — {desc}")
+        print(f"{'=' * 120}")
+        print(f"{'file':<65} {'result':<25} {'det':>5} {'kp':>6} {'bbox%':>7} features")
+        print("-" * 160)
+
+        for f in sorted(cat_dir.glob("*.jpg")):
+            media_id = f.name.split("_")[0]
             img = decode_640(f)
+            if img is None:
+                print(f"{f.name:<65} DECODE_FAILED")
+                continue
             boxes = rtmdet_boxes(img)
-            results = run_pipeline(img, boxes, use_palm)
-            labels = ";".join(r[0] for r in results) if results else "-"
-            has_gesture = any(r[1] is not None and r[1]["cls"] is not None for r in results)
-            if score_dir == "no_score":
-                status = "NO_GESTURE" if not has_gesture else "FP"
-                if has_gesture:
-                    false_positives.append(rel)
-                print(f"{rel:<38} [{status:<42}] {labels}")
-            else:
-                total_scored += 1
-                expected = int(score_dir)
-                ok = any(
-                    r[1] is not None and r[1]["cls"] is not None and r[1]["cls"][1] == expected for
-                    r in results)
-                if ok:
-                    correct += 1
-                else:
-                    misses.append(rel)
-                print(f"{rel:<38} [{'OK' if ok else 'MISS':<42}] {labels}")
-        print(f"accuracy {correct}/{total_scored}, misses: {misses}")
-        print(f"false positives: {false_positives}")
+            results = run_pipeline_detailed(img, boxes)
+
+            for r in results:
+                status = r["status"]
+                det = r.get("det_score", 0)
+                kp = r.get("kp_mean", 0)
+                bbox = r.get("bbox_area_pct", 0)
+                feats = r.get("feats", {})
+
+                # Build feature string
+                feat_str = ""
+                if feats:
+                    ext_r = feats.get("extent_ratio", 0)
+                    p_spread = feats.get("point_spread", 0)
+                    feat_str = f"ext={ext_r:.1f} spread={p_spread:.3f}"
+                    if "idx_ext" in feats:
+                        feat_str += f" idx={feats['idx_ext']} mid={feats['mid_ext']} ring={feats['ring_ext']} pink={feats['pink_ext']}"
+                        feat_str += f" t_len={feats['thumb_len']:.2f} t_i={feats['thumb_index']:.2f} tf_a={feats['tf_angle']:.0f}"
+
+                print(f"{f.name:<65} {status:<25} {det:>5.2f} {kp:>6.3f} {bbox:>6.2f}% {feat_str}")
+
+            # For user_corrections, show expected score
+            if cat == "user_corrections" and media_id in user_verdicts:
+                expected = user_verdicts[media_id]
+                has_correct = any(r.get("score") == expected for r in results)
+                print(f"  ^^ user verdict: {expected}, {'MATCH' if has_correct else 'MISMATCH'}")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
