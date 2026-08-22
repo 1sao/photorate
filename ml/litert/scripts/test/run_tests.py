@@ -2,7 +2,7 @@
 """Run regression tests. Directory names ARE the ground truth.
 
   confident_N  → must detect gesture with score N
-  uncertain_N  → may detect or filter (both ok)
+  uncertain_N  → must detect hand (score N expected, but any score passes)
   rejected     → must NOT detect any gesture
 
 Usage:
@@ -18,7 +18,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "plans" / "benchmarks"))
-from rtmpose_only_v5 import decode_640, rtmdet_boxes, run_pipeline
+from rtmpose_only_v6 import prepare_image, detect_hands, run_pipeline
 
 IMAGES_DIR = SCRIPT_DIR / "images"
 
@@ -31,7 +31,7 @@ def parse_bucket(name: str) -> dict:
     if m:
         level, score = m.group(1), int(m.group(2))
         return {
-            "expect": "detect" if level == "confident" else "detect_or_filter",
+            "expect": "detect" if level == "confident" else "uncertain",
             "score": score,
         }
     return {"expect": "unknown"}
@@ -50,46 +50,52 @@ def check_image(path: Path, bucket_config: dict) -> TestResult:
     img_name = path.name
     expect = bucket_config["expect"]
 
-    img = decode_640(path)
+    img = prepare_image(path)
     if img is None:
         if expect == "filter":
             return TestResult("", img_name, True, "decode_failed (ok)")
         return TestResult("", img_name, False, "decode_failed")
 
-    boxes = rtmdet_boxes(img)
-    results = run_pipeline(img, boxes, use_palm=True)
+    boxes = detect_hands(img)
+    results = run_pipeline(img, boxes)
 
-    detected = []
-    for _, winner in results:
-        if winner is not None and winner["cls"] is not None:
-            gesture, score = winner["cls"]
-            detected.append((gesture, score, winner["kp_mean"]))
-
-    has_gesture = len(detected) > 0
+    has_gesture = any(r.gesture is not None for r in results)
+    has_hand = any(r.kp_mean >= 0.30 for r in results)
+    detected = [(r.gesture, r.score, r.kp_mean, r.uncertain)
+                for r in results if r.gesture]
 
     if expect == "filter":
         if not has_gesture:
             return TestResult("", img_name, True)
-        gestures = [f"{g}-{s}" for g, s, _ in detected]
-        return TestResult("", img_name, False, f"detected: {gestures}")
-
-    if expect == "detect_or_filter":
-        return TestResult("", img_name, True,
-                          "detected" if has_gesture else "filtered")
+        labels = [f"{g}-{s}" for g, s, _, _ in detected]
+        return TestResult("", img_name, False, f"detected: {labels}")
 
     if expect == "detect":
-        expected_score = bucket_config.get("score")
+        expected_score = bucket_config["score"]
         if not has_gesture:
             return TestResult("", img_name, False, "no gesture detected")
-
-        for gesture, score, kp in detected:
+        for gesture, score, kp, _ in detected:
             if score == expected_score:
                 return TestResult("", img_name, True,
                                   f"{gesture}-{score} (kp={kp:.2f})")
-
-        detected_str = [f"{g}-{s}" for g, s, _ in detected]
+        labels = [f"{g}-{s}" for g, s, _, _ in detected]
         return TestResult("", img_name, False,
-                          f"expected score {expected_score}, got {detected_str}")
+                          f"expected score {expected_score}, got {labels}")
+
+    if expect == "uncertain":
+        expected_score = bucket_config.get("score")
+        if not has_hand:
+            return TestResult("", img_name, False, "no hand detected")
+        if not has_gesture:
+            return TestResult("", img_name, False,
+                              f"detected but no gesture (expected score {expected_score})")
+        for gesture, score, kp, _ in detected:
+            if score == expected_score:
+                return TestResult("", img_name, True,
+                                  f"{gesture}-{score} (kp={kp:.2f})")
+        labels = [f"{g}-{s}" for g, s, _, _ in detected]
+        return TestResult("", img_name, False,
+                          f"expected score {expected_score}, got {labels}")
 
     return TestResult("", img_name, False, f"unknown expect: {expect}")
 
@@ -132,8 +138,8 @@ def main():
         label = bucket_dir.name
         if config["expect"] == "detect":
             label += f" (must detect score={config['score']})"
-        elif config["expect"] == "detect_or_filter":
-            label += f" (score={config.get('score', '?')}, detect or filter ok)"
+        elif config["expect"] == "uncertain":
+            label += f" (must detect score={config['score']})"
         else:
             label += " (must filter)"
 

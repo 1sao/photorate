@@ -67,6 +67,12 @@ THUMBS_MIN_THUMB_FINGER_ANGLE = 95
 THUMBS_MIN_THUMB_LENGTH = 0.25
 MAX_THUMB_LEN = 2.0
 
+# Thumb-only fallback (more permissive than THUMBS_UP — fingers may be extended)
+THUMB_MIN_LENGTH_FOR_FALLBACK = 0.4
+THUMB_MIN_FINGER_ANGLE_FOR_FALLBACK = 80
+THUMB_MIN_TIP_ANGLE = 15
+THUMB_MAX_TIP_ANGLE = 165
+
 # Sanity
 MAX_EXTENT_RATIO = 2.9
 
@@ -488,9 +494,27 @@ def assign_score(features):
             and features.thumb_tip_angle < SCORE_TWO_MAX_ANGLE):
         return ("THUMBS_UP", _score_for_thumb_angle(features.thumb_tip_angle))
 
-    # Full hands without a recognized gesture: detected but unscored.
+    # No recognized gesture: detected but unscored.
     # The caller marks these as "detected" (not filtered) with no score.
     return None
+
+
+def _thumb_only_fallback(features, deg, factor):
+    """Thumb-only score guess for deg=0 reads where no gesture matched.
+
+    Requires the thumb to be long enough, pointing away from fingers,
+    and within a plausible up/down range. Only fires on deg=0 (trustworthy
+    angle) with the standard 1.2x crop (0.85x distorts the reading).
+    """
+    if deg != 0 or factor != BOX_EXPANSION:
+        return None
+    if (features.kp_mean < MIN_KP_CONFIDENCE
+            or features.thumb_length_ratio <= THUMB_MIN_LENGTH_FOR_FALLBACK
+            or features.thumb_finger_angle <= THUMB_MIN_FINGER_ANGLE_FOR_FALLBACK
+            or features.thumb_tip_angle <= THUMB_MIN_TIP_ANGLE
+            or features.thumb_tip_angle >= THUMB_MAX_TIP_ANGLE):
+        return None
+    return ("THUMBS_UP", _score_for_thumb_angle(features.thumb_tip_angle))
 
 
 # ---------------------------------------------------------------------------
@@ -518,6 +542,8 @@ def _try_rotations(img, box):
             if bestkp is None or kp_mean > bestkp[0]:
                 bestkp = (kp_mean, deg)
             cls = assign_score(features)
+            if cls is None:
+                cls = _thumb_only_fallback(features, deg, factor)
             if cls is not None:
                 gesture, score = cls
                 uncertain = kp_mean < CONFIDENT_KP
