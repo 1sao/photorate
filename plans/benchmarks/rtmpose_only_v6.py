@@ -46,9 +46,9 @@ sess_rtmp = ort.InferenceSession(str(RTMPOSE), providers=["CPUExecutionProvider"
 # Detection
 MIN_DET = 0.25
 BOX_EXPANSION = 1.2
-FALLBACK_FACTORS = (1.2, 0.85)
+CROP_FACTORS = (1.2, 0.85)
 MAX_HANDS = 2
-CANDIDATE_ROTATIONS = [0, 90, 180, 270]
+CANDIDATE_ROTATIONS = [0]
 
 # Confidence tiers (match the Kotlin app)
 MIN_KP_CONFIDENCE = 0.30  # below this: no hand at all
@@ -499,14 +499,14 @@ def assign_score(features):
     return None
 
 
-def _thumb_only_fallback(features, deg, factor):
-    """Thumb-only score guess for deg=0 reads where no gesture matched.
+def _thumb_only_fallback(features, factor):
+    """Thumb-only score guess where no gesture matched.
 
-    Requires the thumb to be long enough, pointing away from fingers,
-    and within a plausible up/down range. Only fires on deg=0 (trustworthy
-    angle) with the standard 1.2x crop (0.85x distorts the reading).
+    Requires the standard 1.2x crop (0.85x distorts the reading)
+    and a thumb that is long enough, pointing away from fingers,
+    and within a plausible up/down range.
     """
-    if deg != 0 or factor != BOX_EXPANSION:
+    if factor != BOX_EXPANSION:
         return None
     if (features.kp_mean < MIN_KP_CONFIDENCE
             or features.thumb_length_ratio <= THUMB_MIN_LENGTH_FOR_FALLBACK
@@ -522,60 +522,58 @@ def _thumb_only_fallback(features, deg, factor):
 # ---------------------------------------------------------------------------
 
 def _try_rotations(img, box):
-    """Try all rotation candidates for a box.
+    """Try each crop factor at deg=0 for a box.
 
     Returns list of (gesture, score, kp_mean, deg, uncertain).
     gesture=None means hand detected but no recognized gesture.
     Empty list means no hand detected at all.
     """
-    candidates = list(CANDIDATE_ROTATIONS)
     results = []
-    bestkp = None  # highest kp across all rotations, even without gesture
-    for factor in FALLBACK_FACTORS:
-        for deg in candidates:
-            data = obtain_landmark_data(img, box, deg, factor)
-            if data is None:
-                continue
-            points, kp_mean = data
-            features = process_landmark_data(points, kp_mean)
-            # Track bestkp even when no gesture matches
-            if bestkp is None or kp_mean > bestkp[0]:
-                bestkp = (kp_mean, deg)
-            cls = assign_score(features)
-            if cls is None:
-                cls = _thumb_only_fallback(features, deg, factor)
-            if cls is not None:
-                gesture, score = cls
-                uncertain = kp_mean < CONFIDENT_KP
-                results.append((gesture, score, kp_mean, deg, uncertain))
-                # Early exit: confident upright read
-                if deg == 0 and factor == BOX_EXPANSION and kp_mean >= 0.3:
-                    return results
+    bestkp = None
+    for factor in CROP_FACTORS:
+        data = obtain_landmark_data(img, box, 0, factor)
+        if data is None:
+            continue
+        points, kp_mean = data
+        features = process_landmark_data(points, kp_mean)
+        if bestkp is None or kp_mean > bestkp[0]:
+            bestkp = (kp_mean, factor)
+        cls = assign_score(features)
+        if cls is None:
+            cls = _thumb_only_fallback(features, factor)
+        if cls is not None:
+            gesture, score = cls
+            uncertain = kp_mean < CONFIDENT_KP
+            results.append((gesture, score, kp_mean, 0, uncertain))
+            # Early exit: confident read on the standard 1.2x crop
+            if factor == BOX_EXPANSION and kp_mean >= 0.3:
+                return results
     # Filter gesture results with very low kp (unreliable classification)
     results = [r for r in results if r[2] >= MIN_KP_CONFIDENCE]
     # If no gesture matched but RTMPose found a hand, return it as detected
     if not results and bestkp is not None and bestkp[0] >= MIN_KP_CONFIDENCE:
-        kp_mean, deg = bestkp
-        results.append((None, 0, kp_mean, deg, kp_mean < CONFIDENT_KP))
+        kp_mean, _ = bestkp
+        results.append((None, 0, kp_mean, 0, kp_mean < CONFIDENT_KP))
     return results
 
 
 def _edge_scan_rotations(img, im_box):
-    """Try all rotations for an edge-detected box. Returns list of results or empty."""
-    for factor in FALLBACK_FACTORS:
-        for deg in CANDIDATE_ROTATIONS:
-            data = obtain_landmark_data(img, im_box, deg, factor)
-            if data is None:
-                continue
-            points, kp_mean = data
-            features = process_landmark_data(points, kp_mean, edge_detected=True)
-            cls = assign_score(features)
+    """Try each crop factor for an edge-detected box. Returns list of results or empty."""
+    for factor in CROP_FACTORS:
+        data = obtain_landmark_data(img, im_box, 0, factor)
+        if data is None:
+            continue
+        points, kp_mean = data
+        features = process_landmark_data(points, kp_mean, edge_detected=True)
+        cls = assign_score(features)
+        if cls is None or cls[0] != "THUMBS_UP":
+            cls = _thumb_only_fallback(features, factor)
             if cls is None or cls[0] != "THUMBS_UP":
                 continue
-            if kp_mean < EDGE_MIN_KP:
-                continue
-            gesture, score = cls
-            return [(gesture, score, kp_mean, deg, True)]  # always uncertain
+        if kp_mean < EDGE_MIN_KP:
+            continue
+        gesture, score = cls
+        return [(gesture, score, kp_mean, 0, True)]  # always uncertain
     return []
 
 
