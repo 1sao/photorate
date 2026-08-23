@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AppBarWithSearchColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -14,6 +13,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,14 +21,14 @@ import androidx.compose.runtime.Composable
 internal fun SearchInputField(
   searchBarState: SearchBarState,
   textFieldState: TextFieldState,
-  colors: AppBarWithSearchColors,
+  colors: TextFieldColors,
   onClose: () -> Unit,
   onIntent: (HomeIntent) -> Unit,
 ) {
   SearchBarDefaults.InputField(
     textFieldState = textFieldState,
     searchBarState = searchBarState,
-    colors = colors.searchBarColors.inputFieldColors,
+    colors = colors,
     onSearch = { text ->
       onIntent(HomeIntent.UpdateSearchQuery(text))
       onIntent(HomeIntent.SubmitSearch)

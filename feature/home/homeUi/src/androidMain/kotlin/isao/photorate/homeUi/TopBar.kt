@@ -13,10 +13,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarScrollBehavior
+import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.rememberContainedSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import isao.photorate.coreUi.composable.rememberSyncedTextFieldState
 import isao.photorate.searchUi.SearchContent
@@ -48,7 +51,10 @@ internal fun TopBar(
             state.search.query,
             onChange = { onIntent(HomeIntent.UpdateSearchQuery(it)) },
           ),
-        colors = appBarWithSearchColors,
+        colors =
+          appBarWithSearchColors.searchBarColors.inputFieldColors.withHiddenCursorDuringAnimation(
+            searchBarState,
+          ),
         onClose = { scope.launch { searchBarState.animateToCollapsed() } },
         onIntent = onIntent,
       )
@@ -93,4 +99,16 @@ internal fun TopBar(
       onMinSimilarityChange = { value -> onIntent(HomeIntent.SetMinSimilarity(value)) },
     )
   }
+}
+
+/**
+ * Hides the cursor during expand/shrink animations to avoid flickering. May be useless in future if
+ * it's fixed in Material3.
+ */
+@Composable
+private fun TextFieldColors.withHiddenCursorDuringAnimation(
+  searchBarState: SearchBarState
+): TextFieldColors {
+  if (!searchBarState.isAnimating) return this
+  return copy(cursorColor = Color.Transparent)
 }
