@@ -31,6 +31,7 @@ import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
 import isao.photorate.coreUi.composable.PhotoRatePreview
+import isao.photorate.coreUi.modifier.clipDeviceCorners
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -63,7 +64,10 @@ fun ConfigScreenContent(
   var showPurgeDialog by remember { mutableStateOf(false) }
 
   Scaffold(
-    modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+    modifier =
+      Modifier.fillMaxSize()
+        .nestedScroll(scrollBehavior.nestedScrollConnection)
+        .clipDeviceCorners(),
     topBar = {
       Column {
         LargeTopAppBar(
