@@ -20,7 +20,7 @@ PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "plans" / "benchmarks"))
 from rtmpose_only_v6 import prepare_image, detect_hands, run_pipeline
 
-IMAGES_DIR = SCRIPT_DIR / "images"
+IMAGES_DIR = PROJECT_ROOT / "app" / "src" / "androidTest" / "assets"
 
 
 def parse_bucket(name: str) -> dict:

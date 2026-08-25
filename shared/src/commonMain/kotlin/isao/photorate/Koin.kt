@@ -3,6 +3,7 @@ package isao.photorate
 import co.touchlab.kermit.Logger
 import isao.photorate.core.AppInfo
 import isao.photorate.homeUi.HomeUIModule
+import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import kotlin.time.Clock
@@ -62,6 +63,8 @@ class DispatchersModule {
 @Module
 expect class PlatformModule() {
   @Single fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider
+
+  @Single fun provideGestureRecognizerProvider(): GestureRecognizerProvider
 
   @Single fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory
 }

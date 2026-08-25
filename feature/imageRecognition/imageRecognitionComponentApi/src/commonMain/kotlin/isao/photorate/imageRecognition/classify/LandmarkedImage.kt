@@ -27,8 +27,8 @@ data class LandmarkedImage(val hands: List<Hand>, val detectedInMs: Long) {
     /**
      * True when this hand was only found by the ONNX pipeline's edge fallback (a hand mostly out of
      * frame at the left/right image edge — only the thumb is in shot). The off-frame fingers are
-     * unreliable, so [HandGestureClassifier] rates these via a thumb-only path instead of the
-     * normal gesture gates. Always false for the MediaPipe pipeline.
+     * unreliable, so the gesture recognizers rate these via a thumb-only path instead of the normal
+     * gesture gates. Always false for the MediaPipe pipeline.
      */
     val edgeDetected: Boolean = false,
   )

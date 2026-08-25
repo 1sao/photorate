@@ -70,6 +70,27 @@ class BitmapEngineImage(private val bitmap: Bitmap) : EngineImage {
     return BitmapEngineImage(out)
   }
 
+  /**
+   * Applies a 2×3 affine warp (OpenCV src→dst convention). Android's Matrix expects dst→src, so we
+   * invert the 6 coefficients: if src = [m00,m01,m02;m10,m11,m12] × dst, then dst = [a,b,e;c,d,f] ×
+   * src where a,b,c,d,e,f are derived from the inverse.
+   */
+  override fun affineWarp(warp: FloatArray, dstW: Int, dstH: Int, background: Int): EngineImage {
+    val m00 = warp[0]
+    val m01 = warp[1]
+    val m02 = warp[2]
+    val m10 = warp[3]
+    val m11 = warp[4]
+    val m12 = warp[5]
+    val matrix = Matrix()
+    matrix.setValues(floatArrayOf(m00, m01, m02, m10, m11, m12, 0f, 0f, 1f))
+    val out = Bitmap.createBitmap(dstW, dstH, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    canvas.drawColor(background)
+    canvas.drawBitmap(bitmap, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+    return BitmapEngineImage(out)
+  }
+
   override fun getPixels(): IntArray {
     val pixels = IntArray(bitmap.width * bitmap.height)
     bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)

@@ -2,6 +2,7 @@ package isao.photorate
 
 import co.touchlab.kermit.Logger
 import isao.photorate.core.AppInfo
+import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
 import isao.photorate.imageRecognition.classify.LandmarkModel
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.mediapipe.IosMediaPipeHandLandmarkerFactory
@@ -34,6 +35,12 @@ actual class PlatformModule {
       defaultModel = LandmarkModel.MEDIAPIPE,
       factories = mapOf(LandmarkModel.MEDIAPIPE to IosMediaPipeHandLandmarkerFactory()),
     )
+
+  @Single
+  actual fun provideGestureRecognizerProvider(): GestureRecognizerProvider =
+    GestureRecognizerProvider {
+      emptyList()
+    }
 
   @Single
   actual fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory =

@@ -11,14 +11,18 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.util.Log
-import isao.photorate.imageRecognition.classify.GestureClassification
-import isao.photorate.imageRecognition.classify.HandGesture
-import isao.photorate.imageRecognition.classify.HandGestureClassifier
+import isao.photorate.imageRecognition.classify.Gesture
+import isao.photorate.imageRecognition.classify.GestureRecognizer
+import isao.photorate.imageRecognition.classify.GestureResult
+import isao.photorate.imageRecognition.classify.HandFeatures2
 import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
 import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
 import isao.photorate.imageRecognition.classify.LandmarkedImage
+import isao.photorate.imageRecognition.classify.ThumbOnlyGesture
+import isao.photorate.imageRecognition.classify.ThumbSignal
+import isao.photorate.imageRecognition.classify.tryRecognizers
 import isao.photorate.imageRecognition.onnx.AndroidOnnxHandLandmarker.Companion.NMS_MAX_OUT
 import java.io.File
 import java.nio.FloatBuffer
@@ -114,6 +118,7 @@ internal constructor(
   private val ortEnv = OrtEnvironment.getEnvironment()
   private val detectorSession: OrtSession
   private val rtmposeSession: OrtSession
+  private val defaultRecognizers = OnnxGestureRecognizerProvider().createRecognizers()
 
   init {
     val detectorFile = copyAssetToFile(context, AndroidOnnxHandLandmarkerFactory.DETECTOR_ASSET)
@@ -165,6 +170,26 @@ internal constructor(
     }
       .also { detectedIn = it }
     return LandmarkedImage(hands = hands, detectedInMs = detectedIn)
+  }
+
+  /**
+   * Detects hands and classifies each using [recognizers]. Returns one [GestureResult] per detected
+   * hand. Hands where no recognizer matches are omitted.
+   */
+  override fun detectWithRecognizers(
+    candidate: LandmarkCandidate,
+    recognizers: List<GestureRecognizer<*>>,
+  ): List<GestureResult> {
+    val landmarked = detect(candidate)
+    val results = ArrayList<GestureResult>()
+    for (hand in landmarked.hands) {
+      val features = HandFeatures2(hand)
+      val recognized = tryRecognizers(features, recognizers)
+      if (recognized != null && recognized.first.score != null) {
+        results.add(GestureResult(recognized.first, recognized.second, hand))
+      }
+    }
+    return results
   }
 
   // --- Pipeline: RTMDet boxes -> multi-rot RTMPose search -> gesture rate ---
@@ -336,9 +361,12 @@ internal constructor(
         }
         val hand = LandmarkedImage.Hand(points, rotationDegrees = deg)
         val kpMean = kpSum / NUM_LANDMARKS
-        val result = HandWithScore(hand, HandGestureClassifier.classify(hand), kpMean)
+        val features = HandFeatures2(hand)
+        val recognized = tryRecognizers(features, defaultRecognizers)
+        val gesture = recognized?.first
+        val result = HandWithScore(hand, gesture, kpMean)
         if (bestKp == null || result.kpMean > bestKp.kpMean) bestKp = result
-        val classification = result.cls ?: continue
+        if (gesture == null) continue
         if (deg == 0f) {
           if (imageSpace == null || result.kpMean > imageSpace.kpMean) imageSpace = result
           // Early exit: a confident upright read on the standard
@@ -358,20 +386,22 @@ internal constructor(
         val better =
           bestRotated == null ||
             run {
-              val currentCls = bestRotated.cls ?: return@run true
+              val currentGesture = bestRotated.gesture ?: return@run true
+              val isThumbsUp = gesture is ThumbSignal || gesture is ThumbOnlyGesture
+              val currentIsThumbsUp =
+                currentGesture is ThumbSignal || currentGesture is ThumbOnlyGesture
               when {
                 // A THUMBS beats any other gesture (the fallback exists to rate
                 // the thumbs-up geometry the rotated crops see correctly).
-                classification.gesture == HandGesture.THUMBS_UP &&
-                  currentCls.gesture != HandGesture.THUMBS_UP -> true
-
-                classification.gesture != HandGesture.THUMBS_UP &&
-                  currentCls.gesture == HandGesture.THUMBS_UP -> false
+                isThumbsUp && !currentIsThumbsUp -> true
+                !isThumbsUp && currentIsThumbsUp -> false
                 // Among THUMBS pick the highest score; tie-break on confidence.
-                classification.gesture == HandGesture.THUMBS_UP ->
-                  classification.score.score > currentCls.score.score ||
-                    (classification.score.score == currentCls.score.score &&
-                      result.kpMean > bestRotated.kpMean)
+                isThumbsUp -> {
+                  val score = gesture?.score?.score ?: 0
+                  val currentScore = currentGesture.score?.score ?: 0
+                  score > currentScore ||
+                    (score == currentScore && result.kpMean > bestRotated.kpMean)
+                }
                 // Non-THUMBS gestures: trust the most confident one.
                 else -> result.kpMean > bestRotated.kpMean
               }
@@ -405,11 +435,9 @@ internal constructor(
     // gesture use the non-THUMBS gate (the dev-mode rater marks its guess
     // uncertain regardless).
     if (winner.kpMean < options.minHandKpConfidence) return null
+    val isThumbsUp = winner.gesture is ThumbSignal || winner.gesture is ThumbOnlyGesture
     val confidentKp =
-      when (winner.cls?.gesture) {
-        HandGesture.THUMBS_UP -> options.minHandKpConfidence
-        else -> options.minHandConfidentKpConfidence
-      }
+      if (isThumbsUp) options.minHandKpConfidence else options.minHandConfidentKpConfidence
     return winner.hand.copy(uncertain = winner.kpMean < confidentKp)
   }
 
@@ -490,7 +518,10 @@ internal constructor(
           rotationDegrees = deg,
           edgeDetected = true,
         )
-      if (HandGestureClassifier.classify(hand)?.gesture != HandGesture.THUMBS_UP) {
+      val features = HandFeatures2(hand)
+      val recognized = tryRecognizers(features, defaultRecognizers)
+      val isThumbsUp = recognized?.first is ThumbSignal || recognized?.first is ThumbOnlyGesture
+      if (!isThumbsUp) {
         continue
       }
       val kpMean = kpSum / NUM_LANDMARKS
@@ -530,7 +561,7 @@ internal constructor(
 
   private data class HandWithScore(
     val hand: LandmarkedImage.Hand,
-    val cls: GestureClassification?,
+    val gesture: Gesture?,
     val kpMean: Float,
   )
 

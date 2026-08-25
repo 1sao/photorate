@@ -53,6 +53,9 @@ private constructor(
         background,
       )
 
+  override fun affineWarp(warp: FloatArray, dstW: Int, dstH: Int, background: Int): EngineImage =
+    PixelEngineImage(width, height, pixels).affineWarp(warp, dstW, dstH, background)
+
   override fun getPixels(): IntArray = pixels
 
   override fun release() = Unit

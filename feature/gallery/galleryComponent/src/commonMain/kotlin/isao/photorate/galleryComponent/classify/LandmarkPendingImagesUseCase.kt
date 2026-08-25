@@ -6,6 +6,8 @@ import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.galleryRepository.DetectedHandRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
+import isao.photorate.imageRecognition.classify.GestureRecognizer
+import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
 import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
@@ -40,18 +42,17 @@ class LandmarkPendingImagesUseCase(
   private val galleryImageRepository: GalleryImageRepository,
   private val detectedHandRepository: DetectedHandRepository,
   @Provided private val landmarkerFactoryProvider: LandmarkerFactoryProvider,
+  @Provided private val gestureRecognizerProvider: GestureRecognizerProvider,
   private val imageLoader: LandmarkImageLoader,
-  private val landmarkRaterProvider: LandmarkRaterProvider,
   @Provided private val crashReporter: CrashReporter,
   private val log: Logger,
 ) {
   suspend operator fun invoke() =
     withContext(Dispatchers.Default) {
-      // TODO creating landmarker for nothing if there are no images
       val model = landmarkerFactoryProvider.defaultModel
       val options = model.defaultOptions
+      val recognizers = gestureRecognizerProvider.createRecognizers()
       landmarkerFactoryProvider.factoryFor(model).createFromOptions(options).use { landmarker ->
-        val rater = landmarkRaterProvider.raterForScan()
         do {
           var unprocessed = galleryImageRepository.getUnprocessedImages().first()
 
@@ -61,7 +62,7 @@ class LandmarkPendingImagesUseCase(
               landmarkAndSaveOrNull(
                 landmarker,
                 image,
-                rater,
+                recognizers,
                 options,
               )
               yield()
@@ -77,7 +78,7 @@ class LandmarkPendingImagesUseCase(
   private suspend fun landmarkAndSaveOrNull(
     landmarker: HandLandmarker,
     image: GalleryImage,
-    rater: LandmarkRater,
+    recognizers: List<GestureRecognizer<*>>,
     options: HandLandmarkerOptions,
   ) {
     galleryImageRepository.updateStatus(
@@ -100,8 +101,8 @@ class LandmarkPendingImagesUseCase(
       return
     }
 
-    val detection = runCatching {
-      landmarker.detect(candidate)
+    val gestureResults = runCatching {
+      landmarker.detectWithRecognizers(candidate, recognizers)
     }
       .getOrElse { error ->
         crashReporter.logNonFatal(error, "landmark_failed", mapOf("uri" to image.uri))
@@ -113,50 +114,40 @@ class LandmarkPendingImagesUseCase(
         return
       }
 
-    val rated =
-      detection.hands.mapNotNull { hand -> rater.rate(hand)?.let { rating -> hand to rating } }
     galleryImageRepository.markDone(
       uri = image.uri,
-      detectedInMs = detection.detectedInMs,
+      detectedInMs = 0,
     )
-    rated.forEachIndexed { index, (hand, rating) ->
-      // The rated hand is in
-      // image-pixel space
-      // (isotropic, so the gesture
-      // classifier's ratios/angles
-      // are valid); un-rotate
-      // rotated crops
-      // (ONNX rotation search) and
-      // normalize to 0..1 for
-      // display geometry.
-      val displayHand =
-        unrotateAndNormalize(
-          hand,
-          candidate,
+    gestureResults
+      .filter { it.score != null }
+      .forEachIndexed { index, result ->
+        val hand = result.hand
+        val score = result.score!!
+        val displayHand =
+          unrotateAndNormalize(
+            hand,
+            candidate,
+          )
+        val handFeatures = HandFeatureExtractor.extract(displayHand)
+        detectedHandRepository.insertHand(
+          DetectedHand(
+            id = -1,
+            imageUri = image.uri,
+            handIndex = index.toLong(),
+            score = score,
+            bboxMinX = handFeatures.bboxMinX.toDouble(),
+            bboxMinY = handFeatures.bboxMinY.toDouble(),
+            bboxMaxX = handFeatures.bboxMaxX.toDouble(),
+            bboxMaxY = handFeatures.bboxMaxY.toDouble(),
+            bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
+            centroidX = handFeatures.centroidX.toDouble(),
+            centroidY = handFeatures.centroidY.toDouble(),
+            points = displayHand.points,
+            uncertain = hand.uncertain || result.confidence < 1f,
+            isUserRated = false,
+          ),
         )
-      val handFeatures = HandFeatureExtractor.extract(displayHand)
-      detectedHandRepository.insertHand(
-        DetectedHand(
-          id = -1,
-          imageUri = image.uri,
-          handIndex = index.toLong(),
-          score = rating.score,
-          bboxMinX = handFeatures.bboxMinX.toDouble(),
-          bboxMinY = handFeatures.bboxMinY.toDouble(),
-          bboxMaxX = handFeatures.bboxMaxX.toDouble(),
-          bboxMaxY = handFeatures.bboxMaxY.toDouble(),
-          bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
-          centroidX = handFeatures.centroidX.toDouble(),
-          centroidY = handFeatures.centroidY.toDouble(),
-          points = displayHand.points,
-          // A best-guess rating (confidence < 1, dev mode) marks the
-          // hand uncertain; the pipeline's keypoint-based tier still
-          // applies too.
-          uncertain = hand.uncertain || rating.confidence < 1f,
-          isUserRated = false,
-        )
-      )
-    }
+      }
   }
 
   /**

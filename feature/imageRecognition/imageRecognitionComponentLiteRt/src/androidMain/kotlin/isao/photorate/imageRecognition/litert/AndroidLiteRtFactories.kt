@@ -34,7 +34,6 @@ class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context
               ModelSource.Asset(LiteRtRtmModels.RTMPOSE_ASSET),
               EngineConfig(LiteRtAccelerator.GPU),
             ),
-          options = options,
         )
     }
       .also { Log.d(TAG, "Initialized LiteRT hand pipeline in $it ms (GPU first, CPU fallback)") }

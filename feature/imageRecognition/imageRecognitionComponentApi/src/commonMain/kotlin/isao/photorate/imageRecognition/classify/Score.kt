@@ -1,8 +1,8 @@
 package isao.photorate.imageRecognition.classify
 
 /**
- * The thumb-rating score (1–5) a hand communicates. Produced by [HandGestureClassifier] and the
- * dev-mode raters; stored per detected hand.
+ * The thumb-rating score (1–5) a hand communicates. Produced by gesture recognizers; stored per
+ * detected hand.
  */
 enum class Score(val score: Int) {
   ONE(1),

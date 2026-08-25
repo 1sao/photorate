@@ -24,7 +24,6 @@ class JvmLiteRtHandLandmarkerFactory(private val modelsDir: String) : HandLandma
           ModelSource.File("$modelsDir/${LiteRtRtmModels.RTMPOSE_ASSET}"),
           EngineConfig(LiteRtAccelerator.CPU),
         ),
-      options = options,
     )
 }
 

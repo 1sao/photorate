@@ -44,6 +44,12 @@ interface EngineImage {
     background: Int,
   ): EngineImage
 
+  /**
+   * Applies a 2×3 affine warp (source→destination). [warp] is row-major [m00,m01,m02,m10,m11,m12].
+   * The inverse is computed internally so destination pixels map back to source.
+   */
+  fun affineWarp(warp: FloatArray, dstW: Int, dstH: Int, background: Int): EngineImage
+
   /** Row-major ARGB pixels (length width×height). */
   fun getPixels(): IntArray
 

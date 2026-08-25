@@ -161,7 +161,7 @@ class PixelEngineImage(
         // Inverse of forward: dst = scale·(src - c) + c + t
         val srcX = (x - cx - tx) / scale + cx
         val srcY = (y - cy - ty) / scale + cy
-        if (srcX < 0 || srcY < 0 || srcX > width - 1 || srcY > height - 1) continue
+        if (srcX < 0f || srcY < 0f || srcX > width - 1f || srcY > height - 1f) continue
         out[y * targetSize + x] =
           sample(
             srcX,
@@ -170,6 +170,35 @@ class PixelEngineImage(
       }
     }
     return PixelEngineImage(targetSize, targetSize, out)
+  }
+
+  override fun affineWarp(warp: FloatArray, dstW: Int, dstH: Int, background: Int): EngineImage {
+    val m00 = warp[0]
+    val m01 = warp[1]
+    val m02 = warp[2]
+    val m10 = warp[3]
+    val m11 = warp[4]
+    val m12 = warp[5]
+    val det = m00 * m11 - m01 * m10
+    val invDet = 1f / det
+    val a = m11 * invDet
+    val b = -m01 * invDet
+    val c = -m10 * invDet
+    val d = m00 * invDet
+    val e = (m01 * m12 - m11 * m02) * invDet
+    val f = (m10 * m02 - m00 * m12) * invDet
+    val w = width.toFloat()
+    val h = height.toFloat()
+    val out = IntArray(dstW * dstH) { background }
+    for (y in 0 until dstH) {
+      for (x in 0 until dstW) {
+        val srcX = a * x + b * y + e
+        val srcY = c * x + d * y + f
+        if (srcX < 0f || srcY < 0f || srcX > w - 1f || srcY > h - 1f) continue
+        out[y * dstW + x] = sample(srcX, srcY)
+      }
+    }
+    return PixelEngineImage(dstW, dstH, out)
   }
 
   override fun getPixels(): IntArray = argb

@@ -39,6 +39,17 @@ data class HandLandmarkerOptions(
  */
 interface HandLandmarker : AutoCloseable {
   fun detect(candidate: LandmarkCandidate): LandmarkedImage
+
+  /**
+   * Detects hands and classifies each using [recognizers]. Returns one [GestureResult] per detected
+   * hand. Hands where no recognizer matches are omitted.
+   *
+   * Default implementation falls back to [detect] and returns unclassified hands.
+   */
+  fun detectWithRecognizers(
+    candidate: LandmarkCandidate,
+    recognizers: List<GestureRecognizer<*>>,
+  ): List<GestureResult> = detect(candidate).hands.map { GestureResult(null, 0f, it) }
 }
 
 interface HandLandmarkerFactory {

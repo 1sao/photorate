@@ -1,0 +1,18 @@
+package isao.photorate.imageRecognition.classify
+
+/**
+ * Iterates through [recognizers] and returns the first recognized gesture with its confidence, or
+ * null if no recognizer matches the hand features.
+ */
+// TODO Messy. Tweak generics to remove this.
+fun tryRecognizers(
+  features: HandFeatures2,
+  recognizers: List<GestureRecognizer<*>>,
+): Pair<Gesture, Float>? {
+  for (recognizer in recognizers) {
+    @Suppress("UNCHECKED_CAST")
+    val result = (recognizer as GestureRecognizer<Gesture>).recognize(features)
+    if (result != null) return result.gesture to result.confidence
+  }
+  return null
+}

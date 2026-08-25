@@ -2,10 +2,12 @@ package isao.photorate
 
 import android.app.Application
 import isao.photorate.core.AppInfo
+import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
 import isao.photorate.imageRecognition.classify.LandmarkModel
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.litert.AndroidLiteRtAppClipSearchFactory
 import isao.photorate.imageRecognition.litert.AndroidLiteRtHandLandmarkerFactory
+import isao.photorate.imageRecognition.litert.LiteRtGestureRecognizerProvider
 import isao.photorate.imageRecognition.mediapipe.AndroidMediaPipeHandLandmarkerFactory
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import org.koin.android.ext.koin.androidContext
@@ -49,6 +51,10 @@ actual class PlatformModule {
           LandmarkModel.MEDIAPIPE to AndroidMediaPipeHandLandmarkerFactory(scope.get()),
         ),
     )
+
+  @Single
+  actual fun provideGestureRecognizerProvider(): GestureRecognizerProvider =
+    LiteRtGestureRecognizerProvider()
 
   @Single
   actual fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory =

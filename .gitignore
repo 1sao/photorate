@@ -49,5 +49,16 @@ plans/rtmpose_hand/output*/
 ml/original_models/**/output_*.jpg
 onnx/samples/
 
+# Test image datasets for Android instrumented tests and ML scripts.
+app/src/androidTest/assets/assets/
+app/src/androidTest/assets/confident_*/
+app/src/androidTest/assets/rejected/
+app/src/androidTest/assets/uncertain_*/
+ml/litert/scripts/test/images/
+ml/litert/scripts/test/output/
+
+# Skills for agents
+skills/
+
 # Keep the small MediaPipe detector fixture used by instrumented tests.
 !app/src/androidTest/assets/hand_landmarks_detector.tflite

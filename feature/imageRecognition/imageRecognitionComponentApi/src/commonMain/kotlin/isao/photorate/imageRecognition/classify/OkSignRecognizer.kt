@@ -1,20 +1,11 @@
-package isao.photorate.galleryComponent.classify
+package isao.photorate.imageRecognition.classify
 
 import isao.photorate.imageRecognition.classify.LandmarkedImage.Point
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.hypot
 
-/**
- * An OK-sign gesture: thumb and index form a closed circle facing the camera, remaining fingers
- * extended. Always scores 3.
- */
-class OkSign : Gesture
-
-/**
- * Recognizes the OK-sign: a closed thumb+index circle with remaining fingers extended. Ported from
- * the Python v6 `assign_score` OK_SIGN path.
- */
+/** Recognizes the OK-sign: a closed thumb+index circle with remaining fingers extended. */
 class OkSignRecognizer : GestureRecognizer<OkSign> {
 
   override fun recognize(features: HandFeatures2): RecognizedGesture<OkSign>? {

@@ -18,8 +18,10 @@ android {
         rootProject.layout.projectDirectory.dir("ml/litert/converted").asFile.path
       )
       assets.directories.add(
-        rootProject.layout.projectDirectory.dir("ml/litert/tokenizer").asFile.path
+        rootProject.layout.projectDirectory.dir("ml/litert/tokenizer").asFile.path,
       )
+      // ONNX hand models for the ONNX hand pipeline.
+      assets.directories.add(rootProject.layout.projectDirectory.dir("ml/onnx_hand").asFile.path)
     }
     // Instrumented hand-landmarker + search dataset tests
     // read the sample
@@ -73,7 +75,8 @@ android {
     ignoreAssetsPattern =
       "deploy.json:detail.json:pipeline.json:" +
         "output_onnxruntime.jpg:output_pytorch.jpg:end2end.onnx:" +
-        "*.jpeg:*.png:*.md:.DS_Store"
+        "*.jpeg:*.png:*.md:.DS_Store:" +
+        "*.pth:text_model_fp16.onnx:vision_model_fp16.onnx"
   }
 }
 
@@ -95,27 +98,10 @@ dependencies {
   // (imageRecognitionComponentLiteRt keeps its litert dependency `implementation`, so it
   // doesn't leak here). Production code never names LiteRT types.
   androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+  // The ONNX dataset test uses the ONNX hand pipeline.
+  androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentOnnx)
   // The dataset tests name the inference contracts directly
   // (HandGestureClassifier, AppClipSearchFactory, ...).
   androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
-  // The MediaPipe dataset tests import the factory classes + detectFromBitmap
-  // (main-scope code never names MediaPipe types, so the provider is test-only).
-  androidTestImplementation(projects.feature.imageRecognition.imageRecognitionComponentMediaPipe)
   androidTestImplementation(libs.litert)
-  // Raw TFLite interpreter for running the extracted hand landmark model
-  // directly on crops (bypassing the palm-detector stage) in detection-gap
-  // experiments. Test-APK-only; the app itself uses MediaPipe Tasks.
-  // 2.17.0 ships 16KB-page-aligned native libs (2.16.x fails to dlopen on
-  // modern arm64 emulators with 16KB pages); it is also the newest version
-  // published on Maven Central.
-  androidTestImplementation(libs.tensorflow.lite)
-  // Classic TFLite GPU delegate (GLES 3.1 compute) — feasibility probe for
-  // the on-device GPU verification, since the litert CompiledModel GPU path
-  // fails on OpenCL-less devices (see LiteRtOnDeviceVerificationTest).
-  // The Delegate/DelegateFactory/RuntimeFlavor classes live in
-  // tensorflow-lite-api; the -gpu-api carries the GpuDelegateFactory; the
-  // -gpu AAR carries only the native delegate implementation.
-  androidTestImplementation(libs.tensorflow.lite.api)
-  androidTestImplementation(libs.tensorflow.lite.gpu.api)
-  androidTestImplementation(libs.tensorflow.lite.gpu)
 }

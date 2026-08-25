@@ -83,6 +83,7 @@ SELECT gi.uri, gi.scannedAt, gi.modifiedAt, MAX(dh.score) AS bestGuessScore
 FROM GalleryImage gi
 JOIN DetectedHand dh ON dh.imageUri = gi.uri
 WHERE dh.uncertain = 1
+  AND dh.bboxAreaFraction >= (SELECT min_bboxAreaFraction FROM config WHERE id = 1)
   AND gi.status != 'IGNORED'
   AND NOT EXISTS (
     SELECT 1 FROM DetectedHand dh2
