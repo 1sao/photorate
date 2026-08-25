@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,12 +27,10 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -62,7 +61,6 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.imageSharedContentKey
-import isao.photorate.imageRecognition.classify.Score
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -183,8 +181,8 @@ fun GalleryGridContent(
             ) { image ->
               UncertainImageCard(
                 modifier = Modifier.animateItem(),
-                uri = image.uri,
-                bestGuessScore = image.bestGuessScore,
+                item = image,
+                isTablet = isTablet,
                 onClick = remember(image.uri) { { onOpenImage(image.uri) } },
                 onAccept =
                   remember { { uri: String, score: Int -> onAcceptUncertain(uri, score) } },
@@ -270,7 +268,10 @@ private fun GalleryImageCard(
     ) {
       val imageKey = imageSharedContentKey(item.uri)
       val imageRequest =
-        ImageRequest.Builder(LocalContext.current).data(item.uri).memoryCacheKey(imageKey).build()
+        ImageRequest.Builder(LocalContext.current).data(item.uri)
+          .placeholderMemoryCacheKey(imageKey)
+          .memoryCacheKey(imageKey)
+          .build()
       AsyncImage(
         model = imageRequest,
         contentDescription = null,
@@ -320,67 +321,94 @@ private fun UncertainSectionHeader(count: Int) {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun UncertainImageCard(
-  uri: String,
-  bestGuessScore: Score?,
+  item: GalleryImageItem,
+  isTablet: Boolean,
   onClick: () -> Unit,
   onAccept: (String, Int) -> Unit,
   onDelete: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) =
   with(LocalSharedTransitionScope.current) {
-    var selected by remember(uri) { mutableStateOf(bestGuessScore?.score ?: DEFAULT_GUESS_SCORE) }
-    val sharedState = rememberSharedContentState(key = imageSharedContentKey(uri))
-    Surface(
-      modifier = modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(24.dp),
-      color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-      Row(Modifier.fillMaxWidth()) {
-        AsyncImage(
-          model = uri,
-          contentDescription = null,
-          contentScale = ContentScale.Crop,
-          modifier =
-            Modifier.weight(1f)
-              .aspectRatio(1f)
-              .sharedElement(sharedState, LocalNavAnimatedContentScope.current)
-              .clip(RoundedCornerShape(24.dp))
-              .clickable(onClick = onClick),
-        )
-        Column(
-          modifier = Modifier.weight(1.4f).padding(horizontal = 12.dp, vertical = 10.dp),
-          verticalArrangement = Arrangement.Center,
-        ) {
-          Text(
-            text = "Best guess",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    var selected by remember(item.uri) {
+      mutableStateOf(item.bestGuessScore ?: DEFAULT_GUESS_SCORE)
+    }
+    val imageKey = imageSharedContentKey(item.uri)
+    val imageRequest =
+      ImageRequest.Builder(LocalContext.current)
+        .data(item.uri)
+        .placeholderMemoryCacheKey(imageKey)
+        .memoryCacheKey(imageKey)
+        .build()
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+      Surface(
+        modifier =
+          Modifier
+            .fillMaxWidth()
+            .height(
+              if (isTablet) {
+                maxWidth
+              } else {
+                (maxWidth - GRID_HORIZONTAL_SPACING) / GRID_COLUMNS
+              },
+            ),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+      ) {
+        Row(Modifier.fillMaxSize()) {
+          AsyncImage(
+            model = imageRequest,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier =
+              Modifier.weight(1f)
+                .fillMaxHeight()
+                .sharedBounds(
+                  rememberSharedContentState(key = imageKey),
+                  LocalNavAnimatedContentScope.current,
+                  resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                  enter = fadeIn(snap()),
+                  exit = ExitTransition.None,
+                )
+                .clip(RoundedCornerShape(24.dp))
+                .clickable(onClick = onClick),
           )
-          Spacer(Modifier.height(2.dp))
-          UncertainStarSelector(
-            selected = selected,
-            onSelect = { selected = it },
-          )
-          Spacer(Modifier.height(8.dp))
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledIconButton(onClick = { onAccept(uri, selected) }) {
-              Icon(
-                Icons.Filled.Check,
-                contentDescription = "Accept score $selected",
-              )
-            }
-            FilledTonalIconButton(
-              onClick = { onDelete(uri) },
-              colors =
-                IconButtonDefaults.filledTonalIconButtonColors(
-                  containerColor = MaterialTheme.colorScheme.errorContainer,
-                  contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),
-            ) {
-              Icon(
-                Icons.Filled.Close,
-                contentDescription = "Mark as no hand",
-              )
+          Column(
+            modifier = Modifier.weight(1.4f).padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.Center,
+          ) {
+            Text(
+              text = "Best guess",
+              style = MaterialTheme.typography.labelMedium,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(2.dp))
+            RatingStarSelector(
+              selected = selected,
+              onSelect = { selected = it },
+              size = 24.dp,
+              modifier = Modifier.height(32.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              FilledIconButton(onClick = { onAccept(item.uri, selected) }) {
+                Icon(
+                  Icons.Filled.Check,
+                  contentDescription = "Accept score $selected",
+                )
+              }
+              FilledTonalIconButton(
+                onClick = { onDelete(item.uri) },
+                colors =
+                  IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                  ),
+              ) {
+                Icon(
+                  Icons.Filled.Close,
+                  contentDescription = "Mark as no hand",
+                )
+              }
             }
           }
         }
@@ -388,27 +416,10 @@ private fun UncertainImageCard(
     }
   }
 
-@Composable
-private fun UncertainStarSelector(selected: Int, onSelect: (Int) -> Unit) {
-  Row {
-    (1..5).forEach { score ->
-      Box(
-        modifier = Modifier.size(32.dp).clip(CircleShape).clickable { onSelect(score) },
-        contentAlignment = Alignment.Center,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.Star,
-          contentDescription = "Rate $score",
-          tint = if (score <= selected) StarColors.uncertain else StarColors.empty,
-          modifier = Modifier.size(24.dp),
-        )
-      }
-    }
-  }
-}
-
 /** Fallback preselected score when an uncertain image somehow has no best guess. */
 private const val DEFAULT_GUESS_SCORE = 3
+private const val GRID_COLUMNS = 2
+private val GRID_HORIZONTAL_SPACING = 12.dp
 
 /** Year*100 + month (1-12): a stable, order-preserving date-group key. */
 private fun yearMonthKey(epochMillis: Long, calendar: Calendar): Int {

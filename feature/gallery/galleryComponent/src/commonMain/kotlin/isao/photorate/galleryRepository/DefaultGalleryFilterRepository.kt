@@ -3,9 +3,7 @@ package isao.photorate.galleryRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import isao.photorate.gallery.db.PhotoRateDb
-import isao.photorate.gallery.db.SelectImagesWithScores
 import isao.photorate.gallery.db.SelectMatching
-import isao.photorate.gallery.db.SelectUncertainImagesWithScore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -20,9 +18,18 @@ class DefaultGalleryFilterRepository(private val db: PhotoRateDb) : GalleryFilte
   override fun selectMatching(): Flow<List<SelectMatching>> =
     queries.selectMatching().asFlow().mapToList(Dispatchers.IO)
 
-  override fun selectImagesWithScores(): Flow<List<SelectImagesWithScores>> =
-    queries.selectImagesWithScores().asFlow().mapToList(Dispatchers.IO)
-
-  override fun selectUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> =
-    queries.selectUncertainImagesWithScore().asFlow().mapToList(Dispatchers.IO)
+  override fun selectGalleryImages(): Flow<List<GalleryImage>> =
+    queries.galleryImages().asFlow().mapToList(Dispatchers.IO).map { rows ->
+      rows.map { row ->
+        GalleryImage(
+          uri = row.uri,
+          scannedAt = row.scannedAt,
+          createdAt = row.createdAt,
+          modifiedAt = row.modifiedAt,
+          scores = row.scores,
+          bestGuessScore = row.bestGuessScore?.toInt(),
+          isUncertain = row.isUncertain != 0L,
+        )
+      }
+    }
 }

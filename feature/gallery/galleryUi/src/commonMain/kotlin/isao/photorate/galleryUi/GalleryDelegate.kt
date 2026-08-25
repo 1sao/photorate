@@ -3,12 +3,12 @@ package isao.photorate.galleryUi
 import isao.photorate.config.ConfigRepository
 import isao.photorate.config.GallerySorting
 import isao.photorate.gallery.db.GalleryImageStatus
-import isao.photorate.gallery.db.SelectUncertainImagesWithScore
 import isao.photorate.galleryComponent.classify.LandmarkPendingImagesUseCase
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
 import isao.photorate.galleryComponent.populateGallery.PopulateGalleryUseCase
 import isao.photorate.galleryComponent.search.PopulateImageEmbeddingsUseCase
 import isao.photorate.galleryRepository.GalleryFilterRepository
+import isao.photorate.galleryRepository.GalleryImage
 import isao.photorate.galleryRepository.GalleryImageRepository
 import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryUiState.ImageSorting
@@ -61,26 +61,18 @@ class DefaultGalleryDelegate(
 
   override val uiState: Flow<GalleryUiState> =
     combine(
-      galleryFilterRepository.selectImagesWithScores(),
-      galleryFilterRepository.selectUncertainImages(),
+      galleryFilterRepository.selectGalleryImages(),
       galleryImageRepository.observeStatusCounts().sample(.1.seconds),
       configRepository.getConfig(),
       searchFilter,
-    ) { images, uncertain, status, config, filter ->
+    ) { images, status, config, filter ->
       GalleryUiState(
         permissionState = PermissionState.Denied,
         imagesState =
           ImagesState(
             status = status,
-            detections =
-              images.map { row ->
-                GalleryImageItem(
-                  uri = row.uri,
-                  scores = parseScores(row.scores),
-                  scannedAt = row.scannedAt,
-                )
-              },
-            uncertainDetections = uncertain,
+            detections = images.filterNot { it.isUncertain }.map(::toGalleryImageItem),
+            uncertainDetections = images.filter { it.isUncertain }.map(::toGalleryImageItem),
             sorting = config.sorting.toImageSorting(),
             searchUris = filter,
           ),
@@ -134,7 +126,7 @@ data class GalleryUiState(
   data class ImagesState(
     val status: GalleryStatusCounts = GalleryStatusCounts(emptyMap()),
     val detections: List<GalleryImageItem> = emptyList(),
-    val uncertainDetections: List<SelectUncertainImagesWithScore> = emptyList(),
+    val uncertainDetections: List<GalleryImageItem> = emptyList(),
     val sorting: ImageSorting = ImageSorting.Date(isAscending = false),
     val searchUris: Set<String>? = null,
   )
@@ -148,7 +140,11 @@ data class GalleryUiState(
   }
 }
 
-data class GalleryImageItem(val uri: String, val scores: List<Score>, val scannedAt: Long? = null)
+data class GalleryImageItem(
+  val uri: String,
+  val scores: List<Score>,
+  val bestGuessScore: Int? = null,
+)
 
 sealed interface GalleryIntent {
   // TODO
@@ -159,6 +155,13 @@ private fun GallerySorting.toImageSorting(): ImageSorting =
     GallerySorting.SCORE -> ImageSorting.Score(isAscending = false)
     GallerySorting.DATE -> ImageSorting.Date(isAscending = false)
   }
+
+private fun toGalleryImageItem(row: GalleryImage): GalleryImageItem =
+  GalleryImageItem(
+    uri = row.uri,
+    scores = parseScores(row.scores),
+    bestGuessScore = row.bestGuessScore,
+  )
 
 private fun parseScores(aggregated: String?): List<Score> =
   aggregated
