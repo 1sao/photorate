@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
@@ -102,6 +104,7 @@ fun ImageDetailsScreenContent(
         bottomPadding = innerPadding.calculateBottomPadding(),
         onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
         onRemoveClick = { showRemoveDialog = true },
+        modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
       )
 
       Spacer(Modifier.height(DETAIL_SECTION_SPACING))
@@ -128,7 +131,7 @@ private fun ImageDetailsScreenPreview() {
       state =
         ImageDetailsUiState(
           scores = listOf(Score.FIVE),
-          imageUri = "content://preview/1",
+          imageUri = "content://preview/1", // TODO display image preview
         ),
       onBack = {},
       onIntent = {},

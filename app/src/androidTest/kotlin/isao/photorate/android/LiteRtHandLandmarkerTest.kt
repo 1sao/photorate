@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class LiteRtHandLandmarkerTest : LandmarkerTest() {
 
-  override val logTag = "LiteRtDataset2"
+  override val logTag = "LiteRtHandLandmarkerTest"
 
   override val recognizers: List<GestureRecognizer<*>> =
     LiteRtGestureRecognizerProvider().createRecognizers()

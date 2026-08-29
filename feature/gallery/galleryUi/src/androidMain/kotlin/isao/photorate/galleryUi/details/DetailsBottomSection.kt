@@ -4,7 +4,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +35,6 @@ internal fun DetailsBottomSection(
   Column(
     modifier =
       modifier
-        .fillMaxWidth()
         .then(renderInTransition)
         .then(animateEnterExit)
         .clip(MaterialTheme.shapes.largeIncreased)

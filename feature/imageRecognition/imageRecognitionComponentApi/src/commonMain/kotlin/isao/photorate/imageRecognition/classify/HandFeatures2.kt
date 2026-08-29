@@ -9,10 +9,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
 
-/**
- * Structured hand features extracted from 21 keypoints. Each [Finger] and the [Thumb] are inner
- * classes that read directly from the hand's landmark points.
- */
+/** Structured hand features extracted from 21 keypoints. */
 class HandFeatures2(val hand: Hand) {
 
   private val p = hand.points
@@ -65,7 +62,7 @@ class HandFeatures2(val hand: Hand) {
 
     /**
      * Thumb tip angle from image-up (degrees), measured on the MCP→TIP vector. 0 = pointing up, 180
-     * = pointing down. Uses the full thumb length to avoid single-segment curvature bias.
+     * = pointing down.
      */
     val tipAngle: Float = run {
       val dx = p[THUMB_TIP].x - p[THUMB_MCP].x
@@ -75,7 +72,7 @@ class HandFeatures2(val hand: Hand) {
 
     /**
      * Angle (degrees) between the thumb direction (MCP→TIP) and the index direction (MCP→TIP).
-     * Higher values mean the thumb points away from the curled fingers.
+     * Higher values mean the thumb points away from the fingers.
      */
     val fingerAngle: Float = run {
       val tx = p[THUMB_TIP].x - p[THUMB_MCP].x
@@ -87,7 +84,7 @@ class HandFeatures2(val hand: Hand) {
 
     /**
      * Distance between thumb TIP and index TIP / handSize. Small values indicate the fingertips are
-     * touching (e.g. OK-sign circle).
+     * touching.
      */
     val indexTipDistance: Float = dist(p[THUMB_TIP], p[INDEX_TIP]) / handSize
   }

@@ -24,9 +24,7 @@ import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GALLERY_PERMISSION
 import isao.photorate.galleryUi.GalleryGridContent
 import isao.photorate.galleryUi.GalleryUiState
-import isao.photorate.galleryUi.GalleryUiState.ImageSorting
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
-import isao.photorate.galleryUi.GalleryUiState.PermissionState as GalleryPermissionState
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)
@@ -113,15 +111,13 @@ private fun HomeScreenPreview() {
         HomeScreenUiState(
           gallery =
             GalleryUiState(
-              permissionState = GalleryPermissionState.Denied,
               imagesState =
                 ImagesState(
                   status = GalleryStatusCounts(emptyMap()),
                   detections = emptyList(),
                   uncertainDetections = emptyList(),
-                  sorting = ImageSorting.Date(isAscending = false),
                 ),
-            )
+            ),
         ),
       permissionState = rememberPermissionState(GALLERY_PERMISSION),
       onOpenSettings = {},

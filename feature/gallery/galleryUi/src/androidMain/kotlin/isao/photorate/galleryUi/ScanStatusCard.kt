@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -63,7 +62,7 @@ import kotlinx.coroutines.flow.flow
 @Composable
 fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modifier) {
   Surface(
-    modifier = modifier.fillMaxWidth(),
+    modifier = modifier,
     shape = MaterialTheme.shapes.largeIncreased,
     color = MaterialTheme.colorScheme.surfaceContainer,
   ) {
@@ -95,7 +94,6 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
 @Composable
 private fun CounterRow(statuses: List<GalleryImageStatus>, statusCounts: GalleryStatusCounts) {
   Row(
-    modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     statuses.forEach { status ->

@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class OnnxLandmarkerTest : LandmarkerTest() {
 
-  override val logTag = "OnnxDataset2"
+  override val logTag = "OnnxLandmarkerTest"
 
   override val recognizers: List<GestureRecognizer<*>> =
     OnnxGestureRecognizerProvider().createRecognizers()

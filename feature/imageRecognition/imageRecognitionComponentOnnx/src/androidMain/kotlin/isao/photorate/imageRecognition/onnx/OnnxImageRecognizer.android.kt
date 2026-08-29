@@ -40,20 +40,12 @@ import kotlin.system.measureTimeMillis
 /**
  * Android factory for the ONNX hand pipeline: RTMDet hand detection -> multi-rotation RTMPose
  * search -> gesture rating.
- *
- * The sparse landmark model (presence gate) and the palm rotation model were removed: the rater is
- * the gate now (the rotation search passes through gesture-less hands so the dev-mode best-guess
- * rater can still store them for inspection). Verified against plans/samples in
- * plans/benchmarks/rtmpose_only_v5.py — the tightened gesture set (THUMBS / ROCK /
- * OK-as-a-camera-facing-circle) filters every no_score sample on its own, and RTMPose rates all of
- * the score samples (2/ and 3_open_hand_palm_down intentionally no longer rate — PEACE/OPEN_PALM
- * were dropped as false positives).
  */
 class AndroidOnnxHandLandmarkerFactory
 @Inject
 constructor(
   private val context: Context,
-  /** NNAPI flags; null = plain CPU (the app default). Empty = addNnapi() defaults. */
+  /** null = plain CPU (the app default). */
   private val nnapiFlags: Set<NNAPIFlags>? = null,
 ) : HandLandmarkerFactory {
   override fun createFromOptions(options: HandLandmarkerOptions): HandLandmarker {
@@ -873,7 +865,7 @@ internal constructor(
   }
 }
 
-private fun java.nio.FloatBuffer.takeFloatArray(): FloatArray {
+private fun FloatBuffer.takeFloatArray(): FloatArray {
   val array = FloatArray(remaining())
   get(array)
   return array

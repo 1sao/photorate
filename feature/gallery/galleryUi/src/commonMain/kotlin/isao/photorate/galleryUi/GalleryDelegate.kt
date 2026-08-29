@@ -1,9 +1,6 @@
 package isao.photorate.galleryUi
 
-import isao.photorate.config.ConfigRepository
-import isao.photorate.config.GallerySorting
 import isao.photorate.gallery.db.GalleryImageStatus
-import isao.photorate.gallery.db.SelectUncertainImagesWithScore
 import isao.photorate.galleryComponent.classify.LandmarkPendingImagesUseCase
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
 import isao.photorate.galleryComponent.populateGallery.PopulateGalleryUseCase
@@ -11,9 +8,7 @@ import isao.photorate.galleryComponent.search.PopulateImageEmbeddingsUseCase
 import isao.photorate.galleryRepository.GalleryFilterRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
 import isao.photorate.galleryRepository.GalleryStatusCounts
-import isao.photorate.galleryUi.GalleryUiState.ImageSorting
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
-import isao.photorate.galleryUi.GalleryUiState.PermissionState
 import isao.photorate.imageRecognition.classify.Score
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
@@ -54,9 +49,9 @@ class DefaultGalleryDelegate(
   private val galleryFilterRepository: GalleryFilterRepository,
   private val populateImageEmbeddings: PopulateImageEmbeddingsUseCase,
   private val setUserScore: SetUserScoreUseCase,
-  private val configRepository: ConfigRepository,
 ) : GalleryDelegate {
 
+  // TODO gallery should not know about search
   private val searchFilter = MutableStateFlow<Set<String>?>(null)
 
   override val uiState: Flow<GalleryUiState> =
@@ -64,11 +59,9 @@ class DefaultGalleryDelegate(
       galleryFilterRepository.selectImagesWithScores(),
       galleryFilterRepository.selectUncertainImages(),
       galleryImageRepository.observeStatusCounts().sample(.1.seconds),
-      configRepository.getConfig(),
       searchFilter,
-    ) { images, uncertain, status, config, filter ->
+    ) { images, uncertainImages, status, filter ->
       GalleryUiState(
-        permissionState = PermissionState.Denied,
         imagesState =
           ImagesState(
             status = status,
@@ -80,16 +73,19 @@ class DefaultGalleryDelegate(
                   scannedAt = row.scannedAt,
                 )
               },
-            uncertainDetections = uncertain,
-            sorting = config.sorting.toImageSorting(),
+            uncertainDetections =
+              uncertainImages.map { row ->
+                GalleryImageItem(
+                  uri = row.uri,
+                  scores = listOf(row.bestGuessScore ?: Score.THREE),
+                  scannedAt = row.scannedAt,
+                )
+              },
             searchUris = filter,
           ),
       )
     }
 
-  // Serialized with a mutex: rescans share the singleton landmarker and
-  // overlapping scans caused native crashes, so a scan that's already
-  // running is never overlapped — callers queue instead.
   private val rescanLock = Mutex()
 
   override suspend fun rescan() {
@@ -119,33 +115,14 @@ class DefaultGalleryDelegate(
 }
 
 data class GalleryUiState(
-  val permissionState: PermissionState = PermissionState.Denied,
   val imagesState: ImagesState = ImagesState(),
 ) {
-  // TODO remove
-  sealed interface PermissionState {
-    data object Granted : PermissionState
-
-    data object GrantedPartially : PermissionState
-
-    data object Denied : PermissionState
-  }
-
   data class ImagesState(
     val status: GalleryStatusCounts = GalleryStatusCounts(emptyMap()),
     val detections: List<GalleryImageItem> = emptyList(),
-    val uncertainDetections: List<SelectUncertainImagesWithScore> = emptyList(),
-    val sorting: ImageSorting = ImageSorting.Date(isAscending = false),
+    val uncertainDetections: List<GalleryImageItem> = emptyList(),
     val searchUris: Set<String>? = null,
   )
-
-  sealed interface ImageSorting {
-    val isAscending: Boolean
-
-    data class Date(override val isAscending: Boolean) : ImageSorting
-
-    data class Score(override val isAscending: Boolean) : ImageSorting
-  }
 }
 
 data class GalleryImageItem(val uri: String, val scores: List<Score>, val scannedAt: Long? = null)
@@ -153,12 +130,6 @@ data class GalleryImageItem(val uri: String, val scores: List<Score>, val scanne
 sealed interface GalleryIntent {
   // TODO
 }
-
-private fun GallerySorting.toImageSorting(): ImageSorting =
-  when (this) {
-    GallerySorting.SCORE -> ImageSorting.Score(isAscending = false)
-    GallerySorting.DATE -> ImageSorting.Date(isAscending = false)
-  }
 
 private fun parseScores(aggregated: String?): List<Score> =
   aggregated

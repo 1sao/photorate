@@ -1,6 +1,5 @@
 package isao.photorate.galleryUi
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,17 +21,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -41,16 +40,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -62,11 +61,6 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.imageSharedContentKey
-import isao.photorate.imageRecognition.classify.Score
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 // Search-derived values are passed as primitives ([searchUris], [isSearching],
 // [searchQuery]) instead of the search module's state class, keeping galleryUi
@@ -93,7 +87,7 @@ fun GalleryGridContent(
       state.imagesState.searchUris?.let { filter ->
         state.imagesState.detections.filter { it.uri in filter }
       } ?: state.imagesState.detections
-    val visibleUncertainDetections =
+    val visibleUncertainDetections = // TODO respect order from searchUris
       state.imagesState.searchUris?.let { filter ->
         state.imagesState.uncertainDetections.filter { it.uri in filter }
       } ?: state.imagesState.uncertainDetections
@@ -104,17 +98,18 @@ fun GalleryGridContent(
     //      visibleUncertainDetections.isEmpty()
 
     // TODO Move somewhere else? LocalWindowSizeClass?
-    // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive ?
+    // TODO use https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive
+    // ?
     // Previews have no Activity; fall back to the phone layout there.
-    val isTablet =
-      LocalActivity.current?.let {
-        calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
-      } ?: false
+    val isTablet = false
+    //      LocalActivity.current?.let {
+    //        calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
+    //      } ?: false
 
     LazyVerticalGrid(
       state = gridState,
       modifier = Modifier.fillMaxSize(),
-      columns = GridCells.Fixed(2),
+      columns = GridCells.Adaptive(160.dp),
       contentPadding =
         contentPadding +
           PaddingValues(
@@ -162,38 +157,26 @@ fun GalleryGridContent(
             ScanStatusCard(state.imagesState.status)
           }
           //        }
+
           items(visibleDetections, key = { it.uri }) { item ->
-            GalleryImageCard(
+            GalleryItem(
               item = item,
               onClick = remember(item.uri) { { onOpenImage(item.uri) } },
             )
           }
 
-          if (visibleUncertainDetections.isNotEmpty()) {
-            item(
-              key = "uncertain-header",
-              span = { GridItemSpan(maxLineSpan) },
-            ) {
-              UncertainSectionHeader(count = visibleUncertainDetections.size)
-            }
-            items(
-              items = visibleUncertainDetections,
-              key = { "uncertain_${it.uri}" },
-              span = { GridItemSpan(if (isTablet) maxLineSpan / 2 else maxLineSpan) },
-            ) { image ->
-              UncertainImageCard(
-                modifier = Modifier.animateItem(),
-                uri = image.uri,
-                bestGuessScore = image.bestGuessScore,
-                onClick = remember(image.uri) { { onOpenImage(image.uri) } },
-                onAccept =
-                  remember { { uri: String, score: Int -> onAcceptUncertain(uri, score) } },
-                onDelete =
-                  remember {
-                    { uri: String -> onDeleteUncertain(uri) }
-                  }, // TODO unnecessary remembers?
-              )
-            }
+          items(
+            items = visibleUncertainDetections,
+            key = { "uncertain_${it.uri}" },
+            span = { GridItemSpan(2) },
+          ) { item ->
+            UncertainGalleryItem(
+              modifier = Modifier.animateItem(),
+              item = item,
+              onClick = { onOpenImage(item.uri) },
+              onAccept = { uri: String, score: Int -> onAcceptUncertain(uri, score) },
+              onDelete = { uri: String -> onDeleteUncertain(uri) },
+            )
           }
         }
       }
@@ -258,40 +241,123 @@ private fun NoMatchesCard(query: String) {
   }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun GalleryImageCard(
+private fun GalleryItem(
   item: GalleryImageItem,
+  modifier: Modifier = Modifier,
   onClick: () -> Unit,
 ) {
-  with(LocalSharedTransitionScope.current) {
-    Box(
-      modifier = Modifier.fillMaxWidth().aspectRatio(1f).clickable(onClick = onClick),
-    ) {
-      val imageKey = imageSharedContentKey(item.uri)
-      val imageRequest =
-        ImageRequest.Builder(LocalContext.current).data(item.uri).memoryCacheKey(imageKey).build()
-      AsyncImage(
-        model = imageRequest,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
+  Box(modifier = modifier.fillMaxWidth().aspectRatio(1f).clickable(onClick = onClick)) {
+    GalleryCardImage(
+      uri = item.uri,
+      modifier = Modifier.fillMaxSize(),
+    )
+    RatingStar(
+      fraction = item.scores.max().ratingStarFraction,
+      modifier = Modifier.padding(12.dp).size(20.dp),
+    )
+  }
+}
+
+@Composable
+private fun UncertainGalleryItem(
+  item: GalleryImageItem,
+  onClick: () -> Unit,
+  onAccept: (String, Int) -> Unit,
+  onDelete: (String) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Surface(
+    modifier = modifier.fillMaxWidth(),
+    shape = MaterialTheme.shapes.largeIncreased,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+  ) {
+    Row(Modifier.fillMaxSize()) {
+      GalleryCardImage(
+        uri = item.uri,
+        onClick = onClick,
+        modifier = Modifier.weight(1f).aspectRatio(1f),
+      )
+
+      var stars by rememberSaveable { mutableStateOf(item.scores.first().score) }
+      Column(
         modifier =
-          Modifier.fillMaxSize()
-            .sharedBounds(
-              rememberSharedContentState(key = imageKey),
-              LocalNavAnimatedContentScope.current,
-              resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-              enter = fadeIn(snap()),
-              exit = ExitTransition.None,
+          Modifier.weight(1f).fillMaxHeight().padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Text(
+          text = "Best guess",
+          style = MaterialTheme.typography.labelMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        RatingStarSelector(
+          selected = stars,
+          onSelect = { stars = it },
+          modifier = Modifier.widthIn(max = 200.dp).padding(horizontal = 12.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          FilledIconButton(onClick = { onAccept(item.uri, stars) }) {
+            Icon(
+              Icons.Filled.Check,
+              contentDescription = "Accept score $stars",
             )
-            .clip(MaterialTheme.shapes.largeIncreased),
-      )
-      RatingStarsOverlay(
-        scores = item.scores,
-        modifier = Modifier.align(Alignment.TopStart),
-      )
+          }
+          FilledTonalIconButton(
+            onClick = { onDelete(item.uri) },
+            colors =
+              IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+              ),
+          ) {
+            Icon(
+              Icons.Filled.Close,
+              contentDescription = "Mark as no hand",
+            )
+          }
+        }
+      }
     }
   }
+}
+
+@Composable
+private fun GalleryCardImage(
+  uri: String,
+  modifier: Modifier = Modifier,
+  clipShape: Shape = MaterialTheme.shapes.largeIncreased,
+  onClick: (() -> Unit)? = null,
+) {
+  val imageKey = imageSharedContentKey(uri)
+  val imageRequest =
+    ImageRequest.Builder(LocalContext.current)
+      .data(uri)
+      .placeholderMemoryCacheKey(imageKey)
+      .memoryCacheKey(imageKey)
+      .build()
+
+  val sharedBounds =
+    with(LocalSharedTransitionScope.current) {
+      Modifier.sharedBounds(
+        rememberSharedContentState(key = imageKey),
+        LocalNavAnimatedContentScope.current,
+        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+        enter = fadeIn(snap()),
+        exit = ExitTransition.None,
+        zIndexInOverlay = 1f,
+      )
+    }
+
+  AsyncImage(
+    model = imageRequest,
+    contentDescription = null,
+    contentScale = ContentScale.Crop,
+    modifier =
+      modifier.then(sharedBounds).clip(clipShape).let {
+        if (onClick != null) it.clickable(onClick = onClick) else it
+      },
+  )
 }
 
 @Composable
@@ -316,106 +382,3 @@ private fun UncertainSectionHeader(count: Int) {
     }
   }
 }
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-private fun UncertainImageCard(
-  uri: String,
-  bestGuessScore: Score?,
-  onClick: () -> Unit,
-  onAccept: (String, Int) -> Unit,
-  onDelete: (String) -> Unit,
-  modifier: Modifier = Modifier,
-) =
-  with(LocalSharedTransitionScope.current) {
-    var selected by remember(uri) { mutableStateOf(bestGuessScore?.score ?: DEFAULT_GUESS_SCORE) }
-    val sharedState = rememberSharedContentState(key = imageSharedContentKey(uri))
-    Surface(
-      modifier = modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(24.dp),
-      color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-      Row(Modifier.fillMaxWidth()) {
-        AsyncImage(
-          model = uri,
-          contentDescription = null,
-          contentScale = ContentScale.Crop,
-          modifier =
-            Modifier.weight(1f)
-              .aspectRatio(1f)
-              .sharedElement(sharedState, LocalNavAnimatedContentScope.current)
-              .clip(RoundedCornerShape(24.dp))
-              .clickable(onClick = onClick),
-        )
-        Column(
-          modifier = Modifier.weight(1.4f).padding(horizontal = 12.dp, vertical = 10.dp),
-          verticalArrangement = Arrangement.Center,
-        ) {
-          Text(
-            text = "Best guess",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-          Spacer(Modifier.height(2.dp))
-          UncertainStarSelector(
-            selected = selected,
-            onSelect = { selected = it },
-          )
-          Spacer(Modifier.height(8.dp))
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledIconButton(onClick = { onAccept(uri, selected) }) {
-              Icon(
-                Icons.Filled.Check,
-                contentDescription = "Accept score $selected",
-              )
-            }
-            FilledTonalIconButton(
-              onClick = { onDelete(uri) },
-              colors =
-                IconButtonDefaults.filledTonalIconButtonColors(
-                  containerColor = MaterialTheme.colorScheme.errorContainer,
-                  contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),
-            ) {
-              Icon(
-                Icons.Filled.Close,
-                contentDescription = "Mark as no hand",
-              )
-            }
-          }
-        }
-      }
-    }
-  }
-
-@Composable
-private fun UncertainStarSelector(selected: Int, onSelect: (Int) -> Unit) {
-  Row {
-    (1..5).forEach { score ->
-      Box(
-        modifier = Modifier.size(32.dp).clip(CircleShape).clickable { onSelect(score) },
-        contentAlignment = Alignment.Center,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.Star,
-          contentDescription = "Rate $score",
-          tint = if (score <= selected) StarColors.uncertain else StarColors.empty,
-          modifier = Modifier.size(24.dp),
-        )
-      }
-    }
-  }
-}
-
-/** Fallback preselected score when an uncertain image somehow has no best guess. */
-private const val DEFAULT_GUESS_SCORE = 3
-
-/** Year*100 + month (1-12): a stable, order-preserving date-group key. */
-private fun yearMonthKey(epochMillis: Long, calendar: Calendar): Int {
-  calendar.timeInMillis = epochMillis
-  return calendar.get(Calendar.YEAR) * 100 + calendar.get(Calendar.MONTH) + 1
-}
-
-/** "Mar 2026"-style month + year label for the scrollbar chip. */
-private fun formatMonthYear(epochMillis: Long): String =
-  SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Date(epochMillis))

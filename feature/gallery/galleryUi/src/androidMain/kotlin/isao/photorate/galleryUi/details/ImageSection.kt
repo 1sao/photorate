@@ -52,7 +52,7 @@ internal fun ImageSection(
       model = imageRequest,
       contentDescription = null,
       placeholder = null,
-      contentScale = ContentScale.FillWidth,
+      contentScale = ContentScale.FillWidth, // TODO do not let image be larger than screen
       modifier = Modifier.fillMaxSize(),
     )
     if (state.devModeEnabled && state.landmarkHands.isNotEmpty()) {
@@ -64,7 +64,7 @@ internal fun ImageSection(
   }
 }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun ImageSectionPreview() {
   PhotoRatePreview {

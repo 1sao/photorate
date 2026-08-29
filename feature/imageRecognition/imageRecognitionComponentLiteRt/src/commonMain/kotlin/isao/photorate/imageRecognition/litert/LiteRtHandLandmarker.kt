@@ -1,6 +1,5 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.Gesture
 import isao.photorate.imageRecognition.classify.GestureRecognizer
 import isao.photorate.imageRecognition.classify.GestureResult
 import isao.photorate.imageRecognition.classify.HandFeatures2
@@ -8,7 +7,6 @@ import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
 import isao.photorate.imageRecognition.classify.LandmarkedImage
 import isao.photorate.imageRecognition.classify.thumbConfidence
-import isao.photorate.imageRecognition.classify.tryRecognizers
 import kotlin.math.max
 import kotlin.math.min
 
@@ -53,8 +51,6 @@ class LiteRtHandLandmarker(
   override fun detect(candidate: LandmarkCandidate): LandmarkedImage {
     val image = candidate.toEngineImage()
     val boxes = detectBoxes(image)
-    val iw = image.width
-    val ih = image.height
     val hands = ArrayList<LandmarkedImage.Hand>()
     for ((box, score) in boxes.take(MAX_HANDS)) {
       if (score < MIN_DET) continue
@@ -82,8 +78,6 @@ class LiteRtHandLandmarker(
   ): List<GestureResult> {
     val image = candidate.toEngineImage()
     val boxes = detectBoxes(image)
-    val iw = image.width
-    val ih = image.height
     val results = ArrayList<GestureResult>()
     for ((box, score) in boxes.take(MAX_HANDS)) {
       if (score < MIN_DET) continue
@@ -99,21 +93,17 @@ class LiteRtHandLandmarker(
     box: IntArray,
     recognizers: List<GestureRecognizer<*>>,
   ): GestureResult? {
-    val kpResult = rtmposeLandmarks(image, box) ?: return null
+    val kpResult = rtmposeLandmarks(image, box)
     val points = kpResult.keypoints
-    val kpMean = points.sumOf { it.z.toDouble() }.toFloat() / NUM_LANDMARKS
 
     val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
     val features = HandFeatures2(hand)
-    val recognized = tryRecognizers(features, recognizers)
+    if (features.kpMean < MIN_KP_CONFIDENCE) return null
 
-    return if (
-      recognized != null && recognized.first.score != null && kpMean >= MIN_KP_CONFIDENCE
-    ) {
-      GestureResult(recognized.first, recognized.second, hand)
-    } else {
-      BestBoxResult(kpMean, hand, recognized).toResult()
-    }
+    val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence ?: 0f }
+    if (recognized == null) return null
+
+    return GestureResult(recognized.gesture, recognized.confidence, hand)
   }
 
   private fun isQualityHandLandmark(hand: LandmarkedImage.Hand): Boolean {
@@ -162,7 +152,7 @@ class LiteRtHandLandmarker(
   private fun rtmposeLandmarks(
     image: EngineImage,
     box: IntArray,
-  ): KpResult? {
+  ): KpResult {
     val x1 = box[0].toFloat()
     val y1 = box[1].toFloat()
     val x2 = box[2].toFloat()
@@ -271,22 +261,6 @@ class LiteRtHandLandmarker(
     pose.close()
     detectorTensor.release()
     poseTensor.release()
-  }
-
-  private class BestBoxResult(
-    val kpMean: Float,
-    val hand: LandmarkedImage.Hand,
-    val recognized: Pair<Gesture, Float>?,
-  ) {
-    fun toResult(): GestureResult? {
-      if (recognized != null && recognized.first.score != null) {
-        return GestureResult(recognized.first, recognized.second, hand)
-      }
-      if (kpMean >= MIN_KP_CONFIDENCE) {
-        return GestureResult(null, 0f, hand)
-      }
-      return null
-    }
   }
 
   private companion object {

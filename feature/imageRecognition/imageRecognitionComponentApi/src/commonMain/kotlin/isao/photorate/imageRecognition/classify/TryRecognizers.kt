@@ -10,8 +10,7 @@ fun tryRecognizers(
   recognizers: List<GestureRecognizer<*>>,
 ): Pair<Gesture, Float>? {
   for (recognizer in recognizers) {
-    @Suppress("UNCHECKED_CAST")
-    val result = (recognizer as GestureRecognizer<Gesture>).recognize(features)
+    val result = recognizer.recognize(features)
     if (result != null) return result.gesture to result.confidence
   }
   return null

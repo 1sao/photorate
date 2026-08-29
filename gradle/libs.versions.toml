@@ -46,6 +46,7 @@ kmplitert = "0.1.4"
 mediapipe = "0.10.35"
 firebase-bom = "34.17.0"
 tensorflow = "2.17.0"
+material3Adaptive = "1.0.0-alpha06"
 
 [libraries]
 android-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugaring" }
@@ -133,6 +134,7 @@ koin-compiler-gradle-plugin = { module = "io.insert-koin:koin-compiler-gradle-pl
 compose-multiplatform-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose-multiplatform" }
 sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqlDelight" }
 skie-gradle-plugin = { module = "co.touchlab.skie:gradle-plugin", version.ref = "skie" }
+androidx-material3-adaptive = { group = "androidx.compose.material3", name = "material3-adaptive", version.ref = "material3Adaptive" }
 
 [plugins]
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
