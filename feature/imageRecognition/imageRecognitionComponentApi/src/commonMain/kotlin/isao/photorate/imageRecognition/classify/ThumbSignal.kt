@@ -10,9 +10,9 @@ class ThumbSignal(val angle: Float) : Gesture {
 
   companion object {
     private const val THUMBS_UP_MAX_ANGLE = 30f
-    private const val SCORE_FOUR_MAX_ANGLE = 70f
-    private const val SCORE_THREE_MAX_ANGLE = 115f
-    private const val SCORE_TWO_MAX_ANGLE = 155f
+    private const val SCORE_FOUR_MAX_ANGLE = 75f
+    private const val SCORE_THREE_MAX_ANGLE = 105f
+    private const val SCORE_TWO_MAX_ANGLE = 165f
 
     fun scoreForAngle(angle: Float): Score =
       when {

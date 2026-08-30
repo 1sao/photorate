@@ -7,6 +7,9 @@ import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
 import isao.photorate.imageRecognition.classify.LandmarkedImage
 import isao.photorate.imageRecognition.classify.thumbConfidence
+import isao.photorate.imageRecognition.classify.tryRecognizers
+import isao.photorate.imageRecognition.litert.LiteRtHandLandmarker.Companion.MIN_DET
+import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
@@ -81,13 +84,42 @@ class LiteRtHandLandmarker(
     val image = candidate.toEngineImage()
     val boxes = detectBoxes(image)
     val results = ArrayList<GestureResult>()
-    for ((box, score) in boxes.take(MAX_HANDS)) {
-      if (score < MIN_DET) continue
+    // Select the first and the second option boxes
+    for ((index, entry) in boxes.take(MAX_HANDS).withIndex()) {
+      val (box, score) = entry
+      val isTier2 = index > 0 && score < MIN_DET
+      if (isTier2) {
+        if (score < TIER2_MIN_DET) continue
+      } else if (score < MIN_DET) {
+        continue
+      }
       val handResult = classifyBox(image, box, recognizers) ?: continue
+      if (isTier2 && !isTier2Admissible(handResult, box)) continue
       results.add(handResult)
     }
     return results
   }
+
+  /**
+   * Check if a box shows promise as a second option: only a confident read on a geometrically
+   * plausible hand is accepted.
+   */
+  private fun isTier2Admissible(result: GestureResult, box: IntArray): Boolean {
+    if (result.confidence < TIER2_KP_FLOOR) return false
+    val boxSide = max(box[2] - box[0], box[3] - box[1]).toFloat()
+    if (boxSide <= 0f) return false
+    // TODO extract as a HandFeatures2 properties
+    val handSize =
+      dist(result.hand.points[HandFeatures2.WRIST], result.hand.points[HandFeatures2.MIDDLE_MCP])
+    if (handSize / boxSide < MIN_HAND_TO_BOX_RATIO) return false
+    val thumbLength =
+      dist(result.hand.points[HandFeatures2.THUMB_MCP], result.hand.points[HandFeatures2.THUMB_TIP])
+    if (thumbLength / handSize > MAX_THUMB_LENGTH_RATIO) return false
+    return true
+  }
+
+  private fun dist(a: LandmarkedImage.Point, b: LandmarkedImage.Point): Float =
+    hypot(a.x - b.x, a.y - b.y)
 
   private fun classifyBox(
     image: EngineImage,
@@ -99,10 +131,12 @@ class LiteRtHandLandmarker(
 
     val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
     val features = HandFeatures2(hand)
-    val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence ?: 0f }
+    if (features.handSize < MIN_HAND_SIZE) return null
+    val recognized = tryRecognizers(features, recognizers)
+    //    val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence}
 
     return when {
-      recognized != null -> GestureResult(recognized.gesture, recognized.confidence, hand)
+      recognized != null -> GestureResult(recognized.first, recognized.second, hand)
       features.kpMean >= MIN_KP_CONFIDENCE -> GestureResult(null, 0f, hand)
       else -> null
     }
@@ -141,7 +175,7 @@ class LiteRtHandLandmarker(
   private class KpResult(val keypoints: List<LandmarkedImage.Point>)
 
   /**
-   * Runs RTMPose using rtplib's exact crop pipeline: `bbox_xyxy2cs(padding=1.25)` →
+   * Runs RTMPose using rtmlib's exact crop pipeline: `bbox_xyxy2cs(padding=1.25)` →
    * `top_down_affine` → model → postprocess.
    */
   private fun rtmposeLandmarks(
@@ -263,6 +297,13 @@ class LiteRtHandLandmarker(
     const val RTMPOSE_SIZE = 256
     const val RTPLIB_CROP = 1.25f
     const val MIN_DET = 0.25f
+
+    /** Tier-2 admission for the second-ranked box when its det score is below [MIN_DET]. */
+    const val TIER2_MIN_DET = 0.15f
+    const val TIER2_KP_FLOOR = 0.45f
+    const val MIN_HAND_TO_BOX_RATIO = 0.15f
+    const val MAX_THUMB_LENGTH_RATIO = 2f
+
     const val MIN_KP_CONFIDENCE = 0.30f
     const val MAX_HANDS = 2
     const val MIN_BOX_SIDE = 8

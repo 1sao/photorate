@@ -43,7 +43,17 @@ DETECTOR_SIZE = 320
 RTMPOSE_SIZE = 256
 RTPLIB_CROP = 1.25
 MIN_DET = 0.25
+# Tier-2 admission for the second-ranked box: when its detScore falls below
+# MIN_DET it may still be pose-run and classified, but only a high-quality,
+# geometrically-plausible gesture read is accepted. This rescues real hands
+# (e.g. confident_5/IMG_20250209_221817.jpg, box1 det 0.186) without letting
+# tiny/degenerate landmark clouds through.
+TIER2_MIN_DET = 0.15
+TIER2_KP_FLOOR = 0.45
+MIN_HAND_TO_BOX_RATIO = 0.15
+MAX_THUMB_LENGTH_RATIO = 2.0
 MIN_KP_CONFIDENCE = 0.30
+MIN_HAND_SIZE = 40
 MAX_HANDS = 2
 MIN_BOX_SIDE = 8
 NUM_LANDMARKS = 21
@@ -393,9 +403,10 @@ class Pipeline:
     def detect_with_recognizers(self, img, recognizers):
         """Returns list of dicts: gesture, score, kpMean, points, detScore, rotation.
 
-        Mirrors LiteRtHandLandmarker.detectWithRecognizers: MIN_DET gate, top
-        MAX_HANDS boxes, first-matching-recognizer selection, unmatched hands
-        above the kpMean floor retained as gesture-less results.
+        Mirrors LiteRtHandLandmarker.detectWithRecognizers: tiered MIN_DET gate
+        (rank-0 box >= MIN_DET; rank-1 box >= TIER2_MIN_DET with quality gates),
+        top MAX_HANDS boxes, first-matching-recognizer selection, unmatched
+        hands above the kpMean floor retained as gesture-less results.
         """
         if isinstance(img, (str, Path)):
             img = decode_image(img)
@@ -403,17 +414,27 @@ class Pipeline:
                 return []
         boxes = self.backend.detect_hands(img)
         results = []
-        for box in boxes[:MAX_HANDS]:
-            if box[4] < MIN_DET:
+        for rank, box in enumerate(boxes[:MAX_HANDS]):
+            det = float(box[4])
+            is_tier2 = rank > 0 and det < MIN_DET
+            if is_tier2:
+                if det < TIER2_MIN_DET:
+                    continue
+            elif det < MIN_DET:
                 continue
             points = self.backend.landmarks(img, box)
             kp_mean = float(np.mean(points[:, 2]))
             features = HandFeatures(points)
+            if features.hand_size < MIN_HAND_SIZE:
+                continue
             recognized = None
             for r in recognizers:
                 recognized = r.recognize(features)
                 if recognized is not None:
                     break
+            if recognized is not None and is_tier2:
+                if kp_mean < TIER2_KP_FLOOR or not _is_plausible_hand(features, box):
+                    recognized = None
             if recognized is not None:
                 gesture, score, confidence = recognized.gesture, recognized.score, recognized.confidence
             elif kp_mean >= MIN_KP_CONFIDENCE:
@@ -425,7 +446,7 @@ class Pipeline:
                 "score": score,
                 "confidence": confidence,
                 "kpMean": round(kp_mean, 4),
-                "detScore": round(float(box[4]), 4),
+                "detScore": round(det, 4),
                 "rotation": 0,
                 "box": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
                 "points": [(float(p[0]), float(p[1]), float(p[2])) for p in points],
@@ -436,6 +457,19 @@ class Pipeline:
 # Recognizers import lives at the bottom to avoid a circular import
 # (gesture_classify imports nothing from rtm_pipeline).
 from gesture_classify import HandFeatures  # noqa: E402
+
+
+def _is_plausible_hand(features, box):
+    """Geometric validity gate for tier-2 admission: rejects degenerate landmark
+    clouds (tiny hand inside a huge box, physically impossible thumb)."""
+    box_side = max(box[2] - box[0], box[3] - box[1])
+    if box_side <= 0:
+        return False
+    if features.hand_size / box_side < MIN_HAND_TO_BOX_RATIO:
+        return False
+    if features.thumb.length_ratio > MAX_THUMB_LENGTH_RATIO:
+        return False
+    return True
 
 
 def _simcc_maximum(simcc_x, simcc_y):

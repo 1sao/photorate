@@ -106,6 +106,10 @@ fun GalleryGridContent(
     //        calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
     //      } ?: false
 
+    // TODO only allow even numbers of columns by copying and editing GridCells.Adaptive
+    // TODO tweak how grid preloads items to fix image blinking on load
+    // TODO ensure new item types start from a new row by adding a spacer with the remaining column
+    // span between them
     LazyVerticalGrid(
       state = gridState,
       modifier = Modifier.fillMaxSize(),

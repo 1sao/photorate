@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+// TODO Make sure all composables except screens accept Modifier as the first optional param.
 internal fun SearchInputField(
   searchBarState: SearchBarState,
   textFieldState: TextFieldState,

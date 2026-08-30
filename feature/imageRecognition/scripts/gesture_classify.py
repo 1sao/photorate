@@ -74,7 +74,9 @@ class HandFeatures:
         xs = [q[0] for q in p]
         ys = [q[1] for q in p]
         self.extent_ratio = (
-            (max(xs) - min(xs)) / self.hand_size if self.hand_size > 0 else 0.0
+            max(max(xs) - min(xs), max(ys) - min(ys)) / self.hand_size
+            if self.hand_size > 0
+            else 0.0
         )
         self.kp_mean = sum(q[2] for q in p) / len(p)
 
@@ -92,6 +94,12 @@ class HandFeatures:
         self.all_curled = not any(f.is_extended for f in self.fingers)
 
         self.thumb = _Thumb(p, self.hand_size)
+
+        # Mean keypoint confidence of the thumb chain (kp1..4) and of the four fingers (kp5..20)
+        self.thumb_conf = sum(p[i][2] for i in range(THUMB_CMC, THUMB_TIP + 1)) / 4
+        self.finger_conf = sum(p[i][2] for i in range(INDEX_MCP, NUM_LANDMARKS)) / (
+                NUM_LANDMARKS - INDEX_MCP
+        )
 
 
 class _Finger:
@@ -259,25 +267,37 @@ class OkSignRecognizer:
 
 
 class ThumbOnlyRecognizer:
-    """Port of ThumbOnlyGestureRecognizer.kt — permissive: fingers may be extended."""
+    """Port of ThumbOnlyGestureRecognizer.kt — permissive: fingers may be extended.
+
+    - Angular gate is the thumb's direction against the image's vertical axis
+      (tip_angle: 0 = straight up, 90 = horizontal, 180 = straight down)
+      instead of the thumb-vs-index finger_angle, since a rotated view can make
+      thumb and index nearly parallel even for a real thumbs-up.
+    - The fallback only applies to partial/edge hands: fingers not confidently
+      tracked (finger_conf low) but thumb chain solid (thumb_conf high).
+    """
 
     MIN_KP_CONFIDENCE = 0.30
-    MAX_EXTENT_RATIO = 2.9
+    MAX_EXTENT_RATIO = 3.3
     FALLBACK_MIN_THUMB_LENGTH = 0.4
-    FALLBACK_MIN_THUMB_FINGER_ANGLE = 80
     FALLBACK_MIN_TIP_ANGLE = 15
+    FALLBACK_MAX_TIP_ANGLE = 165
+    FALLBACK_MAX_FINGER_CONF = 0.35
+    FALLBACK_MIN_THUMB_CONF = 0.35
 
     def recognize(self, f):
         if f.kp_mean < self.MIN_KP_CONFIDENCE:
             return None
         if f.hand_size <= 0 or f.extent_ratio > self.MAX_EXTENT_RATIO:
             return None
+        if f.finger_conf >= self.FALLBACK_MAX_FINGER_CONF:
+            return None
+        if f.thumb_conf < self.FALLBACK_MIN_THUMB_CONF:
+            return None
         t = f.thumb
         if t.length_ratio <= self.FALLBACK_MIN_THUMB_LENGTH:
             return None
-        if t.finger_angle <= self.FALLBACK_MIN_THUMB_FINGER_ANGLE:
-            return None
-        if t.tip_angle <= self.FALLBACK_MIN_TIP_ANGLE:
+        if t.tip_angle <= self.FALLBACK_MIN_TIP_ANGLE or t.tip_angle > self.FALLBACK_MAX_TIP_ANGLE:
             return None
         return RecognizedGesture("THUMBS_UP", score_for_thumb_angle(t.tip_angle), 0.0)
 
