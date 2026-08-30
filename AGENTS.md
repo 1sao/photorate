@@ -13,11 +13,12 @@ Clean Architecture with MVVM. Layers from outer to inner:
 - **Repository** — Interfaces in `commonMain`, `Default*` implementations using SQLDelight.
 - **DataSource** — Platform gallery APIs (MediaStore / PHAsset), Ktor, MediaPipe ML inference.
 
-Dependency injection via Koin with `expect`/`actual` for `platformModule`. No service locators or
-manual wiring.
+Dependency injection via Koin with `expect`/`actual` for `platformModule`.
 
 # Development rules
 
+- **Work until you're fully done**: do not stop working prematurely. If something is blocking you,
+  try resolving the issue yourself, and surface if you can't.
 - **No comments**: only add comments where it's impossible to understand the flow or decisions that
   led to this code otherwise. Use comments VERY sparingly.
 - **SOLID**: single responsibility per class, dependency inversion at repository boundaries,

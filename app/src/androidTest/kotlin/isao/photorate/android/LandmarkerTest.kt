@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import isao.photorate.imageRecognition.classify.GestureRecognizer
@@ -21,7 +22,7 @@ import org.junit.Test
  *
  * Bucket expectations:
  * - `confident_N` -> must detect gesture with score N
- * - `uncertain_N` -> must detect hand (score N expected, any score passes)
+ * - `uncertain_N` -> must detect gesture with exact score N, confidence == 0
  * - `rejected` -> must NOT detect any gesture
  * - `*_temp_disabled` -> excluded
  */
@@ -67,8 +68,12 @@ abstract class LandmarkerTest {
           val passed =
             when (config.expect) {
               "filter" -> !hasGesture
-              "detect" -> scores.any { it.score == config.score }
-              "uncertain" -> hasGesture
+              "detect" ->
+                scores.any { it.score == config.score } && results.any { it.confidence > 0f }
+              "uncertain" ->
+                results.any {
+                  it.score?.score == config.score && it.gesture != null && it.confidence == 0f
+                }
               else -> false
             }
 
@@ -76,8 +81,10 @@ abstract class LandmarkerTest {
             val detail =
               when (config.expect) {
                 "filter" -> "expected filter, got $detectedScores"
-                "detect" -> "expected score ${config.score}, got $detectedScores"
-                "uncertain" -> "expected hand detected, got $detectedScores"
+                "detect" ->
+                  "expected score ${config.score} with non-zero confidence, got $detectedScores"
+                "uncertain" ->
+                  "expected score ${config.score} with zero confidence, got $detectedScores"
                 else -> "unknown expectation"
               }
             failures += "$bucketDir/$file: $detail"
@@ -100,7 +107,7 @@ abstract class LandmarkerTest {
     val m = Regex("^(confident|uncertain)_(\\d+)$").find(name) ?: return null
     val (level, score) = m.destructured
     return BucketConfig(
-      expect = "detect",
+      expect = if (level == "uncertain") "uncertain" else "detect",
       score = score.toInt(),
     )
   }
@@ -172,7 +179,7 @@ abstract class LandmarkerTest {
   }
 
   protected fun log(msg: String) {
-    android.util.Log.i(logTag, "$logTag $msg")
+    Log.i(logTag, "$logTag $msg")
   }
 
   companion object {

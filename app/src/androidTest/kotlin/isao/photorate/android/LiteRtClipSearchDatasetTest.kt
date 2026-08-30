@@ -31,6 +31,9 @@ import org.junit.runner.RunWith
  * The S1 combined graph (vision + text in one file) passed the host task check at 5/6 with
  * /255-only preprocessing (ml/litert/converted/CLIP_S1_README.md); the app's two-sample set must
  * rank its own description top on-device.
+ *
+ * Python mirror: `feature/imageRecognition/scripts/test_clip_search_regression.py` runs the same
+ * two checks (top-1 ranking + scaled-decode equivalence) on host via ai-edge-litert.
  */
 @RunWith(AndroidJUnit4::class)
 class LiteRtClipSearchDatasetTest {

@@ -20,6 +20,8 @@ import kotlin.math.min
  *   `cv2.warpAffine` borderValue=0), bbox_xyxy2cs padding=1.25, SimCC mean decode.
  *
  * Gesture classification is handled by [GestureRecognizer]s passed to [detectWithRecognizers].
+ *
+ * Host regression harness: `feature/imageRecognition/scripts/test_landmarks_regression.py`
  */
 class LiteRtHandLandmarker(
   private val detector: LiteRtEngine,
@@ -82,7 +84,6 @@ class LiteRtHandLandmarker(
     for ((box, score) in boxes.take(MAX_HANDS)) {
       if (score < MIN_DET) continue
       val handResult = classifyBox(image, box, recognizers) ?: continue
-      if (handResult.gesture != null && !isQualityHandLandmark(handResult.hand)) continue
       results.add(handResult)
     }
     return results
@@ -98,19 +99,13 @@ class LiteRtHandLandmarker(
 
     val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
     val features = HandFeatures2(hand)
-    if (features.kpMean < MIN_KP_CONFIDENCE) return null
-
     val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence ?: 0f }
-    if (recognized == null) return null
 
-    return GestureResult(recognized.gesture, recognized.confidence, hand)
-  }
-
-  private fun isQualityHandLandmark(hand: LandmarkedImage.Hand): Boolean {
-    val features = HandFeatures2(hand)
-    if (features.handSize < MIN_HAND_SIZE) return false
-    if (features.thumbConfidence() < MIN_THUMB_CONF) return false
-    return true
+    return when {
+      recognized != null -> GestureResult(recognized.gesture, recognized.confidence, hand)
+      features.kpMean >= MIN_KP_CONFIDENCE -> GestureResult(null, 0f, hand)
+      else -> null
+    }
   }
 
   private fun detectBoxes(image: EngineImage): List<Pair<IntArray, Float>> {

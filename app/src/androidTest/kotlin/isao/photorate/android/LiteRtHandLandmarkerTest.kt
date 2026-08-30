@@ -12,6 +12,11 @@ import org.junit.runner.RunWith
  * Runs the LiteRT hand pipeline (RTMDet + RTMPose on CompiledModel — see
  * [AndroidLiteRtHandLandmarkerFactory]) over the shared bucket dataset via [LandmarkerTest],
  * mirroring [OnnxLandmarkerTest] on identical inputs and expectations.
+ *
+ * Python mirror: `feature/imageRecognition/scripts/test_landmarks_regression.py` runs the same
+ * bucket dataset with the same expectations on host (`--backend tflite` = this test's models,
+ * `--backend onnx` = rtmlib ground-truth baseline). Diff both runs with
+ * `feature/imageRecognition/scripts/compare_device_log.py`.
  */
 @RunWith(AndroidJUnit4::class)
 class LiteRtHandLandmarkerTest : LandmarkerTest() {

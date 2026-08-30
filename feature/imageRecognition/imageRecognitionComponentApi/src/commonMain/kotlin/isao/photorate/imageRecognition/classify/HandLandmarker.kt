@@ -91,11 +91,8 @@ enum class LandmarkModel(val id: String, val displayName: String) {
             preferredImageDimension = 640,
           )
 
-        // The
-        // LiteRT pipeline runs the same RTMDet + RTMPose models on the
-        // LiteRT runtime (ml/litert/ recipe), so its tuned gates match the
-        // ONNX
-        // provider's.
+        // The LiteRT pipeline runs the same RTMDet + RTMPose models as the ONNX provider.
+
         LITERT ->
           HandLandmarkerOptions(
             maxNumHands = 2,

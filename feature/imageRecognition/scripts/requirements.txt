@@ -1,0 +1,7 @@
+rtmlib>=0.0.5
+onnxruntime>=1.28
+ai-edge-litert>=1.0
+numpy
+opencv-python-headless
+pillow
+tokenizers
