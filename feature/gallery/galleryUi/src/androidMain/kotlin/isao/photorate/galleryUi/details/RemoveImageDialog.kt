@@ -26,7 +26,7 @@ internal fun RemoveImageDialog(
   )
 }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun RemoveImageDialogPreview() {
   PhotoRatePreview {

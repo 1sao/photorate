@@ -40,7 +40,7 @@ private fun easedVerticalAlphaGradient(color: Color, easing: Easing): Brush {
 
 private const val GRADIENT_STOPS = 16
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun StatusBarBackgroundPreview() {
   PhotoRatePreview {

@@ -123,7 +123,7 @@ fun ImageDetailsScreenContent(
   }
 }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun ImageDetailsScreenPreview() {
   PhotoRatePreview {

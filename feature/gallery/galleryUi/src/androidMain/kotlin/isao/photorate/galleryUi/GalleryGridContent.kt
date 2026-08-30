@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,11 +23,11 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -52,15 +53,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.isGranted
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
+import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
+import isao.photorate.gallery.db.GalleryImageStatus.DONE
+import isao.photorate.gallery.db.GalleryImageStatus.PENDING
+import isao.photorate.gallery.db.GalleryImageStatus.PROCESSING
+import isao.photorate.galleryRepository.GalleryStatusCounts
+import isao.photorate.imageRecognition.classify.Score
 
 // Search-derived values are passed as primitives ([searchUris], [isSearching],
 // [searchQuery]) instead of the search module's state class, keeping galleryUi
@@ -106,14 +115,13 @@ fun GalleryGridContent(
     //        calculateWindowSizeClass(it).widthSizeClass > WindowWidthSizeClass.Compact
     //      } ?: false
 
-    // TODO only allow even numbers of columns by copying and editing GridCells.Adaptive
     // TODO tweak how grid preloads items to fix image blinking on load
     // TODO ensure new item types start from a new row by adding a spacer with the remaining column
     // span between them
     LazyVerticalGrid(
       state = gridState,
       modifier = Modifier.fillMaxSize(),
-      columns = GridCells.Adaptive(160.dp),
+      columns = GridCellsAdaptiveEvenOnly(160.dp),
       contentPadding =
         contentPadding +
           PaddingValues(
@@ -158,7 +166,12 @@ fun GalleryGridContent(
           //        }
           //        if (!searchActive) {
           item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
-            ScanStatusCard(state.imagesState.status)
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+              ScanStatusCard(
+                statusCounts = state.imagesState.status,
+                modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth(),
+              )
+            }
           }
           //        }
 
@@ -276,7 +289,7 @@ private fun UncertainGalleryItem(
     shape = MaterialTheme.shapes.largeIncreased,
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
   ) {
-    Row(Modifier.fillMaxSize()) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
       GalleryCardImage(
         uri = item.uri,
         onClick = onClick,
@@ -292,13 +305,13 @@ private fun UncertainGalleryItem(
       ) {
         Text(
           text = "Best guess",
-          style = MaterialTheme.typography.labelMedium,
+          style = MaterialTheme.typography.labelLarge,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         RatingStarSelector(
           selected = stars,
           onSelect = { stars = it },
-          modifier = Modifier.widthIn(max = 200.dp).padding(horizontal = 12.dp),
+          modifier = Modifier.widthIn(max = 200.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           FilledIconButton(onClick = { onAccept(item.uri, stars) }) {
@@ -385,4 +398,108 @@ private fun UncertainSectionHeader(count: Int) {
       )
     }
   }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+private fun previewPermissionState(granted: Boolean): PermissionState =
+  object : PermissionState {
+    override val permission: String = GALLERY_PERMISSION
+    override val status: PermissionStatus =
+      if (granted) PermissionStatus.Granted
+      else PermissionStatus.Denied(shouldShowRationale = false)
+
+    override fun launchPermissionRequest() = Unit
+  }
+
+@Preview(name = "Empty (permission needed)")
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun GalleryGridContentEmptyPreview() {
+  PhotoRatePreview {
+    GalleryGridContent(
+      state =
+        GalleryUiState(
+          imagesState =
+            GalleryUiState.ImagesState(
+              status = GalleryStatusCounts(emptyMap()),
+              detections = emptyList(),
+              uncertainDetections = emptyList(),
+            ),
+        ),
+      gridState = rememberLazyGridState(),
+      permissionState = previewPermissionState(granted = false),
+      contentPadding = PaddingValues(0.dp),
+      onOpenImage = {},
+      onAcceptUncertain = { _: String, _: Int -> },
+      onDeleteUncertain = { _: String -> },
+    )
+  }
+}
+
+@Preview(showBackground = true, widthDp = 411, name = "Loaded (certain + uncertain)")
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun GalleryGridContentLoadedPreview() {
+  PhotoRatePreview {
+    GalleryGridContent(
+      state =
+        GalleryUiState(
+          imagesState =
+            GalleryUiState.ImagesState(
+              status =
+                GalleryStatusCounts(
+                  mapOf(PENDING to 12L, PROCESSING to 3L, DONE to 98L),
+                ),
+              detections =
+                listOf(
+                  GalleryImageItem("content://preview/a", listOf(Score.FIVE)),
+                  GalleryImageItem("content://preview/b", listOf(Score.ONE)),
+                  GalleryImageItem("content://preview/c", listOf(Score.FOUR)),
+                  GalleryImageItem("content://preview/d", listOf(Score.TWO)),
+                ),
+              uncertainDetections =
+                listOf(
+                  GalleryImageItem("content://preview/u1", listOf(Score.THREE)),
+                  GalleryImageItem("content://preview/u2", listOf(Score.FOUR)),
+                ),
+            ),
+        ),
+      gridState = rememberLazyGridState(),
+      permissionState = previewPermissionState(granted = true),
+      contentPadding = PaddingValues(0.dp),
+      onOpenImage = {},
+      onAcceptUncertain = { _: String, _: Int -> },
+      onDeleteUncertain = { _: String -> },
+    )
+  }
+}
+
+@Preview
+@Composable
+private fun GalleryItemPreview() {
+  PhotoRatePreview {
+    GalleryItem(
+      item = GalleryImageItem("content://preview/a", listOf(Score.FIVE)),
+      onClick = {},
+    )
+  }
+}
+
+@Preview
+@Composable
+private fun UncertainGalleryItemPreview() {
+  PhotoRatePreview {
+    UncertainGalleryItem(
+      item = GalleryImageItem("content://preview/u1", listOf(Score.THREE)),
+      onClick = {},
+      onAccept = { _: String, _: Int -> },
+      onDelete = { _: String -> },
+    )
+  }
+}
+
+@Preview
+@Composable
+private fun UncertainSectionHeaderPreview() {
+  PhotoRatePreview { UncertainSectionHeader(count = 5) }
 }

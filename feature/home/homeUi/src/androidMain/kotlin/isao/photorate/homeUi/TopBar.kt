@@ -1,16 +1,20 @@
 package isao.photorate.homeUi
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AppBarWithSearch
+import androidx.compose.material3.AppBarWithSearchColors
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarScrollBehavior
 import androidx.compose.material3.SearchBarState
@@ -19,8 +23,10 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.rememberContainedSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.rememberSyncedTextFieldState
 import isao.photorate.searchUi.SearchContent
 import kotlinx.coroutines.launch
@@ -37,9 +43,12 @@ internal fun TopBar(
 
   val searchBarState = rememberContainedSearchBarState()
 
+  val defaultAppBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors()
   val appBarWithSearchColors =
     SearchBarDefaults.appBarWithSearchColors(
       searchBarColors = SearchBarDefaults.containedColors(state = searchBarState),
+      scrolledAppBarContainerColor =
+        defaultAppBarWithSearchColors.scrolledAppBarContainerColor.copy(alpha = 0f),
     )
 
   val inputField =
@@ -66,25 +75,14 @@ internal fun TopBar(
     colors = appBarWithSearchColors,
     inputField = inputField,
     actions = {
-      AnimatedVisibility(
-        visible = searchBarState.targetValue == SearchBarValue.Collapsed,
-        enter =
-          slideIn(
-            animationSpec = tween(durationMillis = 150),
-            initialOffset = { IntOffset(it.width, 0) },
-          ),
-        exit =
-          slideOut(
-            animationSpec = tween(durationMillis = 150),
-            targetOffset = { IntOffset(it.width, 0) },
-          ),
-      ) {
-        IconButton(onClick = onOpenSettings) {
-          Icon(Icons.Filled.Settings, contentDescription = "Settings")
-        }
-      }
+      SettingsButton(
+        onClick = onOpenSettings,
+        isSearchCollapsed = searchBarState.targetValue == SearchBarValue.Collapsed,
+        appBarWithSearchColors = appBarWithSearchColors,
+      )
     },
   )
+  // TODO use another type for tablets
   ExpandedFullScreenContainedSearchBar(
     state = searchBarState,
     inputField = inputField,
@@ -98,6 +96,41 @@ internal fun TopBar(
       },
       onMinSimilarityChange = { value -> onIntent(HomeIntent.SetMinSimilarity(value)) },
     )
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsButton(
+  onClick: () -> Unit,
+  isSearchCollapsed: Boolean,
+  appBarWithSearchColors: AppBarWithSearchColors,
+  modifier: Modifier = Modifier,
+) {
+  AnimatedVisibility(
+    visible = isSearchCollapsed,
+    modifier = modifier,
+    enter =
+      slideIn(
+        animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMedium),
+        initialOffset = { IntOffset(it.width, 0) },
+      ),
+    exit =
+      slideOut(
+        animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMedium),
+        targetOffset = { IntOffset(it.width, 0) },
+      ),
+  ) {
+    FilledIconButton(
+      onClick = onClick,
+      modifier = Modifier.requiredSize(56.dp),
+      colors =
+        IconButtonDefaults.filledIconButtonColors(
+          containerColor = appBarWithSearchColors.searchBarColors.containerColor,
+        ),
+    ) {
+      Icon(Icons.Filled.Settings, contentDescription = "Settings")
+    }
   }
 }
 

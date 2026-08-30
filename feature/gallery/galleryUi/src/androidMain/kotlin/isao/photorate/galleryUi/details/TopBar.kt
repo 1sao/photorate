@@ -66,7 +66,7 @@ internal fun TopBar(
   )
 }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun TopBarPreview() {
   PhotoRatePreview {

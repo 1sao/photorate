@@ -248,7 +248,7 @@ private val GalleryImageStatus.title
       IGNORED -> "Ignored"
     }
 
-@Preview(showBackground = true, widthDp = 411)
+@Preview
 @Composable
 private fun ScanStatusCardPreview() {
   PhotoRatePreview {
