@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 fun StatusBarBackground(
   modifier: Modifier = Modifier,
   color: Color = MaterialTheme.colorScheme.background,
-  height: Dp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 20.dp,
+  height: Dp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 40.dp,
   easing: Easing = LinearOutSlowInEasing,
 ) {
   Box(modifier.height(height).background(easedVerticalAlphaGradient(color, easing)))

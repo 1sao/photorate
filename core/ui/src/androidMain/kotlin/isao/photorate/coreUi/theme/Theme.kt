@@ -1,6 +1,7 @@
 package isao.photorate.coreUi.theme
 
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,8 +10,11 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 private val lightScheme =
   lightColorScheme(
@@ -278,6 +282,15 @@ fun PhotoRateTheme(
       darkTheme -> darkScheme
       else -> lightScheme
     }
+
+  val view = LocalView.current
+  if (!view.isInEditMode) {
+    val window = LocalActivity.current!!.window
+    SideEffect {
+      val insetsController = WindowCompat.getInsetsController(window, view)
+      insetsController.isAppearanceLightStatusBars = !darkTheme
+    }
+  }
 
   MaterialExpressiveTheme(
     colorScheme = colorScheme,

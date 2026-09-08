@@ -64,7 +64,7 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
   Surface(
     modifier = modifier,
     shape = MaterialTheme.shapes.largeIncreased,
-    color = MaterialTheme.colorScheme.surfaceContainer,
+    color = MaterialTheme.colorScheme.surfaceBright,
   ) {
     Column(Modifier.padding(20.dp).animateContentSize()) {
       Text(
@@ -76,7 +76,6 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
       Text(
         text = "${statusCounts.total} photos total",
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
       Spacer(Modifier.height(16.dp))
       val counters =
