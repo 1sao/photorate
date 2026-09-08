@@ -11,7 +11,7 @@ package isao.photorate.imageRecognition.classify
  */
 class ThumbOnlyGestureRecognizer : GestureRecognizer<ThumbOnlyGesture> {
 
-  override fun recognize(features: HandFeatures2): RecognizedGesture<ThumbOnlyGesture>? {
+  override fun recognize(features: HandFeatures): RecognizedGesture<ThumbOnlyGesture>? {
     if (features.kpMean < MIN_KP_CONFIDENCE) return null
     if (features.handSize <= 0f || features.extentRatio > MAX_EXTENT_RATIO) return null
     if (features.fingerConfidence() >= FALLBACK_MAX_FINGER_CONF) return null

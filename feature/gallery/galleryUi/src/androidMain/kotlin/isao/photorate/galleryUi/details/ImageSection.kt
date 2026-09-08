@@ -48,6 +48,7 @@ internal fun ImageSection(
     }
 
   Box(modifier = modifier.then(sharedBounds).clip(MaterialTheme.shapes.largeIncreased)) {
+    // TODO Use ZoomableAsyncImage
     AsyncImage(
       model = imageRequest,
       contentDescription = null,

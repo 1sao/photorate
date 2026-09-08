@@ -5,8 +5,12 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import arrow.core.raise.Raise
+import arrow.core.raise.catch
+import arrow.core.raise.context.raise
 import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
+import isao.photorate.imageRecognition.ResourceFailure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
@@ -21,7 +25,8 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
 
   val currentMediaStoreVersion = MediaStore.getVersion(context)
 
-  override suspend fun getImageDetails(uri: String): SystemImageDetails? =
+  context(_: Raise<ResourceFailure>)
+  override suspend fun getImageDetails(uri: String): SystemImageDetails =
     withContext(Dispatchers.IO) {
       // SIZE/WIDTH/HEIGHT are only exposed by MediaStore on API 29+; the rest
       // exist on all supported API levels. getColumnIndex returns -1 for
@@ -37,8 +42,25 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
           MediaStore.Images.Media.HEIGHT,
           MediaStore.Images.Media.MIME_TYPE,
         )
-      context.contentResolver.query(uri.toUri(), projection, null, null, null)?.use { cursor ->
-        if (!cursor.moveToFirst()) return@withContext null
+      val cursor =
+        catch(
+          {
+            context.contentResolver.query(
+              uri.toUri(),
+              projection,
+              null,
+              null,
+              null,
+            )
+          },
+        ) { e: Throwable ->
+          when (e) {
+            is SecurityException -> raise(ResourceFailure.PermissionDenied(uri))
+            else -> throw e
+          }
+        }
+      cursor?.use { cursor ->
+        if (!cursor.moveToFirst()) raise(ResourceFailure.NotFound(uri))
         fun textColumn(column: String): String? {
           val index = cursor.getColumnIndex(column)
           return if (index >= 0 && !cursor.isNull(index)) cursor.getString(index) else null
@@ -66,7 +88,7 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
           height = intColumn(MediaStore.Images.Media.HEIGHT),
           mimeType = textColumn(MediaStore.Images.Media.MIME_TYPE),
         )
-      }
+      } ?: raise(ResourceFailure.NotFound(uri))
     }
 
   override suspend fun getAllImages(): List<GalleryImage> =

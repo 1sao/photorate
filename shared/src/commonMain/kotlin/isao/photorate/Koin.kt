@@ -6,11 +6,6 @@ import isao.photorate.homeUi.HomeUIModule
 import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
-import kotlin.time.Clock
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.koin.core.KoinApplication
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
@@ -25,7 +20,6 @@ import org.koin.plugin.module.dsl.startKoin
     [
       AppModule::class,
       PlatformModule::class,
-      DispatchersModule::class,
     ]
 )
 class MyApp
@@ -40,18 +34,6 @@ class MyApp
  * materialized exactly once at runtime.
  */
 @Module(includes = [HomeUIModule::class]) @ComponentScan("isao.photorate") class AppModule
-
-/** Coroutine dispatchers, scope and clock providers. */
-@Module
-class DispatchersModule {
-  @Single fun provideCoroutineDispatcher(): CoroutineDispatcher = Dispatchers.Default
-
-  @Single
-  fun provideCoroutineScope(dispatcher: CoroutineDispatcher): CoroutineScope =
-    CoroutineScope(SupervisorJob() + dispatcher)
-
-  @Single fun provideClock(): Clock = Clock.System
-}
 
 /**
  * Platform-specific providers: the hand-landmark model seam and the CLIP search factory. Each

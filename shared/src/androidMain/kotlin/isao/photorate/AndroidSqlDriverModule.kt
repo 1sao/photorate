@@ -10,11 +10,10 @@ import org.koin.core.scope.Scope
 
 /**
  * The single [SqlDriver] singleton for the whole app, created with the FULL merged schema
- * (`app.db.PhotoRateDb.Schema` merges every feature module's tables). Feature modules construct
- * their own generated DB classes over this driver.
+ * (`app.db.PhotoRateDb.Schema` merges every feature module's tables).
  */
 @Module
-class AndroidDatabaseModule {
+class AndroidSqlDriverModule {
 
   @Single
   fun provideSqlDriver(scope: Scope): SqlDriver =

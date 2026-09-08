@@ -8,5 +8,5 @@ data class RecognizedGesture<T : Gesture>(val gesture: T, val confidence: Float)
  * the gesture this recognizer is looking for.
  */
 fun interface GestureRecognizer<out T : Gesture> {
-  fun recognize(features: HandFeatures2): RecognizedGesture<out T>?
+  fun recognize(features: HandFeatures): RecognizedGesture<out T>?
 }

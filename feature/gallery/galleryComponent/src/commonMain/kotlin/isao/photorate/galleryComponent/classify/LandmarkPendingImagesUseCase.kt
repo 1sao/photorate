@@ -1,13 +1,19 @@
 package isao.photorate.galleryComponent.classify
 
-import co.touchlab.kermit.Logger
+import arrow.core.raise.ExperimentalRaiseAccumulateApi
+import arrow.core.raise.RaiseAccumulate
+import arrow.core.raise.context.forEachAccumulating
+import arrow.core.raise.context.raise
+import arrow.core.raise.iorNel
+import arrow.core.raise.recover
 import isao.photorate.gallery.db.DetectedHand
 import isao.photorate.gallery.db.GalleryImage
-import isao.photorate.gallery.db.GalleryImageStatus
-import isao.photorate.galleryRepository.DetectedHandRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
+import isao.photorate.imageRecognition.ResourceFailure
 import isao.photorate.imageRecognition.classify.GestureRecognizer
 import isao.photorate.imageRecognition.classify.GestureRecognizerProvider
+import isao.photorate.imageRecognition.classify.GestureResult
+import isao.photorate.imageRecognition.classify.HandFeatures
 import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
@@ -16,11 +22,11 @@ import isao.photorate.imageRecognition.classify.LandmarkedImage
 import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.classify.heightPx
 import isao.photorate.imageRecognition.classify.widthPx
-import isao.photorate.tracking.CrashReporter
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.time.measureTime
+import kotlin.time.Clock
+import kotlin.time.measureTimedValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -30,132 +36,108 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Provided
 
 /**
- * Landmarks every unprocessed gallery image with the ACTIVE hand-landmark model, then stores the
- * rated hands. Model-agnostic: the landmarker and the image loader come from the
- * [LandmarkerFactoryProvider] seam, so swapping the on-device model (MediaPipe / ONNX) never
- * touches the scan pipeline. MediaPipe GPU inference + image decode must not run on the main thread
- * (it blocks the UI and was implicated in native crashes), so the whole scan runs on the default
- * dispatcher.
+ * Landmarks every unprocessed gallery image with the default hand landmarking model, then stores
+ * the rated hands.
+ *
+ * Returns failures during landmarking for each image if any, and the number of processed images
+ * (including failed ones).
  */
 @Factory
 class LandmarkPendingImagesUseCase(
   private val galleryImageRepository: GalleryImageRepository,
-  private val detectedHandRepository: DetectedHandRepository,
   @Provided private val landmarkerFactoryProvider: LandmarkerFactoryProvider,
   @Provided private val gestureRecognizerProvider: GestureRecognizerProvider,
   private val imageLoader: LandmarkImageLoader,
-  @Provided private val crashReporter: CrashReporter,
-  private val log: Logger,
 ) {
-  suspend operator fun invoke() =
+  suspend operator fun invoke() = iorNel {
     withContext(Dispatchers.Default) {
       val model = landmarkerFactoryProvider.defaultModel
       val options = model.defaultOptions
       val recognizers = gestureRecognizerProvider.createRecognizers()
+
+      var processedCount = 0
+
       landmarkerFactoryProvider.factoryFor(model).createFromOptions(options).use { landmarker ->
         do {
           var unprocessed = galleryImageRepository.getUnprocessedImages().first()
-
-          measureTime {
-            log.i { "Landmarking ${unprocessed.size} unprocessed images ($model)..." }
-            unprocessed.forEach { image ->
-              landmarkAndSaveOrNull(
-                landmarker,
-                image,
-                recognizers,
-                options,
-              )
-              yield()
-            }
+          forEachAccumulating(unprocessed) { image ->
+            landmarkAndSave(
+              landmarker,
+              image,
+              recognizers,
+              options,
+            )
+            processedCount++
+            yield()
           }
-            .also { log.i { "Landmarking completed in ${it.inWholeMilliseconds} ms" } }
 
           unprocessed = galleryImageRepository.getUnprocessedImages().first()
         } while (unprocessed.isNotEmpty() && isActive)
       }
-    }
 
-  private suspend fun landmarkAndSaveOrNull(
+      return@withContext processedCount
+    }
+  }
+
+  @OptIn(ExperimentalRaiseAccumulateApi::class)
+  context(_: RaiseAccumulate<ResourceFailure>)
+  private suspend fun landmarkAndSave(
     landmarker: HandLandmarker,
     image: GalleryImage,
     recognizers: List<GestureRecognizer<*>>,
     options: HandLandmarkerOptions,
   ) {
-    galleryImageRepository.updateStatus(
-      image.uri,
-      GalleryImageStatus.PROCESSING,
-    )
-    detectedHandRepository.deleteRealHandsForImage(image.uri)
+    recover(
+      {
+        galleryImageRepository.setScanStarted(image.uri)
 
-    val candidate =
-      imageLoader.load(
-        image.uri,
-        options.preferredImageDimension,
-      )
-    if (candidate == null) {
-      log.e { "Failed to load image: ${image.uri}" }
-      galleryImageRepository.updateStatus(
-        image.uri,
-        GalleryImageStatus.FAILED,
-      )
-      return
-    }
+        val candidate = imageLoader.load(image.uri, options.preferredImageDimension)
+        val (gestureResults, duration) =
+          measureTimedValue { landmarker.detectWithRecognizers(candidate, recognizers) }
 
-    val gestureResults = runCatching {
-      landmarker.detectWithRecognizers(candidate, recognizers)
-    }
-      .getOrElse { error ->
-        crashReporter.logNonFatal(error, "landmark_failed", mapOf("uri" to image.uri))
-        log.e { "Landmarking failed for uri: ${image.uri}. Reason: $error" }
-        galleryImageRepository.updateStatus(
-          image.uri,
-          GalleryImageStatus.FAILED,
+        galleryImageRepository.setScanSuccessful(
+          uri = image.uri,
+          scanDuration = duration,
+          scannedAt = Clock.System.now(),
+          hands = gestureResults.toScoredHands(candidate, image.uri),
         )
-        return
-      }
-
-    galleryImageRepository.markDone(
-      uri = image.uri,
-      detectedInMs = 0,
-    )
-    gestureResults
-      .filter { it.score != null }
-      .forEachIndexed { index, result ->
-        val hand = result.hand
-        val score = result.score!!
-        val displayHand =
-          unrotateAndNormalize(
-            hand,
-            candidate,
-          )
-        val handFeatures = HandFeatureExtractor.extract(displayHand)
-        detectedHandRepository.insertHand(
-          DetectedHand(
-            id = -1,
-            imageUri = image.uri,
-            handIndex = index.toLong(),
-            score = score,
-            bboxMinX = handFeatures.bboxMinX.toDouble(),
-            bboxMinY = handFeatures.bboxMinY.toDouble(),
-            bboxMaxX = handFeatures.bboxMaxX.toDouble(),
-            bboxMaxY = handFeatures.bboxMaxY.toDouble(),
-            bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
-            centroidX = handFeatures.centroidX.toDouble(),
-            centroidY = handFeatures.centroidY.toDouble(),
-            points = displayHand.points,
-            uncertain = hand.uncertain || result.confidence < 1f,
-            isUserRated = false,
-          ),
-        )
-      }
+      },
+    ) { failure ->
+      galleryImageRepository.setScanFailed(image.uri)
+      raise(failure)
+    }
   }
+
+  private fun List<GestureResult>.toScoredHands(candidate: LandmarkCandidate, imageUri: String) =
+    mapIndexedNotNull { index, result ->
+      val hand = result.hand
+      val score = result.score ?: return@mapIndexedNotNull null
+      val displayHand =
+        unrotateAndNormalize(
+          hand,
+          candidate,
+        )
+      val handFeatures = HandFeatures(displayHand)
+
+      DetectedHand(
+        id = -1,
+        imageUri = imageUri,
+        handIndex = index.toLong(),
+        score = score,
+        bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
+        points = displayHand.points,
+        uncertain = result.confidence < 1f,
+        isUserRated = false,
+      )
+    }
 
   /**
    * Maps a hand's points from its rating frame to true image space: rotate by
-   * +[LandmarkedImage.Hand.rotationDegrees] around the hand bbox center (deg 0 is identity), then
-   * normalize to 0..1 by the image dimensions for display/storage. Verified sign in
-   * landmark_stage.md.
+   * +[LandmarkedImage.Hand.rotationDegrees] around the hand bbox center, then normalize to 0..1 by
+   * the image dimensions for display/storage.
    */
+  // TODO hand rotation is deprecated, so this function should be removed later. Consider dropping
+  //  normalization too -- it's likely only used for developer mode landmark display.
   private fun unrotateAndNormalize(
     hand: LandmarkedImage.Hand,
     candidate: LandmarkCandidate,

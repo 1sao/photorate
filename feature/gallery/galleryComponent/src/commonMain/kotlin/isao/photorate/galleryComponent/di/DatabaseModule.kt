@@ -1,6 +1,7 @@
 package isao.photorate.galleryComponent.di
 
 import app.cash.sqldelight.EnumColumnAdapter
+import app.cash.sqldelight.Transacter
 import app.cash.sqldelight.db.SqlDriver
 import isao.photorate.config.db.Config
 import isao.photorate.gallery.db.DetectedHand
@@ -16,9 +17,10 @@ import org.koin.core.annotation.Single
 
 // The driver is `@Provided` — bound at the root by `/app` (Android) or
 // `shared` iosMain (iOS), which this leaf module cannot see.
+// TODO move to a more abstract module
 @Module
 class DatabaseModule {
-  @Single
+  @Single(binds = [Transacter::class])
   fun providePhotoRateDb(@Provided driver: SqlDriver): PhotoRateDb =
     PhotoRateDb(
       driver,

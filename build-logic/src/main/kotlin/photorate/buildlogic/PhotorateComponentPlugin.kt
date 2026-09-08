@@ -23,6 +23,7 @@ class PhotorateComponentPlugin : Plugin<Project> {
         implementation(libs.requireLibrary("koin-core"))
         implementation(libs.requireLibrary("koin-annotations"))
         implementation(libs.requireLibrary("coroutines-core"))
+        implementation(libs.requireLibrary("arrow-core"))
       }
     }
 }

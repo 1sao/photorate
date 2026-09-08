@@ -5,7 +5,7 @@ package isao.photorate.imageRecognition.classify
  */
 class ThumbSignalRecognizer : GestureRecognizer<ThumbSignal> {
 
-  override fun recognize(features: HandFeatures2): RecognizedGesture<ThumbSignal>? {
+  override fun recognize(features: HandFeatures): RecognizedGesture<ThumbSignal>? {
     if (features.handSize <= 0f || features.extentRatio > MAX_EXTENT_RATIO) return null
     if (!features.allCurled) return null
     if (features.fingers.any { it.isStraight }) return null

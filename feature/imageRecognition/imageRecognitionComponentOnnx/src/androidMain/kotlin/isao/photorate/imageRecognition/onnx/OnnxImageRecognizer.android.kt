@@ -14,7 +14,7 @@ import android.util.Log
 import isao.photorate.imageRecognition.classify.Gesture
 import isao.photorate.imageRecognition.classify.GestureRecognizer
 import isao.photorate.imageRecognition.classify.GestureResult
-import isao.photorate.imageRecognition.classify.HandFeatures2
+import isao.photorate.imageRecognition.classify.HandFeatures
 import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
 import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
@@ -175,7 +175,7 @@ internal constructor(
     val landmarked = detect(candidate)
     val results = ArrayList<GestureResult>()
     for (hand in landmarked.hands) {
-      val features = HandFeatures2(hand)
+      val features = HandFeatures(hand)
       val recognized = tryRecognizers(features, recognizers)
       if (recognized != null && recognized.first.score != null) {
         results.add(GestureResult(recognized.first, recognized.second, hand))
@@ -353,7 +353,7 @@ internal constructor(
         }
         val hand = LandmarkedImage.Hand(points, rotationDegrees = deg)
         val kpMean = kpSum / NUM_LANDMARKS
-        val features = HandFeatures2(hand)
+        val features = HandFeatures(hand)
         val recognized = tryRecognizers(features, defaultRecognizers)
         val gesture = recognized?.first
         val result = HandWithScore(hand, gesture, kpMean)
@@ -510,7 +510,7 @@ internal constructor(
           rotationDegrees = deg,
           edgeDetected = true,
         )
-      val features = HandFeatures2(hand)
+      val features = HandFeatures(hand)
       val recognized = tryRecognizers(features, defaultRecognizers)
       val isThumbsUp = recognized?.first is ThumbSignal || recognized?.first is ThumbOnlyGesture
       if (!isThumbsUp) {

@@ -98,20 +98,9 @@ class DefaultSearchDelegate(
     val query = session.value.query.trim()
     if (query.isEmpty()) return emptyList()
     session.update { it.copy(isSearching = true) }
-    val results = runCatching {
-      searchImages.search(
-        query,
-        minSimilarity = session.value.minSimilarity,
-      )
-    }
-      .getOrDefault(emptyList())
-    session.update {
-      it.copy(
-        isSearching = false,
-        results = results,
-      )
-    }
-    runCatching { searchHistoryRepository.addRecentSearch(query) }
+    val results = searchImages.search(query, minSimilarity = session.value.minSimilarity)
+    session.update { it.copy(isSearching = false, results = results) }
+    searchHistoryRepository.addRecentSearch(query)
     return results.map { it.uri }
   }
 

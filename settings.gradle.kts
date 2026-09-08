@@ -48,7 +48,8 @@ include(
   ":feature:config:configUi",
   ":feature:imageRecognition:imageRecognitionComponentApi",
   ":feature:imageRecognition:imageRecognitionComponentLiteRt",
-  ":feature:imageRecognition:imageRecognitionComponentMediaPipe",
+  // TODO align with current project architecture or remove
+  //  ":feature:imageRecognition:imageRecognitionComponentMediaPipe",
   ":feature:imageRecognition:imageRecognitionComponentOnnx",
   ":feature:tracking:trackingComponentApi",
   ":feature:tracking:trackingComponentFirebase",

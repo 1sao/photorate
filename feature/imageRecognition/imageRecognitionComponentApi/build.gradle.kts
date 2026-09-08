@@ -9,7 +9,10 @@ kotlin {
     withHostTestBuilder {}.configure {}
   }
   sourceSets {
-    commonMain.dependencies { implementation(libs.kotlinx.serialization.json) }
+    commonMain.dependencies {
+      api(projects.core)
+      implementation(libs.kotlinx.serialization.json)
+    }
     commonTest.dependencies { implementation(libs.kotlin.test) }
     getByName("androidHostTest").dependencies { implementation(libs.kotlin.test) }
   }

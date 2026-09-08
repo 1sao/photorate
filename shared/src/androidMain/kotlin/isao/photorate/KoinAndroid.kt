@@ -8,7 +8,6 @@ import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.litert.AndroidLiteRtAppClipSearchFactory
 import isao.photorate.imageRecognition.litert.AndroidLiteRtHandLandmarkerFactory
 import isao.photorate.imageRecognition.litert.LiteRtGestureRecognizerProvider
-import isao.photorate.imageRecognition.mediapipe.AndroidMediaPipeHandLandmarkerFactory
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.workmanager.koin.workManagerFactory
@@ -28,7 +27,7 @@ class AndroidAppInfo(
 fun initKoinAndroid(app: Application, appInfo: AppInfo): KoinApplication = initKoin {
   androidContext(app)
   workManagerFactory()
-  modules(AndroidDatabaseModule::class)
+  modules(AndroidSqlDriverModule::class)
   modules(module { single { appInfo } })
 }
 
@@ -48,7 +47,7 @@ actual class PlatformModule {
       factories =
         mapOf(
           LandmarkModel.LITERT to AndroidLiteRtHandLandmarkerFactory(scope.get()),
-          LandmarkModel.MEDIAPIPE to AndroidMediaPipeHandLandmarkerFactory(scope.get()),
+          //          LandmarkModel.MEDIAPIPE to AndroidMediaPipeHandLandmarkerFactory(scope.get()),
         ),
     )
 

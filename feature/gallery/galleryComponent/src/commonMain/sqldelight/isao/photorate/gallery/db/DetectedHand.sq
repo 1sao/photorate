@@ -9,13 +9,7 @@ CREATE TABLE DetectedHand (
     imageUri TEXT NOT NULL,
     handIndex INTEGER NOT NULL,
     score REAL AS Score NOT NULL,
-    bboxMinX REAL NOT NULL,
-    bboxMinY REAL NOT NULL,
-    bboxMaxX REAL NOT NULL,
-    bboxMaxY REAL NOT NULL,
     bboxAreaFraction REAL NOT NULL,
-    centroidX REAL NOT NULL,
-    centroidY REAL NOT NULL,
     points TEXT AS List<Point> NOT NULL,
     -- Set for hands rated at reduced confidence (ONNX uncertain tier): the
     -- score is a best guess the user should review.
@@ -39,24 +33,18 @@ CREATE UNIQUE INDEX DetectedHand_user_rated_image_idx ON DetectedHand(imageUri) 
 -- isUserRated = 1 here: the partial unique index below allows only one
 -- user-rated row per image (use upsertUserRatedHand for those).
 insertHand:
-INSERT INTO DetectedHand(imageUri, handIndex, score, bboxMinX, bboxMinY, bboxMaxX, bboxMaxY, bboxAreaFraction, centroidX, centroidY, points, uncertain, isUserRated)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO DetectedHand(imageUri, handIndex, score, bboxAreaFraction, points, uncertain, isUserRated)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- Replaces the single user-entered (fake) hand for an image, keeping real
 -- detections (the old code deleted the user rating, then inserted a new one).
 upsertUserRatedHand:
-INSERT INTO DetectedHand(imageUri, handIndex, score, bboxMinX, bboxMinY, bboxMaxX, bboxMaxY, bboxAreaFraction, centroidX, centroidY, points, uncertain, isUserRated)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+INSERT INTO DetectedHand(imageUri, handIndex, score, bboxAreaFraction, points, uncertain, isUserRated)
+VALUES (?, ?, ?, ?, ?, ?, 1)
 ON CONFLICT(imageUri) WHERE isUserRated = 1 DO UPDATE SET
   handIndex = excluded.handIndex,
   score = excluded.score,
-  bboxMinX = excluded.bboxMinX,
-  bboxMinY = excluded.bboxMinY,
-  bboxMaxX = excluded.bboxMaxX,
-  bboxMaxY = excluded.bboxMaxY,
   bboxAreaFraction = excluded.bboxAreaFraction,
-  centroidX = excluded.centroidX,
-  centroidY = excluded.centroidY,
   points = excluded.points,
   uncertain = excluded.uncertain,
   isUserRated = excluded.isUserRated;

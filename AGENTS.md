@@ -26,7 +26,8 @@ Dependency injection via Koin with `expect`/`actual` for `platformModule`.
 - **Code style**: no magic numbers. No comments unless the why is non-obvious.
 - **Module structure**: multi module, split between shared domain+data and separate per-platform UI
   layers.
-- **Verification**: always build Android (`./gradlew :app:assembleDebug`) with no errors. Optionally
+- **Verification**: always build Android (`./gradlew :app:assembleDebug`) with no errors. In case of
+  any gradle-related errors, run './gradlew --stop '. Optionally
   build iOS and run tests if the change touches shared logic or platform-specific code. When using
   ktfmt, run `ktfmtFormat` first to auto-fix easily fixable problems.
 - **ktfmt + Android sources**: KMP modules must declare `android.library` (the

@@ -17,7 +17,7 @@ package isao.photorate.imageRecognition.classify
  */
 class LenientThumbGestureRecognizer : GestureRecognizer<ThumbSignal> {
 
-  override fun recognize(features: HandFeatures2): RecognizedGesture<ThumbSignal>? {
+  override fun recognize(features: HandFeatures): RecognizedGesture<ThumbSignal>? {
     if (features.kpMean < MIN_KP) return null
     if (features.handSize <= 0f) return null
 

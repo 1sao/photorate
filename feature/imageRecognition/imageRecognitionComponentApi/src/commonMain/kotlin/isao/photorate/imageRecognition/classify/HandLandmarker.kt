@@ -49,7 +49,7 @@ interface HandLandmarker : AutoCloseable {
   fun detectWithRecognizers(
     candidate: LandmarkCandidate,
     recognizers: List<GestureRecognizer<*>>,
-  ): List<GestureResult> = detect(candidate).hands.map { GestureResult(null, 0f, it) }
+  ): List<GestureResult>
 }
 
 interface HandLandmarkerFactory {

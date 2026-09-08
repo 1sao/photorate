@@ -43,7 +43,6 @@ class PhotorateSharedPlugin : Plugin<Project> {
           implementation(project(":feature:search:searchUi"))
           implementation(project(":feature:config:configUi"))
           implementation(project(":feature:imageRecognition:imageRecognitionComponentApi"))
-          implementation(project(":feature:imageRecognition:imageRecognitionComponentMediaPipe"))
         }
       }
       sourceSets.named("commonTest").configure {

@@ -1,8 +1,11 @@
 package isao.photorate.galleryRepository
 
 import isao.photorate.gallery.db.CountsByStatus
+import isao.photorate.gallery.db.DetectedHand
 import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
+import kotlin.time.Duration
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 interface GalleryImageRepository {
@@ -13,7 +16,7 @@ interface GalleryImageRepository {
   fun getUnprocessedImages(): Flow<List<GalleryImage>>
 
   /** Images with real detected hands that don't have a CLIP embedding yet. */
-  fun getImagesMissingEmbeddings(): Flow<List<GalleryImage>>
+  fun getImagesWithMissingEmbeddings(): Flow<List<GalleryImage>>
 
   suspend fun upsertImage(image: GalleryImage)
 
@@ -28,4 +31,15 @@ interface GalleryImageRepository {
   fun getStatus(): Flow<CountsByStatus>
 
   fun observeStatusCounts(): Flow<GalleryStatusCounts>
+
+  suspend fun setScanFailed(uri: String)
+
+  suspend fun setScanStarted(uri: String)
+
+  suspend fun setScanSuccessful(
+    uri: String,
+    scanDuration: Duration,
+    scannedAt: Instant,
+    hands: List<DetectedHand>,
+  )
 }

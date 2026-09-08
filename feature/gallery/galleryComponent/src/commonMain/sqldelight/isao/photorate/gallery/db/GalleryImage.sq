@@ -33,7 +33,7 @@ FROM GalleryImage;
 -- Detail view: all matching hands with image info. The JOIN on DetectedHand
 -- already restricts to images that have hands, so no handCount filter needed.
 selectMatching:
-SELECT gi.uri, dh.id, dh.imageUri, dh.handIndex, dh.score, dh.bboxMinX, dh.bboxMinY, dh.bboxMaxX, dh.bboxMaxY, dh.bboxAreaFraction, dh.centroidX, dh.centroidY, dh.points
+SELECT gi.uri, dh.id, dh.imageUri, dh.handIndex, dh.score, dh.bboxAreaFraction, dh.points
 FROM GalleryImage gi
 JOIN DetectedHand dh ON dh.imageUri = gi.uri
 JOIN config c ON c.id = 1

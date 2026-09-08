@@ -14,11 +14,10 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       implementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
-      implementation(projects.feature.tracking.trackingComponentApi)
       implementation(projects.feature.config.configComponent)
       implementation(projects.core)
+      implementation(projects.feature.tracking.trackingComponentApi)
       implementation(libs.touchlab.kermit)
-      implementation(libs.arrow.core)
       implementation(libs.kotlinx.serialization.json)
     }
     commonTest.dependencies { implementation(libs.kotlin.test) }

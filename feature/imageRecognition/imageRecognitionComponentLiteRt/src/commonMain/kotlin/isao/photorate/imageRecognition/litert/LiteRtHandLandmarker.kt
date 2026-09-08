@@ -2,7 +2,7 @@ package isao.photorate.imageRecognition.litert
 
 import isao.photorate.imageRecognition.classify.GestureRecognizer
 import isao.photorate.imageRecognition.classify.GestureResult
-import isao.photorate.imageRecognition.classify.HandFeatures2
+import isao.photorate.imageRecognition.classify.HandFeatures
 import isao.photorate.imageRecognition.classify.HandLandmarker
 import isao.photorate.imageRecognition.classify.LandmarkCandidate
 import isao.photorate.imageRecognition.classify.LandmarkedImage
@@ -64,7 +64,7 @@ class LiteRtHandLandmarker(
       val kpMean = points.sumOf { it.z.toDouble() }.toFloat() / NUM_LANDMARKS
       if (kpMean < MIN_KP_CONFIDENCE) continue
       val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
-      val features = HandFeatures2(hand)
+      val features = HandFeatures(hand)
       if (features.handSize < MIN_HAND_SIZE) continue
       if (features.thumbConfidence() < MIN_THUMB_CONF) continue
       hands.add(hand)
@@ -108,12 +108,12 @@ class LiteRtHandLandmarker(
     if (result.confidence < TIER2_KP_FLOOR) return false
     val boxSide = max(box[2] - box[0], box[3] - box[1]).toFloat()
     if (boxSide <= 0f) return false
-    // TODO extract as a HandFeatures2 properties
+    // TODO extract as a HandFeatures properties
     val handSize =
-      dist(result.hand.points[HandFeatures2.WRIST], result.hand.points[HandFeatures2.MIDDLE_MCP])
+      dist(result.hand.points[HandFeatures.WRIST], result.hand.points[HandFeatures.MIDDLE_MCP])
     if (handSize / boxSide < MIN_HAND_TO_BOX_RATIO) return false
     val thumbLength =
-      dist(result.hand.points[HandFeatures2.THUMB_MCP], result.hand.points[HandFeatures2.THUMB_TIP])
+      dist(result.hand.points[HandFeatures.THUMB_MCP], result.hand.points[HandFeatures.THUMB_TIP])
     if (thumbLength / handSize > MAX_THUMB_LENGTH_RATIO) return false
     return true
   }
@@ -130,10 +130,11 @@ class LiteRtHandLandmarker(
     val points = kpResult.keypoints
 
     val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
-    val features = HandFeatures2(hand)
+    val features = HandFeatures(hand)
     if (features.handSize < MIN_HAND_SIZE) return null
     val recognized = tryRecognizers(features, recognizers)
-    //    val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence}
+    // TODO try improving using:
+    //  val recognized = recognizers.map { it.recognize(features) }.maxByOrNull { it?.confidence}
 
     return when {
       recognized != null -> GestureResult(recognized.first, recognized.second, hand)

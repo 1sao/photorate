@@ -6,7 +6,7 @@ package isao.photorate.imageRecognition.classify
  */
 // TODO Messy. Tweak generics to remove this.
 fun tryRecognizers(
-  features: HandFeatures2,
+  features: HandFeatures,
   recognizers: List<GestureRecognizer<*>>,
 ): Pair<Gesture, Float>? {
   for (recognizer in recognizers) {

@@ -39,7 +39,7 @@ class AndroidSearchImagesUseCase(
   @Volatile private var cachedSession: AppClipSearch? = null
 
   override suspend fun search(
-    // TODO search in SQL
+    // TODO consider searching in SQL
     query: String,
     limit: Int,
     minSimilarity: Float,
@@ -57,7 +57,7 @@ class AndroidSearchImagesUseCase(
       // cut off at the similarity threshold instead of shown at the tail.
       embeddings
         .asSequence()
-        .map { it.uri to cosineSimilarity(queryEmbedding, it.embedding) }
+        .map { (uri, embedding) -> uri to cosineSimilarity(queryEmbedding, embedding) }
         .filter { (_, similarity) -> similarity >= minSimilarity }
         .sortedByDescending { (_, similarity) -> similarity }
         .take(limit)

@@ -10,11 +10,12 @@ import kotlin.math.hypot
 import kotlin.math.max
 
 /** Structured hand features extracted from 21 keypoints. */
-class HandFeatures2(val hand: Hand) {
+class HandFeatures(val hand: Hand) {
 
   private val p = hand.points
   val handSize: Float = dist(p[WRIST], p[MIDDLE_MCP])
   val extentRatio: Float
+  val bboxAreaFraction: Float
   val kpMean: Float
   val fingerSpread: Float
   val allCurled: Boolean
@@ -29,7 +30,10 @@ class HandFeatures2(val hand: Hand) {
   init {
     val xs = p.map { it.x }
     val ys = p.map { it.y }
-    extentRatio = max(xs.max() - xs.min(), ys.max() - ys.min()) / handSize
+    val width = xs.max() - xs.min()
+    val height = ys.max() - ys.min()
+    extentRatio = max(width, height) / handSize
+    bboxAreaFraction = width * height
     kpMean = p.sumOf { it.z.toDouble() }.toFloat() / p.size
 
     val tips = listOf(p[INDEX_TIP], p[MIDDLE_TIP], p[RING_TIP], p[PINKY_TIP])
@@ -123,18 +127,18 @@ class HandFeatures2(val hand: Hand) {
 }
 
 /** Mean keypoint confidence of the thumb chain (kp1..4). */
-fun HandFeatures2.thumbConfidence(): Float {
+fun HandFeatures.thumbConfidence(): Float {
   val pts = hand.points
-  return (pts[HandFeatures2.THUMB_CMC].z +
-    pts[HandFeatures2.THUMB_MCP].z +
-    pts[HandFeatures2.THUMB_IP].z +
-    pts[HandFeatures2.THUMB_TIP].z) / 4f
+  return (pts[HandFeatures.THUMB_CMC].z +
+    pts[HandFeatures.THUMB_MCP].z +
+    pts[HandFeatures.THUMB_IP].z +
+    pts[HandFeatures.THUMB_TIP].z) / 4f
 }
 
 /** Mean keypoint confidence of the four fingers (kp5..20). */
-fun HandFeatures2.fingerConfidence(): Float {
+fun HandFeatures.fingerConfidence(): Float {
   val pts = hand.points
   var sum = 0f
-  for (i in HandFeatures2.INDEX_MCP until HandFeatures2.NUM_LANDMARKS) sum += pts[i].z
-  return sum / (HandFeatures2.NUM_LANDMARKS - HandFeatures2.INDEX_MCP)
+  for (i in HandFeatures.INDEX_MCP until HandFeatures.NUM_LANDMARKS) sum += pts[i].z
+  return sum / (HandFeatures.NUM_LANDMARKS - HandFeatures.INDEX_MCP)
 }

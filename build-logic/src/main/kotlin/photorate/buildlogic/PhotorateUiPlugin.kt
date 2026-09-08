@@ -30,6 +30,7 @@ class PhotorateUiPlugin : Plugin<Project> {
         implementation(libs.requireLibrary("koin-annotations"))
         implementation(libs.requireLibrary("koin-viewmodel"))
         implementation(libs.requireLibrary("coroutines-core"))
+        implementation(libs.requireLibrary("arrow-core"))
         implementation(libs.requireLibrary("androidx-lifecycle-viewmodel-compose"))
       }
 
@@ -50,6 +51,8 @@ class PhotorateUiPlugin : Plugin<Project> {
         implementation(libs.requireLibrary("coil-compose"))
         implementation(libs.requireLibrary("coil-network-okhttp"))
         implementation(libs.requireLibrary("koin-androidx-compose"))
+        implementation("me.saket.telephoto:zoomable-image-coil3:0.19.0") // TODO declare in .toml
+        implementation("me.saket.telephoto:zoomable-peek-overlay:0.19.0") // TODO declare in .toml
       }
     }
 }

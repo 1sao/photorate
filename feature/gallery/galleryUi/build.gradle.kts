@@ -9,6 +9,7 @@ kotlin {
       implementation(projects.feature.gallery.galleryComponent)
       implementation(projects.feature.config.configComponent)
       implementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
+      implementation(libs.touchlab.kermit)
     }
   }
 }
