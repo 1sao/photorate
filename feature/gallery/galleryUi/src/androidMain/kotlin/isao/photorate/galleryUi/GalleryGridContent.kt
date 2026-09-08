@@ -125,13 +125,13 @@ fun GalleryGridContent(
       contentPadding =
         contentPadding +
           PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 8.dp,
+            start = 8.dp,
+            end = 8.dp,
+            top = 6.dp,
             bottom = 32.dp,
           ),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
       if (!permissionState.status.isGranted && !searchActive) {
         item("permission", span = { GridItemSpan(maxLineSpan) }) {

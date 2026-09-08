@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -81,6 +82,8 @@ internal fun TopBar(
         appBarWithSearchColors = appBarWithSearchColors,
       )
     },
+    // End is bigger to account for the larger than normal settings button.
+    contentPadding = PaddingValues(start = 4.dp, end = 8.dp),
   )
   // TODO use another type for tablets
   ExpandedFullScreenContainedSearchBar(
