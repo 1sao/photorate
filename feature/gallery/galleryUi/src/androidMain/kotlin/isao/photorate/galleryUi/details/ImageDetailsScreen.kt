@@ -2,6 +2,7 @@ package isao.photorate.galleryUi.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -80,34 +82,37 @@ fun ImageDetailsScreenContent(
         .fillMaxSize(),
     )
 
-    Column(
-      modifier =
-        Modifier.fillMaxSize()
-          .padding(top = innerPadding.calculateTopPadding())
-          .padding(start = innerPadding.calculateStartPadding(LocalLayoutDirection.current))
-          .padding(end = innerPadding.calculateEndPadding(LocalLayoutDirection.current))
-          .padding(horizontal = 16.dp)
-          .clip(
-            MaterialTheme.shapes.largeIncreased.copy(
-              bottomStart = CornerSize(0),
-              bottomEnd = CornerSize(0),
-            ),
-          )
-          .verticalScroll(rememberScrollState()),
-    ) {
-      ImageSection(state)
+    BoxWithConstraints {
+      val maxImageHeight = maxHeight
+      Column(
+        modifier =
+          Modifier.fillMaxSize()
+            .padding(top = innerPadding.calculateTopPadding())
+            .padding(start = innerPadding.calculateStartPadding(LocalLayoutDirection.current))
+            .padding(end = innerPadding.calculateEndPadding(LocalLayoutDirection.current))
+            .padding(horizontal = 16.dp)
+            .clip(
+              MaterialTheme.shapes.largeIncreased.copy(
+                bottomStart = CornerSize(0),
+                bottomEnd = CornerSize(0),
+              ),
+            )
+            .verticalScroll(rememberScrollState()),
+      ) {
+        ImageSection(state, modifier = Modifier.heightIn(max = maxImageHeight))
 
-      Spacer(Modifier.height(DETAIL_SECTION_SPACING))
+        Spacer(Modifier.height(DETAIL_SECTION_SPACING))
 
-      DetailsBottomSection(
-        state = state,
-        bottomPadding = innerPadding.calculateBottomPadding(),
-        onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
-        onRemoveClick = { showRemoveDialog = true },
-        modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
-      )
+        DetailsBottomSection(
+          state = state,
+          bottomPadding = innerPadding.calculateBottomPadding(),
+          onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
+          onRemoveClick = { showRemoveDialog = true },
+          modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
+        )
 
-      Spacer(Modifier.height(DETAIL_SECTION_SPACING))
+        Spacer(Modifier.height(DETAIL_SECTION_SPACING))
+      }
     }
   }
 

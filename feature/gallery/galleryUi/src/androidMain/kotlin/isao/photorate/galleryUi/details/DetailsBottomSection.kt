@@ -1,5 +1,8 @@
 package isao.photorate.galleryUi.details
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 
@@ -28,8 +32,26 @@ internal fun DetailsBottomSection(
   val animateEnterExit =
     with(LocalNavAnimatedContentScope.current) {
       Modifier.animateEnterExit(
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it }),
+        enter =
+          slideInVertically(
+            animationSpec =
+              spring(
+                Spring.DampingRatioLowBouncy,
+                Spring.StiffnessVeryLow,
+                IntOffset.VisibilityThreshold,
+              ),
+            initialOffsetY = { it },
+          ),
+        exit =
+          slideOutVertically(
+            animationSpec =
+              spring(
+                Spring.DampingRatioNoBouncy,
+                Spring.StiffnessLow,
+                IntOffset.VisibilityThreshold,
+              ),
+            targetOffsetY = { it },
+          ),
       )
     }
   Column(
