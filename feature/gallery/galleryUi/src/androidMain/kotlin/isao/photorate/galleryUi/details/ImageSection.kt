@@ -54,15 +54,16 @@ internal fun ImageSection(
       )
     }
 
-  Box(modifier) {
-    var isSizeKnown by remember { mutableStateOf(false) }
-    // Fill the screen until the size is known to avoid other sections changing positions later.
-    val sizePlaceholder =
-      if (isSizeKnown) {
-        Modifier
-      } else {
-        Modifier.fillMaxSize()
-      }
+  // Fill the screen until the size is known to avoid other sections changing positions later.
+  var isSizeKnown by remember { mutableStateOf(false) }
+  val sizePlaceholder =
+    if (isSizeKnown) {
+      Modifier
+    } else {
+      Modifier.fillMaxSize()
+    }
+
+  Box(modifier.then(sizePlaceholder)) {
     AsyncImage(
       model = imageRequest,
       contentDescription = null,
@@ -72,7 +73,6 @@ internal fun ImageSection(
       onError = { isSizeKnown = true },
       modifier =
         Modifier.wrapContentSize()
-          .then(sizePlaceholder)
           .then(sharedBounds)
           .clip(MaterialTheme.shapes.largeIncreased)
           // TODO Use ZoomableAsyncImage to allow for better zoom
