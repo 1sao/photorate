@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -83,11 +84,16 @@ fun ImageDetailsScreenContent(
     )
 
     BoxWithConstraints {
-      val maxImageHeight = maxHeight
+      val topPadding = innerPadding.calculateTopPadding()
+      val bottomPadding = innerPadding.calculateBottomPadding()
+
+      val maxImageHeight = maxHeight - topPadding - bottomPadding
+
       Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
           Modifier.fillMaxSize()
-            .padding(top = innerPadding.calculateTopPadding())
+            .padding(top = topPadding)
             .padding(start = innerPadding.calculateStartPadding(LocalLayoutDirection.current))
             .padding(end = innerPadding.calculateEndPadding(LocalLayoutDirection.current))
             .padding(horizontal = 16.dp)
@@ -105,7 +111,7 @@ fun ImageDetailsScreenContent(
 
         DetailsBottomSection(
           state = state,
-          bottomPadding = innerPadding.calculateBottomPadding(),
+          bottomPadding = bottomPadding,
           onSetScore = { score -> onIntent(ImageDetailsIntent.SetScore(score)) },
           onRemoveClick = { showRemoveDialog = true },
           modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
