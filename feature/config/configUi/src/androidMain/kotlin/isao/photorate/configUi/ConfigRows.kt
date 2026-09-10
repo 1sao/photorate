@@ -110,7 +110,7 @@ internal fun DevModeSwitchRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         style = MaterialTheme.typography.bodyLarge,
       )
       Text(
-        text = "Show raw hand landmarks on photo details (for debugging the model).",
+        text = "Show raw hand landmarks on photo details and tweak search confidence.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )

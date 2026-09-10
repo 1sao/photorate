@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-internal fun GalleryPermissionCard(
+fun GalleryPermissionCard(
   permissionState: PermissionState,
   modifier: Modifier = Modifier,
 ) {

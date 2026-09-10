@@ -15,6 +15,9 @@ import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import isao.photorate.searchUi.SearchIntent
+import isao.photorate.searchUi.SearchIntent.SubmitSearch
+import isao.photorate.searchUi.SearchIntent.UpdateSearchQuery
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,14 +34,19 @@ internal fun SearchInputField(
     searchBarState = searchBarState,
     colors = colors,
     onSearch = { text ->
-      onIntent(HomeIntent.UpdateSearchQuery(text))
-      onIntent(HomeIntent.SubmitSearch)
+      onIntent(HomeIntent.Search(UpdateSearchQuery(text)))
+      onIntent(HomeIntent.Search(SubmitSearch))
       onClose()
     },
     placeholder = { Text("Search your photos…") },
     leadingIcon = {
       if (searchBarState.currentValue == SearchBarValue.Expanded) {
-        IconButton(onClick = onClose) {
+        IconButton(
+          onClick = {
+            onIntent(HomeIntent.Search(SearchIntent.ClearSearch))
+            onClose()
+          },
+        ) {
           Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
       } else {
@@ -51,7 +59,7 @@ internal fun SearchInputField(
     },
     trailingIcon = {
       if (textFieldState.text.isNotEmpty()) {
-        IconButton(onClick = { onIntent(HomeIntent.ClearSearch) }) {
+        IconButton(onClick = { onIntent(HomeIntent.Search(SearchIntent.ClearSearch)) }) {
           Icon(Icons.Filled.Close, contentDescription = "Clear search")
         }
       }

@@ -66,15 +66,6 @@ class DefaultGalleryImageRepository(
     }
   }
 
-  override suspend fun updateStatus(uri: String, status: GalleryImageStatus) {
-    withContext(Dispatchers.IO) {
-      galleryImageQueries.updateImageStatus(
-        status,
-        uri,
-      )
-    }
-  }
-
   override suspend fun markDone(uri: String, detectedInMs: Long) {
     withContext(Dispatchers.IO) {
       galleryImageQueries.updateImageDone(
@@ -131,6 +122,15 @@ class DefaultGalleryImageRepository(
           )
         }
       }
+    }
+  }
+
+  override suspend fun setIgnored(uri: String) {
+    withContext(Dispatchers.IO) {
+      galleryImageQueries.updateImageStatus(
+        status = GalleryImageStatus.IGNORED,
+        uri,
+      )
     }
   }
 

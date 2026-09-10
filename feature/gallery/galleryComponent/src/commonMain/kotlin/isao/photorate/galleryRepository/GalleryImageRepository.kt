@@ -3,7 +3,6 @@ package isao.photorate.galleryRepository
 import isao.photorate.gallery.db.CountsByStatus
 import isao.photorate.gallery.db.DetectedHand
 import isao.photorate.gallery.db.GalleryImage
-import isao.photorate.gallery.db.GalleryImageStatus
 import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -19,8 +18,6 @@ interface GalleryImageRepository {
   fun getImagesWithMissingEmbeddings(): Flow<List<GalleryImage>>
 
   suspend fun upsertImage(image: GalleryImage)
-
-  suspend fun updateStatus(uri: String, status: GalleryImageStatus)
 
   suspend fun markDone(uri: String, detectedInMs: Long)
 
@@ -42,4 +39,6 @@ interface GalleryImageRepository {
     scannedAt: Instant,
     hands: List<DetectedHand>,
   )
+
+  suspend fun setIgnored(uri: String)
 }

@@ -1,14 +1,11 @@
 package isao.photorate.searchUi
 
 import isao.photorate.config.FeatureFlagRepository
-import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.searchComponent.SearchHistoryRepository
 import isao.photorate.searchComponent.SearchImagesUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,127 +14,158 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
 
-interface SearchDelegate : AutoCloseable {
+interface SearchDelegate {
   val uiState: Flow<SearchUiState>
 
-  fun clearSearch()
-
-  fun updateSearchQuery(query: String)
-
-  /**
-   * Runs the CLIP search for the current query and returns the ranked result uris; the Home screen
-   * applies them as a gallery grid filter. The full ranked results also stay in [SearchUiState] for
-   * the results header and leftover-match rendering.
-   */
-  suspend fun submitSearch(): List<String>
-
-  fun selectRecentSearch(query: String)
-
-  fun setMinSimilarity(value: Float)
-
-  /**
-   * Cancels in-flight search jobs and releases the underlying [SearchImagesUseCase] (CLIP session).
-   */
-  override fun close()
+  suspend fun onIntent(intent: SearchIntent)
 }
 
-// TODO make searchUi part of galleryUi
 @Factory
 class DefaultSearchDelegate(
   private val searchImages: SearchImagesUseCase,
   private val searchHistoryRepository: SearchHistoryRepository,
-  private val featureFlagRepository: FeatureFlagRepository,
+  featureFlagRepository: FeatureFlagRepository,
 ) : SearchDelegate {
 
-  private data class Session(
-    val query: String = "",
-    val isSearching: Boolean = false,
-    val results: List<GalleryImage> = emptyList(),
-    val minSimilarity: Float = SearchImagesUseCase.DEFAULT_MIN_SIMILARITY,
-  )
+  private var searchJob: Job? = null
+  private var debounceSimilarityThresholdJob: Job? = null
 
-  private val session = MutableStateFlow(Session())
+  private val queryResults = MutableStateFlow<QueryWithResult?>(null)
+
+  private val pendingQuery = MutableStateFlow(Query.INITIAL)
 
   override val uiState: Flow<SearchUiState> =
     combine(
-      session,
+      queryResults,
+      pendingQuery,
       searchHistoryRepository.observeRecentSearches(),
-      featureFlagRepository.devModeEnabled(),
-    ) { session, recent, devMode ->
+      featureFlagRepository.isDevModeEnabled(),
+    ) { queryResults, pendingQuery, recentSearches, isInDevMode ->
       SearchUiState(
-        query = session.query,
-        isSearching = session.isSearching,
-        results = session.results,
-        recentSearches = recent,
-        minSimilarity = session.minSimilarity,
-        devModeEnabled = devMode,
+        queryResults = queryResults,
+        pendingQuery = pendingQuery,
+        recentSearches = recentSearches,
+        isInDevMode = isInDevMode,
       )
     }
 
-  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-  private var searchJob: Job? = null
-
-  private var thresholdRerunJob: Job? = null
-
-  override fun clearSearch() = session.update {
-    it.copy(
-      query = "",
-      results = emptyList(),
-      isSearching = false,
-    )
-  }
-
-  override fun updateSearchQuery(query: String) = session.update { it.copy(query = query) }
-
-  // The CLIP session is single-use and not safe for concurrent use: re-submits
-  // while a search is in flight are dropped, and a re-run waits for the
-  // in-flight search before starting.
-  override suspend fun submitSearch(): List<String> {
-    if (session.value.isSearching) return emptyList()
-    val query = session.value.query.trim()
-    if (query.isEmpty()) return emptyList()
-    session.update { it.copy(isSearching = true) }
-    val results = searchImages.search(query, minSimilarity = session.value.minSimilarity)
-    session.update { it.copy(isSearching = false, results = results) }
-    searchHistoryRepository.addRecentSearch(query)
-    return results.map { it.uri }
-  }
-
-  override fun selectRecentSearch(query: String) {
-    session.update { it.copy(query = query) }
-    scope.launch { submitSearch() }
-  }
-
-  // Slider drags fire many changes, so re-runs are debounced and wait for any
-  // in-flight search (the CLIP session is single-use) instead of being
-  // dropped.
-  override fun setMinSimilarity(value: Float) {
-    session.update { it.copy(minSimilarity = value) }
-    if (session.value.query.isBlank()) return
-    thresholdRerunJob?.cancel()
-    thresholdRerunJob = scope.launch {
-      delay(SearchUiState.THRESHOLD_RERUN_DEBOUNCE_MS)
-      searchJob?.join()
-      if (session.value.query.isNotBlank()) submitSearch()
+  override suspend fun onIntent(intent: SearchIntent) {
+    when (intent) {
+      SearchIntent.ClearSearch -> clearSearch()
+      is SearchIntent.SelectRecentSearch -> selectRecentSearch(intent.query)
+      is SearchIntent.SetMinSimilarity -> setMinSimilarity(intent.value)
+      SearchIntent.SubmitSearch -> submitSearch(pendingQuery.value)
+      is SearchIntent.UpdateSearchQuery -> updateSearchQuery(intent.query)
     }
   }
 
-  override fun close() {
-    scope.cancel()
-    searchImages.close()
+  fun clearSearch() {
+    searchJob?.cancel()
+    queryResults.value = null
+    pendingQuery.update { it.copy(value = "", isInProgress = false) }
+  }
+
+  fun updateSearchQuery(query: String) {
+    if (query == "") {
+      clearSearch()
+      return
+    }
+    pendingQuery.update { it.copy(value = query) }
+  }
+
+  suspend fun submitSearch(query: Query) = coroutineScope {
+    searchJob?.cancel()
+
+    val trimmedQueryValue = query.value.trim()
+    if (trimmedQueryValue == "") return@coroutineScope null
+
+    searchJob = launch {
+      pendingQuery.update {
+        it.copy(
+          value = query.value,
+          minSimilarity = query.minSimilarity,
+          isInProgress = true,
+        )
+      }
+      val result =
+        try {
+          searchImages(
+            query = trimmedQueryValue,
+            limit = SEARCH_LIMIT,
+            minSimilarity = query.minSimilarity,
+          )
+        } finally {
+          pendingQuery.update { it.copy(isInProgress = false) }
+          searchHistoryRepository.addRecentSearch(trimmedQueryValue)
+        }
+
+      queryResults.value =
+        QueryWithResult(
+          value = query.value,
+          minSimilarity = query.minSimilarity,
+          result = result,
+        )
+    }
+  }
+
+  suspend fun selectRecentSearch(query: String) {
+    submitSearch(pendingQuery.value.copy(value = query))
+  }
+
+  suspend fun setMinSimilarity(value: Float) = coroutineScope {
+    pendingQuery.update { it.copy(minSimilarity = value) }
+
+    // TODO Consider removing: current UX requires the user to submit the query to view results
+    //  anyway. This search runs but won't be visible until enter is pressed.
+    //  Alternatively, adjust UX to utilize this logic.
+    debounceSimilarityThresholdJob?.cancel()
+    debounceSimilarityThresholdJob = launch {
+      delay(SIMILARITY_THRESHOLD_DEBOUNCE_MS.milliseconds)
+      submitSearch(pendingQuery.value)
+    }
   }
 }
 
 data class SearchUiState(
-  val query: String = "",
-  val isSearching: Boolean = false,
-  val results: List<GalleryImage> = emptyList(),
+  val queryResults: QueryWithResult? = null,
+  val pendingQuery: Query = Query.INITIAL,
   val recentSearches: List<String> = emptyList(),
-  val minSimilarity: Float = SearchImagesUseCase.DEFAULT_MIN_SIMILARITY,
-  val devModeEnabled: Boolean = false,
+  val isInDevMode: Boolean = false,
+)
+
+data class QueryWithResult(
+  val value: String,
+  val minSimilarity: Float,
+  val result: List<String>,
+)
+
+data class Query(
+  val value: String,
+  val minSimilarity: Float,
+  val isInProgress: Boolean,
 ) {
   companion object {
-    const val THRESHOLD_RERUN_DEBOUNCE_MS = 250L
+    val INITIAL
+      get() =
+        Query(
+          value = "",
+          minSimilarity = .2f,
+          isInProgress = false,
+        )
   }
 }
+
+sealed interface SearchIntent {
+  data object ClearSearch : SearchIntent
+
+  data class UpdateSearchQuery(val query: String) : SearchIntent
+
+  data object SubmitSearch : SearchIntent
+
+  data class SelectRecentSearch(val query: String) : SearchIntent
+
+  data class SetMinSimilarity(val value: Float) : SearchIntent
+}
+
+private const val SEARCH_LIMIT = 50
+private const val SIMILARITY_THRESHOLD_DEBOUNCE_MS = 150

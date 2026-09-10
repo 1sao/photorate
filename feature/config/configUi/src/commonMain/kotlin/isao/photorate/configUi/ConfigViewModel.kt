@@ -45,7 +45,7 @@ class ConfigViewModel(
       }
     }
     viewModelScope.launch {
-      featureFlagRepository.devModeEnabled().collect { enabled ->
+      featureFlagRepository.isDevModeEnabled().collect { enabled ->
         _uiState.update { it.copy(devModeEnabled = enabled) }
       }
     }

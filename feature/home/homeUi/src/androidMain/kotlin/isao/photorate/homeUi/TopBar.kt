@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.rememberSyncedTextFieldState
 import isao.photorate.searchUi.SearchContent
+import isao.photorate.searchUi.SearchIntent
+import isao.photorate.searchUi.SearchIntent.SelectRecentSearch
+import isao.photorate.searchUi.SearchIntent.UpdateSearchQuery
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,8 +61,8 @@ internal fun TopBar(
         searchBarState = searchBarState,
         textFieldState =
           rememberSyncedTextFieldState(
-            state.search.query,
-            onChange = { onIntent(HomeIntent.UpdateSearchQuery(it)) },
+            state.search.pendingQuery.value,
+            onChange = { onIntent(HomeIntent.Search(UpdateSearchQuery(it))) },
           ),
         colors =
           appBarWithSearchColors.searchBarColors.inputFieldColors.withHiddenCursorDuringAnimation(
@@ -94,10 +97,12 @@ internal fun TopBar(
     SearchContent(
       state = state.search,
       onSelectRecent = { query ->
-        onIntent(HomeIntent.SelectRecentSearch(query))
+        onIntent(HomeIntent.Search(SelectRecentSearch(query)))
         scope.launch { searchBarState.animateToCollapsed() }
       },
-      onMinSimilarityChange = { value -> onIntent(HomeIntent.SetMinSimilarity(value)) },
+      onMinSimilarityChange = { value ->
+        onIntent(HomeIntent.Search(SearchIntent.SetMinSimilarity(value)))
+      },
     )
   }
 }

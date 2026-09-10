@@ -14,8 +14,9 @@ kotlin {
       // The merged schema compiles gallery's AND config's .sq files, so
       // their Kotlin types must be on this module's compile classpath.
       implementation(projects.feature.config.configComponent) // TODO remove?
-      implementation(projects.feature.imageRecognition.imageRecognitionComponentApi)
+      api(projects.feature.imageRecognition.imageRecognitionComponentApi)
     }
+    commonTest.dependencies { implementation(libs.kotlin.test) }
   }
 }
 

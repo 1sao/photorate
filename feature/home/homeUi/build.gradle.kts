@@ -8,6 +8,7 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
+      implementation(projects.core)
       implementation(projects.core.ui)
       implementation(projects.feature.gallery.galleryUi)
       implementation(projects.feature.search.searchUi)

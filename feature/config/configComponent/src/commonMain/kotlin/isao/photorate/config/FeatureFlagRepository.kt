@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface FeatureFlagRepository {
   /** Whether Developer Mode is enabled (raw landmark overlay on photo details). */
-  fun devModeEnabled(): Flow<Boolean>
+  fun isDevModeEnabled(): Flow<Boolean>
 
   suspend fun setDevModeEnabled(enabled: Boolean)
 }

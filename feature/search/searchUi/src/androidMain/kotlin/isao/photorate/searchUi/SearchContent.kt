@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
  * The expanded full-screen search UI shown inside the gallery's
  * [androidx.compose.material3.ExpandedFullScreenContainedSearchBar] content slot: recent-search
  * suggestions (or as-you-type history matches) and, in developer mode, the similarity-threshold
- * slider. The query input field itself is owned by the search bar, not this content.
+ * slider.
  */
 @Composable
 fun ColumnScope.SearchContent(
@@ -38,7 +38,7 @@ fun ColumnScope.SearchContent(
   onSelectRecent: (String) -> Unit,
   onMinSimilarityChange: (Float) -> Unit,
 ) {
-  if (state.query.isBlank()) {
+  if (state.pendingQuery.value.isBlank()) {
     RecentSearches(
       recentSearches = state.recentSearches,
       onSelectRecent = onSelectRecent,
@@ -47,14 +47,14 @@ fun ColumnScope.SearchContent(
   } else {
     SuggestionMatches(
       recentSearches = state.recentSearches,
-      query = state.query,
+      query = state.pendingQuery.value,
       onSelectRecent = onSelectRecent,
       modifier = Modifier.weight(1f),
     )
   }
-  if (state.devModeEnabled) {
+  if (state.isInDevMode) {
     SimilarityThresholdSlider(
-      value = state.minSimilarity,
+      value = state.pendingQuery.minSimilarity,
       onValueChange = onMinSimilarityChange,
     )
   }
@@ -180,7 +180,7 @@ private fun SimilarityThresholdSlider(value: Float, onValueChange: (Float) -> Un
         valueRange = 0f..0.6f,
       )
       Text(
-        text = "Hide matches below this similarity (dev mode).",
+        text = "Hide matches below this certainty.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )

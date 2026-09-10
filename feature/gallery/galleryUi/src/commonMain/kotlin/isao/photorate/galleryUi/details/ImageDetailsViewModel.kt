@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.raise.either
 import co.touchlab.kermit.Logger
 import isao.photorate.config.FeatureFlagRepository
-import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
 import isao.photorate.galleryComponent.populateGallery.SystemGalleryImageRepository
 import isao.photorate.galleryComponent.populateGallery.SystemImageDetails
@@ -48,7 +47,7 @@ class ImageDetailsViewModel(
 
   init {
     viewModelScope.launch {
-      featureFlagRepository.devModeEnabled().collect { enabled ->
+      featureFlagRepository.isDevModeEnabled().collect { enabled ->
         _uiState.update { it.copy(devModeEnabled = enabled) }
       }
     }
@@ -97,11 +96,7 @@ class ImageDetailsViewModel(
   }
 
   private fun deleteImage() {
-    viewModelScope.launch {
-      withContext(NonCancellable) {
-        galleryImageRepository.updateStatus(uri, GalleryImageStatus.IGNORED)
-      }
-    }
+    viewModelScope.launch { withContext(NonCancellable) { galleryImageRepository.setIgnored(uri) } }
   }
 }
 

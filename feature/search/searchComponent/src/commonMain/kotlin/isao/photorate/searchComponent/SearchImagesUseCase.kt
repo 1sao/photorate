@@ -1,26 +1,41 @@
 package isao.photorate.searchComponent
 
-import isao.photorate.gallery.db.GalleryImage
+import isao.photorate.galleryRepository.ImageEmbeddingRepository
+import isao.photorate.imageRecognition.search.cosineSimilarity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
 
 /**
  * Ranks gallery images by how well they match a free-text query, using the MobileCLIP search
- * pipeline ([AppClipSearch]). Android implementation lives in androidMain; iOS is not implemented
- * yet (same gap as [AppClipSearchFactory]).
+ * pipeline.
  */
-interface SearchImagesUseCase : AutoCloseable {
-  /**
-   * Returns the top [limit] gallery images ranked by CLIP similarity to [query], keeping only
-   * matches at or above [minSimilarity] so unrelated images are cut off instead of being shown
-   * sorted by likeliness.
-   */
-  suspend fun search(
+@Single
+class SearchImagesUseCase(
+  private val imageEmbeddingRepository: ImageEmbeddingRepository,
+  private val searchSessionHolder: SearchSessionHolder,
+) {
+  suspend operator fun invoke(
+    // TODO consider searching in SQL
     query: String,
-    limit: Int = 50,
-    minSimilarity: Float = DEFAULT_MIN_SIMILARITY,
-  ): List<GalleryImage>
+    limit: Int,
+    minSimilarity: Float,
+  ): List<String> =
+    withContext(Dispatchers.IO) {
+      val embeddings = imageEmbeddingRepository.getEmbeddings().first()
+      if (embeddings.isEmpty()) return@withContext emptyList()
 
-  companion object {
-    /** Default CLIP-similarity cutoff; the dev-mode search slider tunes it. */
-    const val DEFAULT_MIN_SIMILARITY = 0.15f
-  }
+      val queryEmbedding = searchSessionHolder.use { session -> session.embedText(query) }
+
+      embeddings
+        .asSequence()
+        .map { (uri, embedding) -> uri to cosineSimilarity(queryEmbedding, embedding) }
+        .filter { (_, similarity) -> similarity >= minSimilarity }
+        .sortedByDescending { (_, similarity) -> similarity }
+        .take(limit)
+        .map { (uri, _) -> uri }
+        .toList()
+    }
 }

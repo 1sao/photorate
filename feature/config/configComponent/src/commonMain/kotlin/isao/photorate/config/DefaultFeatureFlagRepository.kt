@@ -16,7 +16,7 @@ class DefaultFeatureFlagRepository(private val db: PhotoRateDb) : FeatureFlagRep
   private val queries
     get() = db.configQueries
 
-  override fun devModeEnabled(): Flow<Boolean> =
+  override fun isDevModeEnabled(): Flow<Boolean> =
     queries.getDevMode().asFlow().mapToOne(Dispatchers.IO)
 
   override suspend fun setDevModeEnabled(enabled: Boolean) {
