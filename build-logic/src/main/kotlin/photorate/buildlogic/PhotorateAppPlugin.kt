@@ -68,13 +68,6 @@ class PhotorateAppPlugin : Plugin<Project> {
         add("implementation", project(":core"))
         add("implementation", project(":core:ui"))
         add("implementation", project(":feature:home:homeUi"))
-        // The merged main database now lives in :shared (shared/androidMain
-        // AndroidDatabaseModule); these implementation deps stay because the
-        // manifest references BootSystemGalleryVersionChecker (galleryComponent)
-        // and the instrumented tests use the generated feature types.
-        add("implementation", project(":feature:gallery:galleryComponent"))
-        add("implementation", project(":feature:config:configComponent"))
-        add("implementation", project(":feature:search:searchComponent"))
         libs.requireBundle("app-ui").forEach { add("implementation", it) }
         add("implementation", libs.requireLibrary("kotlinx-dateTime"))
         add("coreLibraryDesugaring", libs.requireLibrary("android-desugaring"))
@@ -87,11 +80,6 @@ class PhotorateAppPlugin : Plugin<Project> {
         add("implementation", libs.requireLibrary("compose-material3"))
         add("implementation", libs.requireLibrary("compose-material3-window-size"))
         add("implementation", libs.requireLibrary("compose-material3-adaptive-navigation-suite"))
-        add("implementation", libs.requireLibrary("accompanist-permissions"))
-        // Navigation3 (type-safe, stable) hosts the gallery / details / config
-        // destinations; routes are @Serializable sealed types.
-        add("implementation", libs.requireLibrary("navigation3-ui"))
-        add("implementation", libs.requireLibrary("kotlinx-serialization-json"))
       }
     }
 }

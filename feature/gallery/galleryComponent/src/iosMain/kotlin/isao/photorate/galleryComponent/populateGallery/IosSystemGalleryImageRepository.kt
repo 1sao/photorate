@@ -12,7 +12,10 @@ import org.koin.core.annotation.Factory
  */
 @Factory
 class IosSystemGalleryImageRepository : SystemGalleryImageRepository {
-  override suspend fun getAllImages(): List<GalleryImage> = emptyList()
+  override suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint> =
+    emptyList<GalleryImage>() to Checkpoint()
+
+  override suspend fun saveCheckpoint(checkpoint: Checkpoint) {}
 
   context(_: Raise<ResourceFailure>)
   override suspend fun getImageDetails(uri: String): SystemImageDetails =

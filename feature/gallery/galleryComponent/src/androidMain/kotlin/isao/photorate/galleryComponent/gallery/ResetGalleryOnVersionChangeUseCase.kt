@@ -15,6 +15,7 @@ class ResetGalleryOnVersionChangeUseCase(
         systemGalleryRepository.lastMediaStoreVersion
     ) {
       galleryRepository.deleteAll()
+      systemGalleryRepository.resetGenerationCheckpoints()
       systemGalleryRepository.lastMediaStoreVersion =
         systemGalleryRepository.currentMediaStoreVersion
       return true

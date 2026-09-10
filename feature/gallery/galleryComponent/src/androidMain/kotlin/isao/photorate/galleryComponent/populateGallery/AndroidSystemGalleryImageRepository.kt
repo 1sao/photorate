@@ -2,6 +2,7 @@ package isao.photorate.galleryComponent.populateGallery
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -13,17 +14,30 @@ import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.imageRecognition.ResourceFailure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Factory
 
 @Factory
-class AndroidSystemGalleryImageRepository(private val context: Context) :
-  SystemGalleryImageRepository {
+class AndroidSystemGalleryImageRepository(
+  private val context: Context,
+) : SystemGalleryImageRepository {
   private val sharedPrefs = context.getSharedPreferences("system-gallery", Context.MODE_PRIVATE)
+
   var lastMediaStoreVersion
-    get() = sharedPrefs.getString("lastMediaStoreVersion", null)
-    set(value) = sharedPrefs.edit { putString("lastMediaStoreVersion", value) }
+    get() = sharedPrefs.getString(LAST_MEDIA_STORE_VERSION_KEY, null)
+    set(value) = sharedPrefs.edit { putString(LAST_MEDIA_STORE_VERSION_KEY, value) }
 
   val currentMediaStoreVersion = MediaStore.getVersion(context)
+
+  private fun lastCheckpoints(): Map<String, Long> =
+    sharedPrefs.getString(CHECKPOINTS_KEY, null)?.let { stored ->
+      // TODO A silent failure. Good enough for this case?
+      runCatching { Json.decodeFromString<Map<String, Long>>(stored) }.getOrNull()
+    } ?: emptyMap()
+
+  fun resetGenerationCheckpoints() {
+    sharedPrefs.edit { remove(CHECKPOINTS_KEY) }
+  }
 
   context(_: Raise<ResourceFailure>)
   override suspend fun getImageDetails(uri: String): SystemImageDetails =
@@ -91,69 +105,96 @@ class AndroidSystemGalleryImageRepository(private val context: Context) :
       } ?: raise(ResourceFailure.NotFound(uri))
     }
 
-  override suspend fun getAllImages(): List<GalleryImage> =
+  override suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint> =
     withContext(Dispatchers.IO) {
-      val refs = mutableListOf<GalleryImage>()
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        return@withContext scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI) to
+          Checkpoint(emptyMap())
+      }
 
-      val projection =
-        arrayOf(
-          MediaStore.Images.Media._ID,
-          MediaStore.Images.Media.DATE_ADDED,
-          MediaStore.Images.Media.DATA, // Real path to file
-          MediaStore.Images.Media.DATE_MODIFIED,
-          MediaStore.Images.Media.DATE_TAKEN,
-          MediaStore.Images.Media.GENERATION_ADDED,
-          MediaStore.Images.Media.GENERATION_MODIFIED,
-        )
-      val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-      // TODO detect updates
-      // (https://developer.android.com/training/data-storage/shared/media#detect-updates-media-files)
-      context.contentResolver
-        .query(
-          MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-          projection,
-          null,
-          null,
-          // sortOrder, TODO do we need it?
-          sortOrder,
-        )
-        ?.use { cursor ->
-          val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-          val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-          val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-          val dateModifiedColumn =
-            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
-          val dateTakenColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
-          val generationAddedColumn =
-            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_ADDED)
-          val generationModifiedColumn =
-            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_MODIFIED)
-
-          while (cursor.moveToNext()) {
-            val id = cursor.getLong(idColumn)
-            val dateAdded = cursor.getLong(dateAddedColumn)
-            val dateModified = cursor.getLong(dateModifiedColumn)
-            val generationAdded = cursor.getLong(generationAddedColumn)
-            val generationModified = cursor.getLong(generationModifiedColumn)
-
-            val contentUri =
-              Uri.withAppendedPath(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                id.toString(),
-              )
-
-            refs.add(
-              GalleryImage(
-                uri = contentUri.toString(),
-                createdAt = dateAdded,
-                modifiedAt = dateModified,
-                status = GalleryImageStatus.PENDING,
-                scannedAt = null,
-                detectedInMs = null,
-              ),
-            )
-          }
-        }
-      return@withContext refs
+      val checkpoints = mutableMapOf<String, Long>()
+      val images = mutableListOf<GalleryImage>()
+      for (volumeName in MediaStore.getExternalVolumeNames(context)) {
+        // Capture the checkpoint before querying: every image with a generation at or below the
+        // captured value is visible to the query, so a concurrent add can never be skipped.
+        val generation = MediaStore.getGeneration(context, volumeName)
+        images +=
+          scanCollection(
+            MediaStore.Images.Media.getContentUri(volumeName),
+            selection = "${MediaStore.MediaColumns.GENERATION_MODIFIED} >= ?",
+            selectionArgs = arrayOf((lastCheckpoints()[volumeName] ?: 0L).toString()),
+          )
+        checkpoints[volumeName] = generation
+      }
+      return@withContext images to Checkpoint(checkpoints)
     }
+
+  override suspend fun saveCheckpoint(checkpoint: Checkpoint) {
+    withContext(Dispatchers.IO) {
+      if (checkpoint.generations.isEmpty()) return@withContext
+      val old = lastCheckpoints()
+      val merged = old.toMutableMap()
+      checkpoint.generations.forEach { (volumeName, generation) ->
+        if (generation > (old[volumeName] ?: 0L)) merged[volumeName] = generation
+      }
+      if (merged != old) {
+        // TODO Is there a way to synchronize sharedPreference reads AND writes without introducing
+        //  more singletons?
+        sharedPrefs.edit { putString(CHECKPOINTS_KEY, Json.encodeToString(merged)) }
+      }
+    }
+  }
+
+  private fun scanCollection(
+    collection: Uri,
+    selection: String? = null,
+    selectionArgs: Array<String>? = null,
+  ): List<GalleryImage> {
+    val projection =
+      arrayOf(
+        MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.DATE_ADDED,
+        MediaStore.Images.Media.DATE_MODIFIED,
+      )
+
+    val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+    val images = mutableListOf<GalleryImage>()
+    context.contentResolver
+      .query(collection, projection, selection, selectionArgs, sortOrder)
+      ?.use { cursor ->
+        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+        val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+        val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
+
+        while (cursor.moveToNext()) {
+          val id = cursor.getLong(idColumn)
+          val dateAdded = cursor.getLong(dateAddedColumn)
+          val dateModified = cursor.getLong(dateModifiedColumn)
+
+          val contentUri =
+            Uri.withAppendedPath(
+              MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+              id.toString(),
+            )
+
+          images.add(
+            GalleryImage(
+              uri = contentUri.toString(),
+              createdAt = dateAdded,
+              modifiedAt = dateModified,
+              status = GalleryImageStatus.PENDING,
+              scannedAt = null,
+              detectedInMs = null,
+            ),
+          )
+        }
+      }
+    return images
+  }
+
+  private companion object {
+    const val CHECKPOINTS_KEY = "lastGenerationCheckpoints"
+    const val LAST_MEDIA_STORE_VERSION_KEY = "lastMediaStoreVersion"
+  }
 }

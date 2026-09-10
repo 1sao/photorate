@@ -6,8 +6,7 @@ import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * Convention plugin for KMP data/domain modules (core, *Component). Applies the shared KMP + Koin
- * compiler setup and the common koin-core/koin-annotations/coroutines-core dependency trio.
+ * Convention plugin for KMP data/domain modules (core, *Component).
  *
  * Modules that own SQLDelight schemas or need Skie ObjC export apply those plugins themselves:
  * sqldelight crashes the IDE sync when the plugin is applied without any `databases.create(...)`

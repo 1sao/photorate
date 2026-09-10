@@ -2,9 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins { `kotlin-dsl` }
 
-// AGP/KGP on this classpath require Java 17 variants; pin both Java and
-// Kotlin targets so the compiler does not fall back from the host JDK (26)
-// to an unaligned Kotlin default.
 java {
   sourceCompatibility = JavaVersion.VERSION_17
   targetCompatibility = JavaVersion.VERSION_17

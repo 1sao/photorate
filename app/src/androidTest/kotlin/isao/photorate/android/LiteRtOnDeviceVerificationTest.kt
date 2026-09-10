@@ -26,6 +26,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+// TODO cleanup? Not useful for day-to-day testing.
 /**
  * On-device verification of the LiteRT-converted RTM hand models (see the ml/litert/ model recipe
  * and the on-device-verification skill).

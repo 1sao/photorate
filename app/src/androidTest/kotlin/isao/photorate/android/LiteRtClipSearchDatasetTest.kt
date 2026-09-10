@@ -3,6 +3,7 @@ package isao.photorate.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -19,8 +20,7 @@ import org.junit.runner.RunWith
 
 /**
  * On-device MobileCLIP-S1 search verification over the dataset in plans/samples/search (exposed as
- * androidTest assets) — the LiteRT mirror of the ONNX MobileCLIP test (now in the unplugged
- * imageRecognitionComponentOnnx module):
+ * androidTest assets).
  *
  * 1. Every image must be the TOP-1 match for its own description (what the app's search does when
  *    the user types a query).
@@ -143,14 +143,12 @@ class LiteRtClipSearchDatasetTest {
   }
 
   private fun log(msg: String) {
-    android.util.Log.i("LiteRtClip", "LITERTCLIP $msg")
+    Log.i("LiteRtClip", msg)
   }
 
   companion object {
-    // Measured in Python on the same models: scaled (640)
-    // vs full decode
-    // similarity is 0.9998; keep a generous margin for
-    // on-device decoders.
+    // Measured in Python on the same models: scaled (640) vs full decode similarity is 0.9998; keep
+    // a generous margin for on-device decoders.
     private const val SCALED_EQUIVALENCE_THRESHOLD = 0.99
     private const val DECODE_MIN_DIM = 640
   }

@@ -7,7 +7,6 @@ import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.ExtensionAware
-import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -19,10 +18,12 @@ internal val Project.libs: VersionCatalog
   get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 /**
- * Per-module KMP target knobs from root gradle.properties (`photorate.<module>.<name>`, falling
- * back to a global `photorate.<name>`). Gradle ignores subproject gradle.properties files and
- * module-script config is invisible at apply time, so scoped root properties are the only eager
- * per-module channel.
+ * Per-module KMP target knobs controlling optional module targets. Taken from root
+ * gradle.properties (`photorate.<module>.<name>`, falling back to a global `photorate.<name>`).
+ * Gradle ignores subproject gradle.properties files and module-script config is invisible at apply
+ * time, so scoped root properties are the only eager per-module channel.
+ *
+ * TODO: consider dropping support for platforms requiring these knobs.
  */
 private fun Project.targetKnob(name: String, default: Boolean): Boolean =
   providers

@@ -13,7 +13,7 @@ class PopulateGalleryUseCase(
 ) {
   suspend operator fun invoke(): Int {
     return withContext(Dispatchers.IO) {
-      val images = systemGalleryImageRepository.getAllImages()
+      val (images, checkpoint) = systemGalleryImageRepository.getAllImagesAfterLastCheckpoint()
 
       // TODO uncomment
       // galleryImageRepository.reconcileOrphans(images.map { it.uri }.toSet())
@@ -21,6 +21,8 @@ class PopulateGalleryUseCase(
       for (image in images) {
         galleryImageRepository.upsertImage(image)
       }
+
+      systemGalleryImageRepository.saveCheckpoint(checkpoint)
 
       return@withContext images.size
     }

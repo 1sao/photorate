@@ -7,8 +7,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
  * Convention plugin for the `:shared` umbrella module. Applies the full KMP stack (serialization,
- * skie, compose compiler + compose multiplatform) and the shared dependency sets; the module keeps
- * its iOS-specific framework/dylib wiring.
+ * skie, compose compiler + compose multiplatform) and the shared dependency sets.
+ *
+ * TODO: it's unlikely we'll ever need to copy the config from shared somewhere else. Consider
+ *   removing.
  */
 class PhotorateSharedPlugin : Plugin<Project> {
   override fun apply(project: Project) =

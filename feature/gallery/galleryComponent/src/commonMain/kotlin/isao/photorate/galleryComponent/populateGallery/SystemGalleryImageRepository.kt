@@ -5,7 +5,14 @@ import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.imageRecognition.ResourceFailure
 
 interface SystemGalleryImageRepository {
-  suspend fun getAllImages(): List<GalleryImage>
+  /**
+   * Returns the gallery images plus the incremental-sync checkpoint that must be saved (via
+   * [saveCheckpoint]) only after the images have been persisted.
+   */
+  suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint>
+
+  /** Persists the checkpoint captured by the last [getAllImagesAfterLastCheckpoint] call. */
+  suspend fun saveCheckpoint(checkpoint: Checkpoint)
 
   /** Fetches one image's metadata straight from the system gallery (no caching). */
   context(_: Raise<ResourceFailure>)
