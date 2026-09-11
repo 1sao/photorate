@@ -1,6 +1,8 @@
 package isao.photorate.galleryComponent.populateGallery
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -105,18 +107,29 @@ class AndroidSystemGalleryImageRepository(
       } ?: raise(ResourceFailure.NotFound(uri))
     }
 
-  override suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint> =
+  override suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult =
     withContext(Dispatchers.IO) {
+      if (getMediaAccess() != MediaAccess.Full) {
+        resetGenerationCheckpoints()
+        return@withContext GalleryScanResult(
+          images = scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
+          checkpoint = Checkpoint(emptyMap()),
+          isCompleteScan = true,
+        )
+      }
+
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-        return@withContext scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI) to
-          Checkpoint(emptyMap())
+        return@withContext GalleryScanResult(
+          images = scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
+          checkpoint = Checkpoint(emptyMap()),
+          isCompleteScan = true,
+        )
       }
 
       val checkpoints = mutableMapOf<String, Long>()
       val images = mutableListOf<GalleryImage>()
       for (volumeName in MediaStore.getExternalVolumeNames(context)) {
-        // Capture the checkpoint before querying: every image with a generation at or below the
-        // captured value is visible to the query, so a concurrent add can never be skipped.
+        // Capture the checkpoint before querying to avoid race conditions.
         val generation = MediaStore.getGeneration(context, volumeName)
         images +=
           scanCollection(
@@ -126,8 +139,35 @@ class AndroidSystemGalleryImageRepository(
           )
         checkpoints[volumeName] = generation
       }
-      return@withContext images to Checkpoint(checkpoints)
+      return@withContext GalleryScanResult(
+        images = images,
+        checkpoint = Checkpoint(checkpoints),
+        isCompleteScan = false,
+      )
     }
+
+  private fun getMediaAccess(): MediaAccess =
+    when {
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        context.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
+          PackageManager.PERMISSION_GRANTED -> MediaAccess.Full
+
+      Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
+        context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+          PackageManager.PERMISSION_GRANTED -> MediaAccess.Full
+
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        context.checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) ==
+          PackageManager.PERMISSION_GRANTED -> MediaAccess.Partial
+
+      else -> MediaAccess.None
+    }
+
+  private enum class MediaAccess {
+    Full,
+    Partial,
+    None,
+  }
 
   override suspend fun saveCheckpoint(checkpoint: Checkpoint) {
     withContext(Dispatchers.IO) {

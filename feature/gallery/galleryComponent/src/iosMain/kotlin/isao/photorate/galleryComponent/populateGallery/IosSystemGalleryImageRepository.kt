@@ -2,7 +2,6 @@ package isao.photorate.galleryComponent.populateGallery
 
 import arrow.core.raise.Raise
 import arrow.core.raise.context.raise
-import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.imageRecognition.ResourceFailure
 import org.koin.core.annotation.Factory
 
@@ -12,8 +11,12 @@ import org.koin.core.annotation.Factory
  */
 @Factory
 class IosSystemGalleryImageRepository : SystemGalleryImageRepository {
-  override suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint> =
-    emptyList<GalleryImage>() to Checkpoint()
+  override suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult =
+    GalleryScanResult(
+      images = emptyList(),
+      checkpoint = Checkpoint(),
+      isCompleteScan = true,
+    )
 
   override suspend fun saveCheckpoint(checkpoint: Checkpoint) {}
 

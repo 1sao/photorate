@@ -4,7 +4,7 @@ import app.cash.sqldelight.ColumnAdapter
 
 /**
  * Stores a [FloatArray] (e.g. a 512-dim CLIP embedding) as a little-endian BLOB. Manual byte
- * packing instead of java.nio so it works on every target.
+ * packing instead of java.nio to keep it multiplatform.
  */
 object FloatArrayAdapter : ColumnAdapter<FloatArray, ByteArray> {
 

@@ -142,12 +142,16 @@ class DefaultGalleryImageRepository(
 
         if (orphaned.isEmpty()) return@transaction
 
-        galleryImageQueries.deleteByUris(orphaned)
+        orphaned.chunked(DELETE_BATCH_SIZE).forEach { galleryImageQueries.deleteByUris(it) }
       }
     }
   }
 
   override suspend fun deleteAll() {
     withContext(Dispatchers.IO) { galleryImageQueries.deleteAllImages() }
+  }
+
+  private companion object {
+    const val DELETE_BATCH_SIZE = 900
   }
 }

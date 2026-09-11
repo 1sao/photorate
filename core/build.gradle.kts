@@ -8,9 +8,8 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
-      // `api` so feature modules that own .sq schemas get the sqldelight
-      // runtime (Transacter, EnumColumnAdapter, asFlow/mapToList) without
-      // re-declaring it.
+      // `api` so feature modules that own .sq schemas get the sqldelight runtime (Transacter,
+      // EnumColumnAdapter, asFlow/mapToList) without re-declaring it.
       api(libs.sqlDelight.coroutinesExt)
       implementation(libs.touchlab.kermit)
     }

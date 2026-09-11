@@ -51,6 +51,7 @@ import coil3.request.ImageRequest
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
+import isao.photorate.coreUi.composable.rememberImageUnavailablePainter
 import isao.photorate.imageRecognition.classify.Score
 
 // TODO verify if the search is slow enough to require this
@@ -221,6 +222,7 @@ private fun GalleryCardImage(
   AsyncImage(
     model = imageRequest,
     contentDescription = null,
+    error = rememberImageUnavailablePainter(),
     contentScale = ContentScale.Crop,
     modifier =
       modifier.then(sharedBounds).clip(clipShape).let {

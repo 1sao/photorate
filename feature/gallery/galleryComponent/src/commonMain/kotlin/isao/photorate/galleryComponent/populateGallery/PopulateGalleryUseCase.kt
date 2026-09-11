@@ -13,18 +13,19 @@ class PopulateGalleryUseCase(
 ) {
   suspend operator fun invoke(): Int {
     return withContext(Dispatchers.IO) {
-      val (images, checkpoint) = systemGalleryImageRepository.getAllImagesAfterLastCheckpoint()
+      val galleryScanResult = systemGalleryImageRepository.getAllImagesAfterLastCheckpoint()
 
-      // TODO uncomment
-      // galleryImageRepository.reconcileOrphans(images.map { it.uri }.toSet())
+      if (galleryScanResult.isCompleteScan) {
+        galleryImageRepository.reconcileOrphans(galleryScanResult.images.map { it.uri }.toSet())
+      }
 
-      for (image in images) {
+      for (image in galleryScanResult.images) {
         galleryImageRepository.upsertImage(image)
       }
 
-      systemGalleryImageRepository.saveCheckpoint(checkpoint)
+      systemGalleryImageRepository.saveCheckpoint(galleryScanResult.checkpoint)
 
-      return@withContext images.size
+      return@withContext galleryScanResult.images.size
     }
   }
 }

@@ -50,6 +50,8 @@ internal fun DetailsBottomSection(
                 Spring.StiffnessLow,
                 IntOffset.VisibilityThreshold,
               ),
+            // TODO Since the animation only slides for this section's height, given a tiny enough
+            //  image, the section will not be completely hidden by the end of the animation.
             targetOffsetY = { it },
           ),
       )

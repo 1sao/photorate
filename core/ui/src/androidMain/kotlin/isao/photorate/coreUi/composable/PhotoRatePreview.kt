@@ -14,12 +14,7 @@ import coil3.compose.AsyncImagePreviewHandler
 import coil3.compose.LocalAsyncImagePreviewHandler
 import isao.photorate.coreUi.theme.PhotoRateTheme
 
-/**
- * A wrapper for Compose previews. Applies [PhotoRateTheme] and provides the composition locals the
- * feature screens rely on — [LocalSharedTransitionScope] (via [SharedTransitionLayout]) and
- * [LocalNavAnimatedContentScope] (via [AnimatedContent]) — so shared-element screens can be
- * previewed without a navigation host; as well as for other utilities.
- */
+/** A wrapper for Compose previews. Provides dependencies feature screens may rely on. */
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalCoilApi::class)
 @Composable
 fun PhotoRatePreview(content: @Composable () -> Unit) {

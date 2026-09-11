@@ -24,19 +24,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.StatusBarBackground
+import isao.photorate.coreUi.permission.GalleryPermissions
+import isao.photorate.coreUi.permission.hasAnyGalleryAccess
+import isao.photorate.coreUi.permission.hasFullGalleryAccess
 import isao.photorate.gallery.db.GalleryImageStatus.DONE
 import isao.photorate.gallery.db.GalleryImageStatus.PENDING
 import isao.photorate.gallery.db.GalleryImageStatus.PROCESSING
 import isao.photorate.galleryRepository.GalleryStatusCounts
-import isao.photorate.galleryUi.GALLERY_PERMISSION
 import isao.photorate.galleryUi.GalleryImageItem
 import isao.photorate.galleryUi.GalleryIntent.AcceptUncertain
 import isao.photorate.galleryUi.GalleryIntent.DeleteUncertain
@@ -59,11 +62,12 @@ fun HomeScreen(
   onOpenImage: (String) -> Unit,
 ) {
   val screenState by viewModel.uiState.collectAsStateWithLifecycle()
-  val galleryPermissionState = rememberPermissionState(GALLERY_PERMISSION)
+  val galleryPermissionsState =
+    rememberMultiplePermissionsState(GalleryPermissions.ALL_GALLERY_PERMISSIONS)
 
   HomeScreenContent(
     state = screenState,
-    permissionState = galleryPermissionState,
+    permissionsState = galleryPermissionsState,
     onOpenSettings = onOpenSettings,
     onOpenImage = onOpenImage,
     onIntent = viewModel::onIntent,
@@ -74,7 +78,7 @@ fun HomeScreen(
 @Composable
 fun HomeScreenContent(
   state: HomeScreenUiState,
-  permissionState: PermissionState,
+  permissionsState: MultiplePermissionsState,
   onOpenSettings: () -> Unit,
   onOpenImage: (String) -> Unit,
   onIntent: (HomeIntent) -> Unit,
@@ -97,7 +101,7 @@ fun HomeScreenContent(
     ) { innerPadding ->
       GalleryGridContent(
         state = state,
-        permissionState = permissionState,
+        permissionsState = permissionsState,
         contentPadding = innerPadding,
         onIntent = onIntent,
         onOpenImage = onOpenImage,
@@ -115,15 +119,16 @@ fun HomeScreenContent(
 @Composable
 private fun GalleryGridContent(
   state: HomeScreenUiState,
-  permissionState: PermissionState,
+  permissionsState: MultiplePermissionsState,
   contentPadding: PaddingValues,
   onIntent: (HomeIntent) -> Unit,
   onOpenImage: (String) -> Unit,
 ) {
-  LaunchedEffect(permissionState.status.isGranted) { onIntent(HomeIntent.GalleryPermissionGranted) }
+  LaunchedEffect(Lifecycle.Event.ON_RESUME) {
+    if (permissionsState.hasAnyGalleryAccess) onIntent(HomeIntent.GalleryPermissionGranted)
+  }
 
   val isSearching = state.search.queryResults != null
-  //    || state.search.pendingQuery.isInProgress
   val displayedImages =
     remember(state.search.queryResults, state.gallery.imagesState.detections) {
       val allImages = state.gallery.imagesState.detections
@@ -159,10 +164,10 @@ private fun GalleryGridContent(
     horizontalArrangement = Arrangement.spacedBy(6.dp),
     verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
-    if (!permissionState.status.isGranted && !isSearching) {
+    if (!permissionsState.hasFullGalleryAccess && !isSearching) {
       item("permission", span = { GridItemSpan(maxLineSpan) }) {
         GalleryPermissionCard(
-          permissionState = permissionState,
+          permissionsState = permissionsState,
           modifier = Modifier.animateItem(),
         )
       }
@@ -241,7 +246,7 @@ private fun HomeScreenPreview() {
                 ),
             ),
         ),
-      permissionState = previewPermissionState(isGranted = true),
+      permissionsState = previewPermissionsState(isGranted = true),
       onOpenSettings = {},
       onOpenImage = {},
       onIntent = {},
@@ -256,7 +261,7 @@ private fun GalleryGridContentEmptyPreview() {
   PhotoRatePreview {
     HomeScreenContent(
       state = HomeScreenUiState(),
-      permissionState = previewPermissionState(isGranted = false),
+      permissionsState = previewPermissionsState(isGranted = false),
       onOpenImage = {},
       onOpenSettings = {},
       onIntent = {},
@@ -265,12 +270,23 @@ private fun GalleryGridContentEmptyPreview() {
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
-private fun previewPermissionState(isGranted: Boolean): PermissionState =
-  object : PermissionState {
-    override val permission: String = GALLERY_PERMISSION
-    override val status: PermissionStatus =
-      if (isGranted) PermissionStatus.Granted
-      else PermissionStatus.Denied(shouldShowRationale = false)
+private fun previewPermissionsState(isGranted: Boolean): MultiplePermissionsState =
+  object : MultiplePermissionsState {
+    override val permissions: List<PermissionState> =
+      GalleryPermissions.ALL_GALLERY_PERMISSIONS.map { permission ->
+        object : PermissionState {
+          override val permission: String = permission
+          override val status: PermissionStatus =
+            if (isGranted) PermissionStatus.Granted
+            else PermissionStatus.Denied(shouldShowRationale = false)
 
-    override fun launchPermissionRequest() = Unit
+          override fun launchPermissionRequest() = Unit
+        }
+      }
+
+    override val shouldShowRationale: Boolean = false
+    override val allPermissionsGranted: Boolean = isGranted
+    override val revokedPermissions: List<PermissionState> = emptyList()
+
+    override fun launchMultiplePermissionRequest() = Unit
   }

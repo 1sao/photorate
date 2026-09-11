@@ -24,6 +24,7 @@ import coil3.request.ImageRequest
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
+import isao.photorate.coreUi.composable.rememberImageUnavailablePainter
 import isao.photorate.imageRecognition.classify.Score
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
@@ -68,6 +69,7 @@ internal fun ImageSection(
       model = imageRequest,
       contentDescription = null,
       placeholder = null,
+      error = rememberImageUnavailablePainter(),
       contentScale = ContentScale.Fit,
       onSuccess = { isSizeKnown = true },
       onError = { isSizeKnown = true },

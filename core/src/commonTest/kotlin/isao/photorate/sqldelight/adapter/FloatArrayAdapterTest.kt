@@ -4,11 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-/**
- * Round-trip tests for [FloatArrayAdapter] — the byte packing that stores CLIP embeddings (512
- * floats) as a BLOB. A byte-order/shift bug here would silently corrupt every stored embedding
- * (searches would rank garbage), so encode → decode must reproduce the exact bit patterns.
- */
 class FloatArrayAdapterTest {
 
   @Test

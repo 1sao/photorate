@@ -1,7 +1,6 @@
 package isao.photorate.galleryComponent.populateGallery
 
 import arrow.core.raise.Raise
-import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.imageRecognition.ResourceFailure
 
 interface SystemGalleryImageRepository {
@@ -9,7 +8,7 @@ interface SystemGalleryImageRepository {
    * Returns the gallery images plus the incremental-sync checkpoint that must be saved (via
    * [saveCheckpoint]) only after the images have been persisted.
    */
-  suspend fun getAllImagesAfterLastCheckpoint(): Pair<List<GalleryImage>, Checkpoint>
+  suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult
 
   /** Persists the checkpoint captured by the last [getAllImagesAfterLastCheckpoint] call. */
   suspend fun saveCheckpoint(checkpoint: Checkpoint)
