@@ -120,10 +120,11 @@ private fun SuggestionMatches(
 }
 
 @Composable
-private fun SuggestionRow(text: String, onClick: () -> Unit) {
+private fun SuggestionRow(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
   Row(
     modifier =
-      Modifier.fillMaxWidth()
+      modifier
+        .fillMaxWidth()
         .clickable(onClick = onClick)
         .padding(horizontal = 20.dp, vertical = 14.dp),
     verticalAlignment = Alignment.CenterVertically,
@@ -149,9 +150,13 @@ private fun SuggestionRow(text: String, onClick: () -> Unit) {
  * Uncertain (low-confidence) images are part of the search pool, so they show up here too.
  */
 @Composable
-private fun SimilarityThresholdSlider(value: Float, onValueChange: (Float) -> Unit) {
+private fun SimilarityThresholdSlider(
+  value: Float,
+  onValueChange: (Float) -> Unit,
+  modifier: Modifier = Modifier,
+) {
   Surface(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
   ) {

@@ -15,23 +15,25 @@ import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import isao.photorate.searchUi.SearchIntent
 import isao.photorate.searchUi.SearchIntent.SubmitSearch
 import isao.photorate.searchUi.SearchIntent.UpdateSearchQuery
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// TODO Make sure all composables except screens accept Modifier as the first optional param.
 internal fun SearchInputField(
   searchBarState: SearchBarState,
   textFieldState: TextFieldState,
   colors: TextFieldColors,
   onClose: () -> Unit,
   onIntent: (HomeIntent) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   SearchBarDefaults.InputField(
     textFieldState = textFieldState,
     searchBarState = searchBarState,
+    modifier = modifier,
     colors = colors,
     onSearch = { text ->
       onIntent(HomeIntent.Search(UpdateSearchQuery(text)))

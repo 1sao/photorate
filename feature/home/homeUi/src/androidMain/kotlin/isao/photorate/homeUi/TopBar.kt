@@ -42,6 +42,7 @@ internal fun TopBar(
   scrollBehavior: SearchBarScrollBehavior,
   onOpenSettings: () -> Unit,
   onIntent: (HomeIntent) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val scope = rememberCoroutineScope()
 
@@ -75,6 +76,7 @@ internal fun TopBar(
 
   AppBarWithSearch(
     state = searchBarState,
+    modifier = modifier,
     scrollBehavior = scrollBehavior,
     colors = appBarWithSearchColors,
     inputField = inputField,

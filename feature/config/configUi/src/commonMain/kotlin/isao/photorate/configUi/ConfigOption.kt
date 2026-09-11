@@ -4,11 +4,7 @@ import isao.photorate.config.DateHeaderMode
 import isao.photorate.config.GalleryConfig
 import isao.photorate.config.GallerySorting
 
-/**
- * One group of related settings on the Config screen. The setup is static and shared between the
- * Android Compose UI and the (future) iOS UI; only the option values derive from the current
- * [GalleryConfig].
- */
+/** One group of related settings on the Config screen. */
 data class ConfigSection(val title: String, val options: List<ConfigOption>)
 
 /**

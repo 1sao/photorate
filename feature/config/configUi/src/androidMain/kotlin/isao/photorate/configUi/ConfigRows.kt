@@ -26,20 +26,26 @@ import androidx.compose.ui.unit.dp
 import isao.photorate.config.GalleryConfig
 
 @Composable
-internal fun SectionTitle(text: String) {
+internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
   Text(
     text = text,
     style = MaterialTheme.typography.titleMedium,
     color = MaterialTheme.colorScheme.primary,
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
   )
 }
 
 @Composable
-internal fun SettingRow(title: String, value: String, onClick: () -> Unit) {
+internal fun SettingRow(
+  title: String,
+  value: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
   Row(
     modifier =
-      Modifier.fillMaxWidth()
+      modifier
+        .fillMaxWidth()
         .clickable(onClick = onClick)
         .padding(horizontal = 16.dp, vertical = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
@@ -63,8 +69,9 @@ internal fun RadioOptionRow(
   option: RadioOption,
   config: GalleryConfig,
   onIntent: (ConfigIntent) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+  Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
     Text(
       text = option.name,
       style = MaterialTheme.typography.bodyLarge,
@@ -99,9 +106,13 @@ internal fun RadioOptionRow(
 }
 
 @Composable
-internal fun DevModeSwitchRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+internal fun DevModeSwitchRow(
+  enabled: Boolean,
+  onToggle: (Boolean) -> Unit,
+  modifier: Modifier = Modifier,
+) {
   Row(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Column(Modifier.weight(1f)) {
@@ -123,10 +134,11 @@ internal fun DevModeSwitchRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
 }
 
 @Composable
-internal fun PurgeAndRescanRow(onClick: () -> Unit) {
+internal fun PurgeAndRescanRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
   Surface(
     modifier =
-      Modifier.fillMaxWidth()
+      modifier
+        .fillMaxWidth()
         .padding(horizontal = 16.dp, vertical = 4.dp)
         .clickable(onClick = onClick),
     shape = RoundedCornerShape(16.dp),
@@ -149,7 +161,11 @@ internal fun PurgeAndRescanRow(onClick: () -> Unit) {
 }
 
 @Composable
-internal fun VersionFooter(versionName: String, versionCode: Int) {
+internal fun VersionFooter(
+  versionName: String,
+  versionCode: Int,
+  modifier: Modifier = Modifier,
+) {
   val label =
     when {
       versionName.isNotBlank() && versionCode > 0 -> "Version $versionName ($versionCode)"
@@ -162,6 +178,6 @@ internal fun VersionFooter(versionName: String, versionCode: Int) {
     style = MaterialTheme.typography.bodySmall,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
     textAlign = TextAlign.Center,
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
   )
 }

@@ -56,9 +56,9 @@ import isao.photorate.imageRecognition.classify.Score
 
 // TODO verify if the search is slow enough to require this
 @Composable
-private fun SearchingIndicator(query: String) {
+private fun SearchingIndicator(query: String, modifier: Modifier = Modifier) {
   Row(
-    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+    modifier = modifier.fillMaxWidth().padding(vertical = 24.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.Center,
   ) {
@@ -74,9 +74,9 @@ private fun SearchingIndicator(query: String) {
 
 // TODO consider removing
 @Composable
-private fun SearchResultsHeader(query: String, count: Int) {
+private fun SearchResultsHeader(query: String, count: Int, modifier: Modifier = Modifier) {
   Surface(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(24.dp),
     color = MaterialTheme.colorScheme.surfaceVariant,
   ) {
@@ -114,8 +114,8 @@ fun NoMatchesCard(query: String, modifier: Modifier = Modifier) {
 @Composable
 fun GalleryItem(
   item: GalleryImageItem,
-  modifier: Modifier = Modifier,
   onClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   Box(modifier = modifier.fillMaxWidth().aspectRatio(1f).clickable(onClick = onClick)) {
     GalleryCardImage(
@@ -232,9 +232,9 @@ private fun GalleryCardImage(
 }
 
 @Composable
-private fun UncertainSectionHeader(count: Int) {
+private fun UncertainSectionHeader(count: Int, modifier: Modifier = Modifier) {
   Surface(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(24.dp),
     color = MaterialTheme.colorScheme.surfaceVariant,
   ) {

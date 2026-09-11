@@ -91,8 +91,13 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
 }
 
 @Composable
-private fun CounterRow(statuses: List<GalleryImageStatus>, statusCounts: GalleryStatusCounts) {
+private fun CounterRow(
+  statuses: List<GalleryImageStatus>,
+  statusCounts: GalleryStatusCounts,
+  modifier: Modifier = Modifier,
+) {
   Row(
+    modifier = modifier,
     horizontalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     statuses.forEach { status ->

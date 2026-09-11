@@ -4,6 +4,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import isao.photorate.coreUi.composable.PhotoRatePreview
 
@@ -11,9 +12,11 @@ import isao.photorate.coreUi.composable.PhotoRatePreview
 internal fun RemoveImageDialog(
   onDismiss: () -> Unit,
   onConfirm: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   AlertDialog(
     onDismissRequest = onDismiss,
+    modifier = modifier,
     title = { Text("Remove this photo?") },
     text = {
       Text(

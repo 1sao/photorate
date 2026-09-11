@@ -52,8 +52,8 @@ internal fun DetailsMetadataSection(details: SystemImageDetails, modifier: Modif
 }
 
 @Composable
-private fun DetailRow(label: String, value: String?) {
-  Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+private fun DetailRow(label: String, value: String?, modifier: Modifier = Modifier) {
+  Row(modifier = modifier.fillMaxWidth().padding(vertical = 6.dp)) {
     Text(
       text = label,
       style = MaterialTheme.typography.bodyMedium,

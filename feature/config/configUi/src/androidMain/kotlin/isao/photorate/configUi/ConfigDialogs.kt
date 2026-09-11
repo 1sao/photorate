@@ -30,11 +30,13 @@ internal fun SliderDialog(
   config: GalleryConfig,
   onIntent: (ConfigIntent) -> Unit,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   var value by remember(option, config) { mutableFloatStateOf(option.current(config)) }
 
   AlertDialog(
     onDismissRequest = onDismiss,
+    modifier = modifier,
     title = { Text(option.name) },
     text = {
       Column(
@@ -84,11 +86,13 @@ internal fun RangeSliderDialog(
   config: GalleryConfig,
   onIntent: (ConfigIntent) -> Unit,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   var range by remember(option, config) { mutableStateOf(option.current(config)) }
 
   AlertDialog(
     onDismissRequest = onDismiss,
+    modifier = modifier,
     title = { Text(option.name) },
     text = {
       Column(
@@ -132,9 +136,14 @@ internal fun RangeSliderDialog(
 }
 
 @Composable
-internal fun PurgeConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun PurgeConfirmDialog(
+  onConfirm: () -> Unit,
+  onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
   AlertDialog(
     onDismissRequest = onDismiss,
+    modifier = modifier,
     title = { Text("Purge all saved images?") },
     text = {
       Text(
