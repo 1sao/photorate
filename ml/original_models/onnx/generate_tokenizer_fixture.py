@@ -3,7 +3,7 @@
 Generates a minimal, self-contained CLIP tokenizer.json fixture for unit tests.
 
 The unit tests for the Kotlin ClipTokenizer (in photosComponent) need a
-tokenizer.json to load, but the real one (onnx/models/tokenizer.json) is ~1MB.
+tokenizer.json to load, but the real one (ml/original_models/tokenizer.json) is ~1MB.
 Embedding it in tests would be wasteful, and pointing tests at a file on disk
 is fragile. Instead, this script extracts a tiny subset that is exactly enough
 to tokenize a fixed set of test texts:
@@ -21,7 +21,7 @@ change, re-run this script and copy the new JSON into the test.
 
 Usage:
     python3 generate_tokenizer_fixture.py [texts...]
-(uses the venv at onnx/.venv; default texts are the current sample descriptions)
+(uses the venv at ml/litert/.venv; default texts are the current sample descriptions)
 """
 
 import json
@@ -31,7 +31,7 @@ from pathlib import Path
 from tokenizers import Tokenizer
 
 HERE = Path(__file__).resolve().parent
-REAL_TOKENIZER = HERE / "models" / "tokenizer.json"
+REAL_TOKENIZER = HERE.parent / "tokenizer.json"
 
 DEFAULT_TEXTS = [
     "Turtle",

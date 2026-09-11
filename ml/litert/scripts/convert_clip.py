@@ -34,28 +34,27 @@ Usage:
   ml/litert/.venv/bin/python ml/litert/scripts/convert_clip.py
 
 Staged fp32 exports (written, never overwrite sources):
-  onnx/models_fp32/clip_vision_fp32.onnx
-  onnx/models_fp32/clip_text_fp32.onnx
+  ml/original_models/onnx/models_fp32/clip_vision_fp32.onnx
+  ml/original_models/onnx/models_fp32/clip_text_fp32.onnx
 
 Outputs (in ml/litert/converted/):
   clip_vision_f32.tflite
   clip_text_f32.tflite
 """
 
+import numpy as np
+import onnx
+import onnxruntime as ort
 import os
 import shutil
 import subprocess
 import tempfile
-from pathlib import Path
-
-import numpy as np
-import onnx
-import onnxruntime as ort
 from onnx import helper, numpy_helper
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]  # ml/litert
 ORIG = ROOT.parent / "original_models"  # ml/original_models
-FP32_DIR = ROOT.parent.parent / "onnx" / "models_fp32"  # repo root/onnx/models_fp32
+FP32_DIR = ROOT.parent / "original_models" / "onnx" / "models_fp32"  # ml/original_models/onnx/models_fp32
 OUT = ROOT / "converted"
 VENV_BIN = ROOT / ".venv" / "bin"
 

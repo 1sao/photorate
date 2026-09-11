@@ -7,7 +7,7 @@ kotlin/isao/photorate/imageRecognition/litert/LiteRtHandLandmarker.kt (KDoc link
 Backends
 --------
 - ``onnx``  — the **rtmlib** package running the app's local ONNX models
-  (onnx/models/rtmdet_n_hand.onnx + rtmpose_hand.onnx). This is the
+  (ml/original_models/onnx/rtmdet_n_hand.onnx + rtmpose_hand_rawsimcc.onnx). This is the
   ground-truth oracle: rtmlib's bbox_xyxy2cs(padding=1.25) + top_down_affine
   is exactly the crop pipeline LiteRtHandLandmarker.getWarpMatrix mirrors.
   Expected to produce BETTER results than the device because the Kotlin
@@ -66,7 +66,7 @@ RTMLIB_MEAN = np.array([123.675, 116.28, 103.53], dtype=np.float32)
 RTMLIB_STD = np.array([58.395, 57.12, 57.375], dtype=np.float32)
 DECODE_MIN_DIM = 640
 
-ONNX_MODELS_DIR = PROJECT_ROOT / "onnx" / "models"
+ONNX_MODELS_DIR = PROJECT_ROOT / "ml" / "original_models" / "onnx"
 ONNX_DETECTOR = ONNX_MODELS_DIR / "rtmdet_n_hand.onnx"
 ONNX_POSE = ONNX_MODELS_DIR / "rtmpose_hand.onnx"
 

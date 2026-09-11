@@ -2,9 +2,7 @@ import isao.photorate.config.DateHeaderMode;
 import isao.photorate.config.GallerySorting;
 import kotlin.Boolean;
 
--- config: singleton filter settings row + dev-mode feature flag. The dev
--- flag lives here (same singleton row) so it persists across launches without
--- a second table; it is exposed through FeatureFlagRepository, not GalleryConfig.
+-- TODO: align column naming with other tables (should be pascalCase)
 CREATE TABLE config (
     id INTEGER NOT NULL PRIMARY KEY DEFAULT 1 CHECK (id = 1),
     min_score REAL NOT NULL DEFAULT 0.0,
@@ -17,7 +15,6 @@ CREATE TABLE config (
 );
 
 INSERT OR IGNORE INTO config(id, min_score, max_score, min_bboxAreaFraction, sort_by, date_header_mode, dev_mode, updated_at) VALUES (1, 1.0, 5.0, 0.01, 'DATE', 'DATES', 0, 0);
-
 
 -- Config
 getConfig:
@@ -35,7 +32,7 @@ UPDATE config SET sort_by = ?, updated_at = ? WHERE id = 1;
 updateDateHeaderMode:
 UPDATE config SET date_header_mode = ?, updated_at = ? WHERE id = 1;
 
--- Developer-mode feature flag (exposed through FeatureFlagRepository)
+-- Feature flags
 getDevMode:
 SELECT dev_mode FROM config WHERE id = 1;
 

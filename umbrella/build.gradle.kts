@@ -2,6 +2,9 @@
 
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCacheApi
 
+// TODO: There's a ton of duplicate config from shared module. See if its convention plugin can be
+//  used here as well.
+
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.skie)
@@ -62,9 +65,6 @@ kotlin {
     }
   }
 
-  // The umbrella framework is what Xcode links, so it must carry the same
-  // SwiftPM dependency (SwiftTasksVision / MediaPipeTasksVision) that
-  // `shared`'s iOS code links against.
   swiftPMDependencies {
     swiftPackage(
       url = url("https://github.com/jordond/SwiftTasksVision.git"),

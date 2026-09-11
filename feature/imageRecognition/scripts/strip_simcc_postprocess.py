@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generates onnx/models/rtmpose_hand_rawsimcc.onnx from onnx/models/rtmpose_hand.onnx.
+"""Generates ml/original_models/onnx/rtmpose_hand_rawsimcc.onnx from
+ml/original_models/onnx/rtmpose_hand.onnx.
 
 The shipped PINTO end2end export bakes a SimCC post-processing whose
 `bboxes_width_height` rescale convention differs from rtmlib's, which broke the
@@ -26,8 +27,9 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPTS_DIR.parents[2]
-SRC = PROJECT_ROOT / "onnx" / "models" / "rtmpose_hand.onnx"
-DST = PROJECT_ROOT / "onnx" / "models" / "rtmpose_hand_rawsimcc.onnx"
+ONNX_MODELS_DIR = PROJECT_ROOT / "ml" / "original_models" / "onnx"
+SRC = ONNX_MODELS_DIR / "rtmpose_hand.onnx"
+DST = ONNX_MODELS_DIR / "rtmpose_hand_rawsimcc.onnx"
 
 
 def main() -> int:

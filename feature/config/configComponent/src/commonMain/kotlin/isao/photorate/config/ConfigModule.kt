@@ -10,8 +10,6 @@ import org.koin.core.annotation.Module
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
-// The SqlDriver is `@Provided` — bound at the root by `/app` (Android) or
-// `shared` iosMain (iOS), which this leaf module cannot see.
 @Module(includes = [CoreModule::class])
 @ComponentScan("isao.photorate.config")
 class ConfigModule {

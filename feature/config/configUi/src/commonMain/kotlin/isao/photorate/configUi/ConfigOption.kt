@@ -126,7 +126,7 @@ val defaultConfigSections: List<ConfigSection> =
         ),
     ),
     ConfigSection(
-      title = "Date headers",
+      title = "Date headers (under construction)",
       options =
         listOf(
           RadioOption(
