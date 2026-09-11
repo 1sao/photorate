@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,6 +24,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
@@ -124,7 +124,7 @@ private fun GalleryGridContent(
   onIntent: (HomeIntent) -> Unit,
   onOpenImage: (String) -> Unit,
 ) {
-  LaunchedEffect(Lifecycle.Event.ON_RESUME) {
+  LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
     if (permissionsState.hasAnyGalleryAccess) onIntent(HomeIntent.GalleryPermissionGranted)
   }
 
