@@ -3,7 +3,7 @@ package isao.photorate.config
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOne
 import isao.photorate.config.db.Config
-import isao.photorate.config.db.PhotoRateDb
+import isao.photorate.config.db.ConfigQueries
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
@@ -14,11 +14,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
-class DefaultConfigRepository(private val db: PhotoRateDb) : ConfigRepository {
-
-  private val queries
-    get() = db.configQueries
-
+class DefaultConfigRepository(private val queries: ConfigQueries) : ConfigRepository {
   override fun getConfig(): Flow<GalleryConfig> =
     queries.getConfig().asFlow().mapToOne(Dispatchers.IO).map { it.toGalleryConfig() }
 

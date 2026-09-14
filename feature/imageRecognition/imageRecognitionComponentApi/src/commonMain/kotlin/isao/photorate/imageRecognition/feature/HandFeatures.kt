@@ -11,8 +11,9 @@ import kotlin.math.max
 /** Structured hand features extracted from 21 keypoints. */
 class HandFeatures(val hand: LandmarkedImage.Hand) {
 
-  private val p = hand.points
-  val handSize: Float = dist(p[WRIST], p[MIDDLE_MCP])
+  private val points = hand.points
+
+  val handSize: Float
   val extentRatio: Float
   val bboxAreaFraction: Float
   val kpMean: Float
@@ -27,15 +28,16 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   val fingers: List<Finger> = listOf(index, middle, ring, pinky)
 
   init {
-    val xs = p.map { it.x }
-    val ys = p.map { it.y }
+    val xs = points.map { it.x }
+    val ys = points.map { it.y }
     val width = xs.max() - xs.min()
     val height = ys.max() - ys.min()
+    handSize = dist(points[WRIST], points[MIDDLE_MCP])
     extentRatio = max(width, height) / handSize
     bboxAreaFraction = width * height
-    kpMean = p.sumOf { it.z.toDouble() }.toFloat() / p.size
+    kpMean = points.sumOf { it.z.toDouble() }.toFloat() / points.size
 
-    val tips = listOf(p[INDEX_TIP], p[MIDDLE_TIP], p[RING_TIP], p[PINKY_TIP])
+    val tips = listOf(points[INDEX_TIP], points[MIDDLE_TIP], points[RING_TIP], points[PINKY_TIP])
     var spreadTotal = 0f
     for (i in 0 until tips.size - 1) {
       spreadTotal += dist(tips[i], tips[i + 1])
@@ -48,28 +50,30 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   /** A single finger identified by its PIP and TIP keypoint indices. */
   open inner class Finger(pipIndex: Int, tipIndex: Int) {
     /** Finger is extended when its tip is farther from the wrist than its PIP joint. */
-    val isExtended: Boolean = dist(p[tipIndex], p[WRIST]) > dist(p[pipIndex], p[WRIST])
+    val isExtended: Boolean =
+      dist(points[tipIndex], points[WRIST]) > dist(points[pipIndex], points[WRIST])
 
     /**
      * Finger is straight when PIP→TIP distance / handSize < 0.25. A straight finger is both
      * extended and not curled around an object.
      */
     val isStraight: Boolean =
-      if (handSize > 0f) dist(p[tipIndex], p[pipIndex]) / handSize < STRAIGHT_THRESHOLD else false
+      if (handSize > 0f) dist(points[tipIndex], points[pipIndex]) / handSize < STRAIGHT_THRESHOLD
+      else false
   }
 
   /** Thumb-specific features beyond the basic [Finger] extension/straightness checks. */
   inner class Thumb : Finger(THUMB_IP, THUMB_TIP) {
     /** Thumb length ratio: MCP→TIP distance / handSize. */
-    val lengthRatio: Float = dist(p[THUMB_MCP], p[THUMB_TIP]) / handSize
+    val lengthRatio: Float = dist(points[THUMB_MCP], points[THUMB_TIP]) / handSize
 
     /**
      * Thumb tip angle from image-up (degrees), measured on the MCP→TIP vector. 0 = pointing up, 180
      * = pointing down.
      */
     val tipAngle: Float = run {
-      val dx = p[THUMB_TIP].x - p[THUMB_MCP].x
-      val dy = p[THUMB_TIP].y - p[THUMB_MCP].y
+      val dx = points[THUMB_TIP].x - points[THUMB_MCP].x
+      val dy = points[THUMB_TIP].y - points[THUMB_MCP].y
       abs(atan2(dx.toDouble(), -dy.toDouble()) * RAD_TO_DEG).toFloat()
     }
 
@@ -78,10 +82,10 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
      * Higher values mean the thumb points away from the fingers.
      */
     val fingerAngle: Float = run {
-      val tx = p[THUMB_TIP].x - p[THUMB_MCP].x
-      val ty = p[THUMB_TIP].y - p[THUMB_MCP].y
-      val ix = p[INDEX_TIP].x - p[INDEX_MCP].x
-      val iy = p[INDEX_TIP].y - p[INDEX_MCP].y
+      val tx = points[THUMB_TIP].x - points[THUMB_MCP].x
+      val ty = points[THUMB_TIP].y - points[THUMB_MCP].y
+      val ix = points[INDEX_TIP].x - points[INDEX_MCP].x
+      val iy = points[INDEX_TIP].y - points[INDEX_MCP].y
       angleBetween(tx, ty, ix, iy)
     }
 
@@ -89,7 +93,7 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
      * Distance between thumb TIP and index TIP / handSize. Small values indicate the fingertips are
      * touching.
      */
-    val indexTipDistance: Float = dist(p[THUMB_TIP], p[INDEX_TIP]) / handSize
+    val indexTipDistance: Float = dist(points[THUMB_TIP], points[INDEX_TIP]) / handSize
   }
 
   private fun dist(a: LandmarkedImage.Point, b: LandmarkedImage.Point): Float =

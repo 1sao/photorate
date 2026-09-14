@@ -2,21 +2,6 @@ package isao.photorate.imageRecognition.search
 
 import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 
-/**
- * MobileCLIP image-search pipeline (Android for now).
- *
- * Mirrors the hand-landmarker architecture: a platform-agnostic contract in commonMain
- * ([AppClipSearchFactory] / [AppClipSearch]) with a platform implementation behind it. On Android
- * the implementation wraps ONNX Runtime sessions for the MobileCLIP text + vision encoders and a
- * custom CLIP tokenizer (see [ClipTokenizer]); it is wired into Koin from the shared module's
- * [isao.photorate.PlatformModule].
- */
-
-/**
- * Creates [AppClipSearch] instances. Platform implementations live in `androidMain` (and later
- * `iosMain`) and are provided through `PlatformModule` so the common code never touches ORT
- * directly.
- */
 interface AppClipSearchFactory {
   fun createFromOptions(options: Options): AppClipSearch
 
@@ -27,20 +12,15 @@ interface AppClipSearchFactory {
 }
 
 /**
- * A live MobileCLIP session: encodes text queries and images into shared 512-dim embedding space.
+ * A live CLIP session: encodes text queries and images into shared 512-dim embedding space.
  * Implementations must be closed after use.
  */
 interface AppClipSearch : AutoCloseable {
-  /** Embeds a text query (e.g. "Coffee") into a 512-dim vector. */
+  /** Embeds a text query (e.g. "Coffee") into a vector. */
   fun embedText(text: String): FloatArray
 
-  /** Embeds the bytes of an image file (JPEG/PNG) into a 512-dim vector. */
   fun embedImage(imageBytes: ByteArray): FloatArray
 
-  /**
-   * Embeds the platform image ([isao.photorate.imageRecognition.LandmarkCandidate]) into a 512-dim
-   * vector.
-   */
   fun embedImage(candidate: LandmarkCandidate): FloatArray = embedImage(candidate.toJpegBytes())
 }
 

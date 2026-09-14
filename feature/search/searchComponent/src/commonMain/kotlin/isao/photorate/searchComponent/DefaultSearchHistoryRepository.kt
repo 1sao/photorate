@@ -2,7 +2,7 @@ package isao.photorate.searchComponent
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import isao.photorate.search.db.PhotoRateDb
+import isao.photorate.search.db.SearchHistoryQueries
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.Dispatchers
@@ -12,13 +12,9 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Provided
 
-/** SQLDelight-backed [SearchHistoryRepository]. */
 @Factory
-class DefaultSearchHistoryRepository(@Provided private val db: PhotoRateDb) :
+class DefaultSearchHistoryRepository(@Provided private val queries: SearchHistoryQueries) :
   SearchHistoryRepository {
-
-  private val queries
-    get() = db.searchHistoryQueries
 
   override fun observeRecentSearches(limit: Long): Flow<List<String>> =
     queries.recentSearches(limit).asFlow().mapToList(Dispatchers.IO)
@@ -26,8 +22,7 @@ class DefaultSearchHistoryRepository(@Provided private val db: PhotoRateDb) :
   @OptIn(ExperimentalTime::class)
   override suspend fun addRecentSearch(query: String) {
     withContext(Dispatchers.IO) {
-      // TODO clocks should be
-      // constructor-injected
+      // TODO clocks should be constructor-injected
       queries.insertSearch(
         query.trim(),
         Clock.System.now().toEpochMilliseconds(),

@@ -1,6 +1,5 @@
 package isao.photorate.galleryUi
 
-import isao.photorate.galleryComponent.domain.GalleryFilterRepository
 import isao.photorate.galleryComponent.domain.GalleryImageRepository
 import isao.photorate.galleryComponent.domain.GalleryImageStatus
 import isao.photorate.galleryComponent.domain.SetUserScoreUseCase
@@ -24,14 +23,13 @@ interface GalleryDelegate {
 @Factory
 class DefaultGalleryDelegate(
   private val galleryImageRepository: GalleryImageRepository,
-  private val galleryFilterRepository: GalleryFilterRepository,
   private val setUserScore: SetUserScoreUseCase,
 ) : GalleryDelegate {
 
   override val uiState: Flow<GalleryUiState> =
     combine(
-      galleryFilterRepository.selectImagesWithScores(),
-      galleryFilterRepository.selectUncertainImages(),
+      galleryImageRepository.selectScoredCertainImages(),
+      galleryImageRepository.selectScoredUncertainImages(),
       selectStatusCounts().sample(.1.seconds),
     ) { images, uncertainImages, status ->
       GalleryUiState(

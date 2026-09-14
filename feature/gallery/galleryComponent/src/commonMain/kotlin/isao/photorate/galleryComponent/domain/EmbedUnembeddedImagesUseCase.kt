@@ -4,8 +4,8 @@ import arrow.core.IorNel
 import isao.photorate.imageRecognition.ResourceFailure
 
 /**
- * Fills the `ImageEmbedding` table for hand images that don't have an embedding yet, so
- * [SearchImagesUseCase] can rank stored vectors.
+ * Finds the images that do not have an embedding yet, creates the embeddings, and saves them. After
+ * that, the images will be searchable.
  */
 interface EmbedUnembeddedImagesUseCase {
   suspend operator fun invoke(): IorNel<ResourceFailure, Int>

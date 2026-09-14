@@ -1,13 +1,15 @@
 package isao.photorate.galleryComponent.data
 
-import app.cash.sqldelight.Transacter
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import isao.photorate.gallery.db.PhotoRateDb
 import isao.photorate.galleryComponent.db.DetectedHand
+import isao.photorate.galleryComponent.db.DetectedHandQueries
 import isao.photorate.galleryComponent.db.GalleryImage
+import isao.photorate.galleryComponent.db.GalleryImageQueries
+import isao.photorate.galleryComponent.db.SelectImagesWithScores
+import isao.photorate.galleryComponent.db.SelectUncertainImagesWithScore
 import isao.photorate.galleryComponent.domain.GalleryImageRepository
 import isao.photorate.galleryComponent.domain.GalleryImageStatus
 import kotlin.time.Clock
@@ -22,13 +24,15 @@ import org.koin.core.annotation.Provided
 
 @Factory
 class DefaultGalleryImageRepository(
-  @Provided private val db: PhotoRateDb,
-  @Provided private val transacter: Transacter,
+  @Provided private val galleryImageQueries: GalleryImageQueries,
+  @Provided private val detectedHandQueries: DetectedHandQueries,
 ) : GalleryImageRepository {
 
-  // TODO queries should be constructor-injected instead of the whole db
-  private val galleryImageQueries = db.galleryImageQueries
-  private val detectedHandQueries = db.detectedHandQueries
+  override fun selectScoredCertainImages(): Flow<List<SelectImagesWithScores>> =
+    galleryImageQueries.selectImagesWithScores().asFlow().mapToList(Dispatchers.IO)
+
+  override fun selectScoredUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> =
+    galleryImageQueries.selectUncertainImagesWithScore().asFlow().mapToList(Dispatchers.IO)
 
   override fun getImages(): Flow<List<GalleryImage>> =
     galleryImageQueries.selectAllImages().asFlow().mapToList(Dispatchers.IO)
@@ -84,7 +88,7 @@ class DefaultGalleryImageRepository(
     hands: List<DetectedHand>,
   ) {
     withContext(Dispatchers.IO) {
-      transacter.transaction {
+      galleryImageQueries.transaction {
         galleryImageQueries.updateImageDone(
           detectedInMs = scanDuration.inWholeMilliseconds,
           scannedAt = scannedAt.toEpochMilliseconds(),
@@ -119,7 +123,7 @@ class DefaultGalleryImageRepository(
 
   override suspend fun reconcileOrphans(currentValidUris: Set<String>) {
     withContext(Dispatchers.IO) {
-      transacter.transaction {
+      galleryImageQueries.transaction {
         val storedUris = galleryImageQueries.selectAllUris().executeAsList().toSet()
         val orphaned = storedUris - currentValidUris
 

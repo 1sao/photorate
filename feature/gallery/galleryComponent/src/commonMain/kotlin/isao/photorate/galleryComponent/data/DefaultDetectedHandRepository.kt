@@ -2,8 +2,8 @@ package isao.photorate.galleryComponent.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import isao.photorate.gallery.db.PhotoRateDb
 import isao.photorate.galleryComponent.db.DetectedHand
+import isao.photorate.galleryComponent.db.DetectedHandQueries
 import isao.photorate.galleryComponent.domain.DetectedHandRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -13,11 +13,8 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Provided
 
 @Factory
-class DefaultDetectedHandRepository(@Provided private val db: PhotoRateDb) :
+class DefaultDetectedHandRepository(@Provided private val queries: DetectedHandQueries) :
   DetectedHandRepository {
-
-  private val queries
-    get() = db.detectedHandQueries
 
   override fun getHandsForImage(imageUri: String): Flow<List<DetectedHand>> =
     queries.selectHandsForImage(imageUri).asFlow().mapToList(Dispatchers.IO)
