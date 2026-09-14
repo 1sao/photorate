@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.PhotoRatePreview
-import isao.photorate.galleryComponent.populateGallery.SystemImageDetails
+import isao.photorate.galleryComponent.domain.SystemImageDetails
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale

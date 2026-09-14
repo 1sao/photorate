@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin

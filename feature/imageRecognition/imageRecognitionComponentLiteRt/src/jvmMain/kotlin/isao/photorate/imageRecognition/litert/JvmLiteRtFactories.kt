@@ -1,8 +1,8 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.HandLandmarker
-import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
-import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
+import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.search.AppClipSearch
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 

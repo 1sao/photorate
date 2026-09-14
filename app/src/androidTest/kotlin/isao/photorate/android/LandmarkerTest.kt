@@ -8,8 +8,8 @@ import android.os.Build
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import isao.photorate.imageRecognition.classify.GestureRecognizer
-import isao.photorate.imageRecognition.classify.HandLandmarker
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.recognizer.GestureRecognizer
 import java.nio.ByteBuffer
 import kotlin.math.min
 import org.junit.Assert.assertEquals

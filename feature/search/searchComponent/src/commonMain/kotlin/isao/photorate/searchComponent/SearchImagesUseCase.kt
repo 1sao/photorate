@@ -1,6 +1,6 @@
 package isao.photorate.searchComponent
 
-import isao.photorate.galleryRepository.ImageEmbeddingRepository
+import isao.photorate.galleryComponent.domain.ImageEmbeddingRepository
 import isao.photorate.imageRecognition.search.cosineSimilarity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

@@ -1,6 +1,6 @@
 package isao.photorate.imageRecognition.search
 
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 
 /** JPEG quality (0-100) used when encoding [LandmarkCandidate]s for CLIP vision encoding. */
 const val CLIP_JPEG_QUALITY = 95

@@ -1,11 +1,11 @@
 package isao.photorate.android
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import isao.photorate.imageRecognition.classify.GestureRecognizer
-import isao.photorate.imageRecognition.classify.HandLandmarker
-import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.onnx.AndroidOnnxHandLandmarkerFactory
 import isao.photorate.imageRecognition.onnx.OnnxGestureRecognizerProvider
+import isao.photorate.imageRecognition.recognizer.GestureRecognizer
 import org.junit.runner.RunWith
 
 /**

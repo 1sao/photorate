@@ -2,9 +2,9 @@ package isao.photorate.imageRecognition.litert
 
 import android.content.Context
 import android.util.Log
-import isao.photorate.imageRecognition.classify.HandLandmarker
-import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
-import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
+import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.search.AppClipSearch
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import javax.inject.Inject

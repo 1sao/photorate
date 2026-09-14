@@ -20,7 +20,7 @@ import kotlin.system.measureTimeMillis
 
 /**
  * ONNX-backed [AppClipSearchFactory] (MobileCLIP search). Mirrors the hand-landmarker architecture
- * ([isao.photorate.imageRecognition.classify.HandLandmarkerFactory]): the factory is
+ * ([isao.photorate.imageRecognition.landmark.HandLandmarkerFactory]): the factory is
  * Android-specific, injected with a [Context], and registered in Koin from the shared module's
  * [isao.photorate.PlatformModule] when the ONNX provider is active (currently the app uses the
  * LiteRT provider — see `photosLiteRT`).

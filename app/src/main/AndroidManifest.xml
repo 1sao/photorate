@@ -39,7 +39,7 @@
         </activity>
 
         <receiver
-            android:name="isao.photorate.galleryComponent.gallery.BootSystemGalleryVersionChecker"
+            android:name="isao.photorate.galleryComponent.BootSystemGalleryVersionChecker"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">

@@ -48,7 +48,7 @@ import isao.photorate.galleryUi.GridCellsAdaptiveEvenOnly
 import isao.photorate.galleryUi.NoMatchesCard
 import isao.photorate.galleryUi.ScanStatusCard
 import isao.photorate.galleryUi.UncertainGalleryItem
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalSharedTransitionApi::class)

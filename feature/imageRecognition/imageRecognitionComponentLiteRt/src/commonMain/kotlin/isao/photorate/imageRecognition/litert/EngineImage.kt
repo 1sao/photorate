@@ -1,6 +1,6 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 
 /**
  * Platform-neutral image the shared vision pipeline consumes. Android wraps a `Bitmap` (delegating
@@ -60,5 +60,8 @@ interface EngineImage {
 /** Decodes JPEG/PNG bytes into an [EngineImage] (BitmapFactory / UIImage / ImageIO). */
 expect fun decodeEngineImage(bytes: ByteArray): EngineImage
 
-/** Adapts the platform [LandmarkCandidate] (Bitmap / UIImage / BufferedImage). */
+/**
+ * Adapts the platform [isao.photorate.imageRecognition.LandmarkCandidate] (Bitmap / UIImage /
+ * BufferedImage).
+ */
 expect fun LandmarkCandidate.toEngineImage(): EngineImage

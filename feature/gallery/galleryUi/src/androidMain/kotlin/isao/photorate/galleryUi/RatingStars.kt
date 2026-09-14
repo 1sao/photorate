@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.modifier.noRippleClickable
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

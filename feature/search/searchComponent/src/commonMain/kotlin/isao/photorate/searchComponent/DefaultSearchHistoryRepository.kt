@@ -10,10 +10,12 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Provided
 
 /** SQLDelight-backed [SearchHistoryRepository]. */
 @Factory
-class DefaultSearchHistoryRepository(private val db: PhotoRateDb) : SearchHistoryRepository {
+class DefaultSearchHistoryRepository(@Provided private val db: PhotoRateDb) :
+  SearchHistoryRepository {
 
   private val queries
     get() = db.searchHistoryQueries

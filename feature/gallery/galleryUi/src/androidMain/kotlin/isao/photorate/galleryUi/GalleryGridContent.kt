@@ -52,7 +52,7 @@ import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
 import isao.photorate.coreUi.composable.rememberImageUnavailablePainter
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 
 // TODO verify if the search is slow enough to require this
 @Composable

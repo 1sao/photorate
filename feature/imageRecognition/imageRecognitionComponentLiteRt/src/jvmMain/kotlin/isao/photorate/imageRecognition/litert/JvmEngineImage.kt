@@ -1,6 +1,6 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO

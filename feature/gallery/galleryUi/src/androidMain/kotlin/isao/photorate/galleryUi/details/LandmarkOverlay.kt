@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import isao.photorate.imageRecognition.classify.LandmarkedImage.Point
+import isao.photorate.imageRecognition.landmark.LandmarkedImage.Point
 
 /** Developer Mode overlay: draws the raw detected 21-point hand landmarks on top of the photo. */
 @Composable

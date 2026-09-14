@@ -1,11 +1,11 @@
 package isao.photorate.galleryUi
 
-import isao.photorate.gallery.db.GalleryImageStatus
-import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
-import isao.photorate.galleryRepository.GalleryFilterRepository
-import isao.photorate.galleryRepository.GalleryImageRepository
+import isao.photorate.galleryComponent.domain.GalleryFilterRepository
+import isao.photorate.galleryComponent.domain.GalleryImageRepository
+import isao.photorate.galleryComponent.domain.GalleryImageStatus
+import isao.photorate.galleryComponent.domain.SetUserScoreUseCase
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.FlowPreview

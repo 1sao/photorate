@@ -1,7 +1,7 @@
 package isao.photorate.imageRecognition.search
 
 import android.graphics.Bitmap
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import java.io.ByteArrayOutputStream
 
 actual fun LandmarkCandidate.toJpegBytes(): ByteArray =

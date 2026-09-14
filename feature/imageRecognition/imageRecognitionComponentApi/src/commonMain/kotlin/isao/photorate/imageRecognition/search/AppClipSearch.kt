@@ -1,6 +1,6 @@
 package isao.photorate.imageRecognition.search
 
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 
 /**
  * MobileCLIP image-search pipeline (Android for now).
@@ -37,7 +37,10 @@ interface AppClipSearch : AutoCloseable {
   /** Embeds the bytes of an image file (JPEG/PNG) into a 512-dim vector. */
   fun embedImage(imageBytes: ByteArray): FloatArray
 
-  /** Embeds the platform image ([LandmarkCandidate]) into a 512-dim vector. */
+  /**
+   * Embeds the platform image ([isao.photorate.imageRecognition.LandmarkCandidate]) into a 512-dim
+   * vector.
+   */
   fun embedImage(candidate: LandmarkCandidate): FloatArray = embedImage(candidate.toJpegBytes())
 }
 

@@ -34,7 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 

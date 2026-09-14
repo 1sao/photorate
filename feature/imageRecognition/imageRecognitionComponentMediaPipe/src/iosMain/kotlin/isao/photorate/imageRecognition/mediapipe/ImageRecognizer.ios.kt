@@ -1,10 +1,10 @@
 package isao.photorate.imageRecognition.mediapipe
 
-import isao.photorate.imageRecognition.classify.HandLandmarker
-import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
-import isao.photorate.imageRecognition.classify.HandLandmarkerOptions
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
-import isao.photorate.imageRecognition.classify.LandmarkedImage
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
+import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkedImage
 import kotlin.time.measureTime
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents

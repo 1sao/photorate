@@ -1,8 +1,8 @@
 package isao.photorate.android
 
 import android.app.Application
-import isao.photorate.AndroidAppInfo
-import isao.photorate.initKoinAndroid
+import isao.photorate.di.AndroidAppInfo
+import isao.photorate.di.initKoinAndroid
 
 class MainApp : Application() {
 

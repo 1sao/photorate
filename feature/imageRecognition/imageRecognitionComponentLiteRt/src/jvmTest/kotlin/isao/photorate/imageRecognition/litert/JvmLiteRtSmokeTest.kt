@@ -1,7 +1,7 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.LandmarkModel
-import isao.photorate.imageRecognition.classify.ThumbSignal
+import isao.photorate.imageRecognition.gesture.ThumbSignal
+import isao.photorate.imageRecognition.landmark.LandmarkModel
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test

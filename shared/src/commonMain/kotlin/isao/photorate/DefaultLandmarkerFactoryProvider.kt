@@ -1,8 +1,8 @@
 package isao.photorate
 
-import isao.photorate.imageRecognition.classify.HandLandmarkerFactory
-import isao.photorate.imageRecognition.classify.LandmarkModel
-import isao.photorate.imageRecognition.classify.LandmarkerFactoryProvider
+import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
+import isao.photorate.imageRecognition.landmark.LandmarkModel
+import isao.photorate.imageRecognition.landmark.LandmarkerFactoryProvider
 
 /**
  * Concrete [LandmarkerFactoryProvider]: a fixed default model and one factory per [LandmarkModel].

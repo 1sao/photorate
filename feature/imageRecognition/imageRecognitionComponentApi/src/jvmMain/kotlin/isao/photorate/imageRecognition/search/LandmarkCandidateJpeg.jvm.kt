@@ -1,6 +1,6 @@
 package isao.photorate.imageRecognition.search
 
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 

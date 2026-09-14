@@ -1,14 +1,14 @@
 package isao.photorate.imageRecognition.litert
 
-import isao.photorate.imageRecognition.classify.GestureRecognizer
-import isao.photorate.imageRecognition.classify.GestureResult
-import isao.photorate.imageRecognition.classify.HandFeatures
-import isao.photorate.imageRecognition.classify.HandLandmarker
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
-import isao.photorate.imageRecognition.classify.LandmarkedImage
-import isao.photorate.imageRecognition.classify.thumbConfidence
-import isao.photorate.imageRecognition.classify.tryRecognizers
+import isao.photorate.imageRecognition.GestureResult
+import isao.photorate.imageRecognition.feature.HandFeatures
+import isao.photorate.imageRecognition.feature.thumbConfidence
+import isao.photorate.imageRecognition.landmark.HandLandmarker
+import isao.photorate.imageRecognition.landmark.LandmarkCandidate
+import isao.photorate.imageRecognition.landmark.LandmarkedImage
 import isao.photorate.imageRecognition.litert.LiteRtHandLandmarker.Companion.MIN_DET
+import isao.photorate.imageRecognition.recognizer.GestureRecognizer
+import isao.photorate.imageRecognition.recognizer.tryRecognizers
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min

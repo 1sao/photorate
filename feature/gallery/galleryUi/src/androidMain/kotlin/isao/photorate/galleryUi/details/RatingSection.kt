@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.galleryUi.RatingStarSelector
-import isao.photorate.imageRecognition.classify.Score
+import isao.photorate.imageRecognition.Score
 
 @Composable
 internal fun RatingSection(

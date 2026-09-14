@@ -3,7 +3,7 @@ package isao.photorate.homeUi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import isao.photorate.core.keepAlive
-import isao.photorate.galleryComponent.populateGallery.GallerySyncManager
+import isao.photorate.galleryComponent.domain.GallerySyncManager
 import isao.photorate.galleryUi.GalleryDelegate
 import isao.photorate.galleryUi.GalleryIntent
 import isao.photorate.galleryUi.GalleryUiState
