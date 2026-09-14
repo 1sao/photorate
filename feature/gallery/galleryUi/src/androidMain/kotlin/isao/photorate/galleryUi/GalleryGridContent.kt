@@ -34,7 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -140,7 +140,7 @@ fun UncertainGalleryItem(
   Surface(
     modifier = modifier.fillMaxWidth(),
     shape = MaterialTheme.shapes.largeIncreased,
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    color = MaterialTheme.colorScheme.surfaceContainerLow,
   ) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
       GalleryCardImage(
@@ -149,7 +149,7 @@ fun UncertainGalleryItem(
         modifier = Modifier.weight(1f).aspectRatio(1f),
       )
 
-      var stars by rememberSaveable { mutableStateOf(item.scores.first().score) }
+      var stars by rememberSaveable { mutableIntStateOf(item.scores.first().score) }
       Column(
         modifier =
           Modifier.weight(1f).fillMaxHeight().padding(horizontal = 24.dp, vertical = 12.dp),
