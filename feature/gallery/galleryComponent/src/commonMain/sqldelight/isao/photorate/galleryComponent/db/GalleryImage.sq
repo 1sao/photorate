@@ -1,8 +1,6 @@
 import isao.photorate.galleryComponent.domain.GalleryImageStatus;
 
-
--- GalleryImage: one row per scanned image. Scan results (status/scannedAt/
--- detectedInMs) live here; the detected hands themselves are DetectedHand rows.
+-- Stores images that were / will be scanned.
 CREATE TABLE GalleryImage (
     uri TEXT NOT NULL PRIMARY KEY,
     createdAt INTEGER NOT NULL,
@@ -12,7 +10,6 @@ CREATE TABLE GalleryImage (
     detectedInMs INTEGER
 );
 
--- Count for a single status.
 selectCount:
 SELECT COUNT(*)
 FROM GalleryImage
@@ -56,7 +53,7 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT imageUri, GROUP_CONCAT(DISTINCT score) AS scores
     FROM DetectedHand
-    WHERE uncertain = 0
+    WHERE isUncertain = 0
       AND score >= (SELECT min_score FROM config WHERE id = 1)
       AND score <= (SELECT max_score FROM config WHERE id = 1)
       AND bboxAreaFraction >= (SELECT min_bboxAreaFraction FROM config WHERE id = 1)
@@ -74,13 +71,13 @@ selectUncertainImagesWithScore:
 SELECT gi.uri, gi.scannedAt, gi.modifiedAt, MAX(dh.score) AS bestGuessScore
 FROM GalleryImage gi
 JOIN DetectedHand dh ON dh.imageUri = gi.uri
-WHERE dh.uncertain = 1
+WHERE dh.isUncertain = 1
   AND dh.bboxAreaFraction >= (SELECT min_bboxAreaFraction FROM config WHERE id = 1)
   AND gi.status != 'IGNORED'
   AND NOT EXISTS (
     SELECT 1 FROM DetectedHand dh2
     WHERE dh2.imageUri = gi.uri
-      AND dh2.uncertain = 0
+      AND dh2.isUncertain = 0
   )
 GROUP BY gi.uri, gi.scannedAt, gi.modifiedAt
 ORDER BY gi.modifiedAt DESC;
@@ -124,10 +121,6 @@ SELECT * FROM GalleryImage;
 selectAllUris:
 SELECT uri FROM GalleryImage;
 
--- Hand images that don't have an embedding yet (incremental fill after
--- landmarking, or after an upgrade that introduced search). "Hand image"
--- means at least one real detection (isUserRated = 0) — what the landmarker
--- writes. A user-entered rating alone does not count.
 selectImagesMissingEmbeddings:
 SELECT gi.* FROM GalleryImage gi
 LEFT JOIN ImageEmbedding e ON e.uri = gi.uri

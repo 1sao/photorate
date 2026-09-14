@@ -29,7 +29,7 @@ class SetUserScoreUseCase(private val detectedHandRepository: DetectedHandReposi
         score = score,
         bboxAreaFraction = 1.0,
         points = emptyList(),
-        uncertain = false,
+        isUncertain = false,
         isUserRated = true,
       ),
     )

@@ -27,7 +27,7 @@ class DefaultDetectedHandRepository(@Provided private val queries: DetectedHandQ
         score = hand.score,
         bboxAreaFraction = hand.bboxAreaFraction,
         points = hand.points,
-        uncertain = hand.uncertain,
+        isUncertain = hand.isUncertain,
         isUserRated = hand.isUserRated,
       )
     }
@@ -41,7 +41,7 @@ class DefaultDetectedHandRepository(@Provided private val queries: DetectedHandQ
         score = hand.score,
         bboxAreaFraction = hand.bboxAreaFraction,
         points = hand.points,
-        uncertain = hand.uncertain,
+        isUncertain = hand.isUncertain,
       )
     }
   }

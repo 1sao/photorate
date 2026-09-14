@@ -104,7 +104,7 @@ class DefaultGalleryImageRepository(
             score = hand.score,
             bboxAreaFraction = hand.bboxAreaFraction,
             points = hand.points,
-            uncertain = hand.uncertain,
+            isUncertain = hand.isUncertain,
             isUserRated = hand.isUserRated,
           )
         }

@@ -1,18 +1,15 @@
 import kotlin.FloatArray;
 
--- ImageEmbedding: precomputed MobileCLIP embedding (512 floats) for every
--- gallery image with a real detected hand. Filled ahead of time by
--- PopulateImageEmbeddingsUseCase right after landmarking, so a search only
--- embeds the query text and ranks against stored vectors instead of
--- re-embedding every image on each search.
+-- Stores CLIP embeddings (512-dimentional vectors), computed for each scored image.
+-- Unlike the search query embedding, which is embedded on query submission,
+-- image embeddings are calculated ahead of time.
 CREATE TABLE ImageEmbedding (
     uri TEXT NOT NULL PRIMARY KEY,
     embedding BLOB AS FloatArray NOT NULL,
     FOREIGN KEY (uri) REFERENCES GalleryImage(uri) ON DELETE CASCADE
 );
 
--- Search candidates: embeddings only exist for hand images (the population
--- use case filters to images with real detections), so ranking these rows IS
+-- Search candidates: embeddings only exist for hand images, so ranking these rows means
 -- searching through images in which a hand was detected.
 selectAllEmbeddings:
 SELECT uri, embedding FROM ImageEmbedding;
@@ -21,8 +18,6 @@ upsertEmbedding:
 INSERT INTO ImageEmbedding(uri, embedding) VALUES (?, ?)
 ON CONFLICT(uri) DO UPDATE SET embedding = excluded.embedding;
 
--- Removes one image's embedding (e.g. after its detections were rejected and
--- the image was marked no-hand) so search stops ranking it.
 deleteEmbedding:
 DELETE FROM ImageEmbedding WHERE uri = ?;
 
