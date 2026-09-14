@@ -1,8 +1,8 @@
 package isao.photorate.galleryRepository
 
-import isao.photorate.gallery.db.CountsByStatus
 import isao.photorate.gallery.db.DetectedHand
 import isao.photorate.gallery.db.GalleryImage
+import isao.photorate.gallery.db.GalleryImageStatus
 import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -25,13 +25,9 @@ interface GalleryImageRepository {
 
   suspend fun deleteAll()
 
-  fun getStatus(): Flow<CountsByStatus>
-
-  fun observeStatusCounts(): Flow<GalleryStatusCounts>
+  fun selectCount(status: GalleryImageStatus): Flow<Long>
 
   suspend fun setScanFailed(uri: String)
-
-  suspend fun setScanStarted(uri: String)
 
   suspend fun setScanSuccessful(
     uri: String,

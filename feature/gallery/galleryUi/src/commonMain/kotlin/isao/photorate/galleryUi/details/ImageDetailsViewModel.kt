@@ -32,7 +32,6 @@ sealed interface ImageDetailsIntent {
 
 @KoinViewModel
 class ImageDetailsViewModel(
-  /** The image this screen instance is bound to (injected per navigation). */
   @InjectedParam private val uri: String,
   private val detectedHandRepository: DetectedHandRepository,
   private val systemGalleryImageRepository: SystemGalleryImageRepository,

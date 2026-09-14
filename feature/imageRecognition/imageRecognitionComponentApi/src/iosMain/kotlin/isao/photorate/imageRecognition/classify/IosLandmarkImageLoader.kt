@@ -1,10 +1,8 @@
-package isao.photorate.galleryComponent.classify
+package isao.photorate.imageRecognition.classify
 
 import arrow.core.raise.Raise
 import arrow.core.raise.context.raise
 import isao.photorate.imageRecognition.ResourceFailure
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
-import isao.photorate.imageRecognition.classify.LandmarkImageLoader
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.annotation.Factory
 import platform.CoreGraphics.CGSizeMake

@@ -1,9 +1,9 @@
 package isao.photorate.galleryUi
 
+import isao.photorate.gallery.db.GalleryImageStatus
 import isao.photorate.galleryComponent.gallery.SetUserScoreUseCase
 import isao.photorate.galleryRepository.GalleryFilterRepository
 import isao.photorate.galleryRepository.GalleryImageRepository
-import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.imageRecognition.classify.Score
 import kotlin.math.roundToInt
@@ -32,7 +32,7 @@ class DefaultGalleryDelegate(
     combine(
       galleryFilterRepository.selectImagesWithScores(),
       galleryFilterRepository.selectUncertainImages(),
-      galleryImageRepository.observeStatusCounts().sample(.1.seconds),
+      selectStatusCounts().sample(.1.seconds),
     ) { images, uncertainImages, status ->
       GalleryUiState(
         imagesState =
@@ -65,24 +65,46 @@ class DefaultGalleryDelegate(
     }
   }
 
-  suspend fun acceptUncertain(uri: String, score: Int) {
+  private suspend fun acceptUncertain(uri: String, score: Int) {
     val enumScore = Score.entries.firstOrNull { it.score == score } ?: return
     setUserScore(uri, enumScore)
   }
 
-  suspend fun deleteUncertain(uri: String) {
+  private suspend fun deleteUncertain(uri: String) {
     galleryImageRepository.setIgnored(uri)
   }
+
+  private fun selectStatusCounts(): Flow<GalleryStatusCounts> =
+    combine(
+      galleryImageRepository.selectCount(GalleryImageStatus.PENDING),
+      galleryImageRepository.selectCount(GalleryImageStatus.DONE),
+      galleryImageRepository.selectCount(GalleryImageStatus.FAILED),
+    ) { pending, done, failed ->
+      GalleryStatusCounts(
+        pending = pending,
+        done = done,
+        failed = failed,
+      )
+    }
 }
 
 data class GalleryUiState(
   val imagesState: ImagesState = ImagesState(),
 ) {
   data class ImagesState(
-    val status: GalleryStatusCounts = GalleryStatusCounts(emptyMap()),
+    val status: GalleryStatusCounts = GalleryStatusCounts(),
     val detections: List<GalleryImageItem> = emptyList(),
     val uncertainDetections: List<GalleryImageItem> = emptyList(),
   )
+}
+
+data class GalleryStatusCounts(
+  val pending: Long = 0L,
+  val done: Long = 0L,
+  val failed: Long = 0L,
+) {
+  val total: Long
+    get() = pending + done + failed
 }
 
 data class GalleryImageItem(val uri: String, val scores: List<Score>, val scannedAt: Long? = null)

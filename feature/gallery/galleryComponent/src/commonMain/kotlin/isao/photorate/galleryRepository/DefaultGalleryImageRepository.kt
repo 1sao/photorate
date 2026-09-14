@@ -5,7 +5,6 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import isao.photorate.gallery.db.CountsByStatus
 import isao.photorate.gallery.db.DetectedHand
 import isao.photorate.gallery.db.GalleryImage
 import isao.photorate.gallery.db.GalleryImageStatus
@@ -16,7 +15,6 @@ import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
@@ -42,16 +40,8 @@ class DefaultGalleryImageRepository(
   override fun getImagesWithMissingEmbeddings(): Flow<List<GalleryImage>> =
     galleryImageQueries.selectImagesMissingEmbeddings().asFlow().mapToList(Dispatchers.IO)
 
-  override fun getStatus(): Flow<CountsByStatus> =
-    galleryImageQueries.countsByStatus().asFlow().mapToOne(Dispatchers.IO)
-
-  override fun observeStatusCounts(): Flow<GalleryStatusCounts> =
-    galleryImageQueries.countsByStatus().asFlow().mapToList(Dispatchers.IO).map { rows ->
-      val raw = rows.associate { it.status to it.count }
-      // Fill in zeros for statuses with no rows so the UI doesn't have to guess.
-      val complete = GalleryImageStatus.entries.associateWith { raw[it] ?: 0L }
-      GalleryStatusCounts(complete)
-    }
+  override fun selectCount(status: GalleryImageStatus): Flow<Long> =
+    galleryImageQueries.selectCount(status).asFlow().mapToOne(Dispatchers.IO)
 
   override suspend fun upsertImage(image: GalleryImage) {
     withContext(Dispatchers.IO) {
@@ -71,15 +61,6 @@ class DefaultGalleryImageRepository(
       galleryImageQueries.updateImageDone(
         detectedInMs,
         Clock.System.now().toEpochMilliseconds(),
-        uri,
-      )
-    }
-  }
-
-  override suspend fun setScanStarted(uri: String) {
-    withContext(Dispatchers.IO) {
-      galleryImageQueries.updateImageStatus(
-        status = GalleryImageStatus.PROCESSING,
         uri,
       )
     }

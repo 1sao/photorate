@@ -12,21 +12,13 @@ CREATE TABLE GalleryImage (
     detectedInMs INTEGER
 );
 
--- One row per status with its count, in one query.
-countsByStatus:
-SELECT status, COUNT(*) AS count
-FROM GalleryImage
-WHERE status != 'IGNORED'
-GROUP BY status;
-
--- Single status count, if you just need one number (e.g. a badge).
-countForStatus:
+-- Count for a single status.
+selectCount:
 SELECT COUNT(*)
 FROM GalleryImage
 WHERE status = ?;
 
--- Total row count, handy alongside the breakdown.
-totalCount:
+selectTotalCount:
 SELECT COUNT(*)
 FROM GalleryImage;
 
@@ -98,10 +90,9 @@ ORDER BY gi.modifiedAt DESC;
 -- ImageEmbedding rows (their FKs point back here with ON DELETE CASCADE).
 -- File metadata (createdAt/modifiedAt) always follows the system gallery;
 -- scan results (status/scannedAt/detectedInMs) are only reset when the file
--- actually changed (modifiedAt differs). A row left in PROCESSING (a previous
--- scan killed mid-image) is re-queued for landmarking. DONE/FAILED results for
--- an unchanged file are kept, so re-populating on every launch does not re-run
--- landmarking for already-scanned images.
+-- actually changed (modifiedAt differs). DONE/FAILED results for an unchanged
+-- file are kept, so re-populating on every launch does not re-run landmarking
+-- for already-scanned images.
 insertOrUpdateImage:
 INSERT INTO GalleryImage(uri, createdAt, modifiedAt, status, scannedAt, detectedInMs)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -109,7 +100,6 @@ ON CONFLICT(uri) DO UPDATE SET
   createdAt = excluded.createdAt,
   modifiedAt = excluded.modifiedAt,
   status = CASE
-    WHEN modifiedAt = excluded.modifiedAt AND status = 'PROCESSING' THEN 'PENDING'
     WHEN modifiedAt = excluded.modifiedAt THEN status
     ELSE 'PENDING'
   END,

@@ -36,15 +36,12 @@ import isao.photorate.coreUi.composable.StatusBarBackground
 import isao.photorate.coreUi.permission.GalleryPermissions
 import isao.photorate.coreUi.permission.hasAnyGalleryAccess
 import isao.photorate.coreUi.permission.hasFullGalleryAccess
-import isao.photorate.gallery.db.GalleryImageStatus.DONE
-import isao.photorate.gallery.db.GalleryImageStatus.PENDING
-import isao.photorate.gallery.db.GalleryImageStatus.PROCESSING
-import isao.photorate.galleryRepository.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryImageItem
 import isao.photorate.galleryUi.GalleryIntent.AcceptUncertain
 import isao.photorate.galleryUi.GalleryIntent.DeleteUncertain
 import isao.photorate.galleryUi.GalleryItem
 import isao.photorate.galleryUi.GalleryPermissionCard
+import isao.photorate.galleryUi.GalleryStatusCounts
 import isao.photorate.galleryUi.GalleryUiState
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.galleryUi.GridCellsAdaptiveEvenOnly
@@ -227,10 +224,7 @@ private fun HomeScreenPreview() {
             GalleryUiState(
               imagesState =
                 ImagesState(
-                  status =
-                    GalleryStatusCounts(
-                      mapOf(PENDING to 12L, PROCESSING to 3L, DONE to 98L),
-                    ),
+                  status = GalleryStatusCounts(pending = 15L, done = 98L),
                   detections =
                     listOf(
                       GalleryImageItem("content://preview/a", listOf(Score.FIVE)),

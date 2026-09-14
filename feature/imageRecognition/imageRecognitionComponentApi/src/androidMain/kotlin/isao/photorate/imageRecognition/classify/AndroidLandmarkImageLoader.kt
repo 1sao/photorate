@@ -1,4 +1,4 @@
-package isao.photorate.galleryComponent.classify
+package isao.photorate.imageRecognition.classify
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -10,8 +10,6 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.context.raise
 import isao.photorate.imageRecognition.ResourceFailure
-import isao.photorate.imageRecognition.classify.LandmarkCandidate
-import isao.photorate.imageRecognition.classify.LandmarkImageLoader
 import java.io.FileNotFoundException
 import java.io.IOException
 import kotlin.math.min

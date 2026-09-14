@@ -20,10 +20,11 @@ Dependency injection via Koin with `expect`/`actual` for `platformModule`.
 - **Work until you're fully done**: do not stop working prematurely. If something is blocking you,
   try resolving the issue yourself, and surface if you can't.
 - **No comments**: only add comments where it's impossible to understand the flow or decisions that
-  led to this code otherwise. Use comments VERY sparingly.
+  led to this code otherwise. Use comments VERY sparingly. NEVER add comments that only serve as a
+  changelog (the function used to do X, now it does Y).
 - **SOLID**: single responsibility per class, dependency inversion at repository boundaries,
   open/closed for new features via interfaces.
-- **Code style**: no magic numbers. No comments unless the why is non-obvious.
+- **Code style**: no magic numbers.
 - **Module structure**: multi module, split between shared domain+data and separate per-platform UI
   layers.
 - **Verification**: always build Android (`./gradlew :app:assembleDebug`) with no errors. In case of

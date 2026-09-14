@@ -89,8 +89,6 @@ class LandmarkPendingImagesUseCase(
   ) {
     recover(
       {
-        galleryImageRepository.setScanStarted(image.uri)
-
         val candidate = imageLoader.load(image.uri, options.preferredImageDimension)
         val (gestureResults, duration) =
           measureTimedValue { landmarker.detectWithRecognizers(candidate, recognizers) }

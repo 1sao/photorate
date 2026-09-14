@@ -60,7 +60,7 @@ class AndroidLiteRtAppClipSearchFactory @Inject constructor(private val context:
       val engine =
         AndroidLiteRtEngine(
           context,
-          AndroidLiteRtAppClipSearchFactory.MODEL_ASSET,
+          MODEL_ASSET,
           AndroidLiteRtEngine.hybridOptions(),
         )
       val tokenizerJson =
@@ -74,8 +74,6 @@ class AndroidLiteRtAppClipSearchFactory @Inject constructor(private val context:
   companion object {
     private const val TAG = "LiteRtAppClipSearch"
 
-    // fp16 variant of the combined S1 graph: bit-parity with fp32 on the
-    // host task check, half the size (CLIP_S1_README.md quality row).
     const val MODEL_ASSET = "clip_s1_combined_f16.tflite"
     const val TOKENIZER_ASSET = "tokenizer.json"
   }

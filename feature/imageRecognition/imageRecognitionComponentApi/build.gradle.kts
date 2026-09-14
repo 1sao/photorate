@@ -13,6 +13,7 @@ kotlin {
       api(projects.core)
       implementation(libs.kotlinx.serialization.json)
     }
+    androidMain.dependencies { implementation(libs.androidx.core) }
     commonTest.dependencies { implementation(libs.kotlin.test) }
     getByName("androidHostTest").dependencies { implementation(libs.kotlin.test) }
   }
