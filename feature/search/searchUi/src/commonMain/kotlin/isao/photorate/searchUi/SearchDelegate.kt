@@ -38,7 +38,7 @@ class DefaultSearchDelegate(
     combine(
       queryResults,
       pendingQuery,
-      searchHistoryRepository.observeRecentSearches(),
+      searchHistoryRepository.selectRecentSearches(),
       featureFlagRepository.isDevModeEnabled(),
     ) { queryResults, pendingQuery, recentSearches, isInDevMode ->
       SearchUiState(
@@ -96,7 +96,7 @@ class DefaultSearchDelegate(
           )
         } finally {
           pendingQuery.update { it.copy(isInProgress = false) }
-          searchHistoryRepository.addRecentSearch(trimmedQueryValue)
+          searchHistoryRepository.upsertRecentSearch(trimmedQueryValue)
         }
 
       queryResults.value =

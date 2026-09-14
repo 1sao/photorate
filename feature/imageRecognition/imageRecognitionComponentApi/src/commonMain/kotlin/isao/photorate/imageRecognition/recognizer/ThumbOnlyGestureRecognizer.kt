@@ -13,6 +13,8 @@ import isao.photorate.imageRecognition.gesture.ThumbOnlyGesture
  * up, 90 = horizontal, 180 = straight down) instead of the thumb-vs-index fingerAngle. The fallback
  * only applies to partial/edge hands: fingers not confidently tracked (fingerConfidence low) but
  * the thumb chain solid (thumbConfidence high).
+ *
+ * TODO: obsolete after adding [LenientThumbGestureRecognizer]. Remove.
  */
 class ThumbOnlyGestureRecognizer : GestureRecognizer<ThumbOnlyGesture> {
 

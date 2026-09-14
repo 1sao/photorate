@@ -7,7 +7,7 @@ import isao.photorate.imageRecognition.gesture.Gesture
  * Iterates through [recognizers] and returns the first recognized gesture with its confidence, or
  * null if no recognizer matches the hand features.
  */
-// TODO Messy. Tweak generics to remove this.
+// TODO Try replacing with smarter approaches, such as the one in LiteRtHandLandmarker
 fun tryRecognizers(
   features: HandFeatures,
   recognizers: List<GestureRecognizer<*>>,

@@ -16,11 +16,11 @@ import org.koin.core.annotation.Provided
 class DefaultSearchHistoryRepository(@Provided private val queries: SearchHistoryQueries) :
   SearchHistoryRepository {
 
-  override fun observeRecentSearches(limit: Long): Flow<List<String>> =
+  override fun selectRecentSearches(limit: Long): Flow<List<String>> =
     queries.recentSearches(limit).asFlow().mapToList(Dispatchers.IO)
 
   @OptIn(ExperimentalTime::class)
-  override suspend fun addRecentSearch(query: String) {
+  override suspend fun upsertRecentSearch(query: String) {
     withContext(Dispatchers.IO) {
       // TODO clocks should be constructor-injected
       queries.insertSearch(
@@ -30,7 +30,7 @@ class DefaultSearchHistoryRepository(@Provided private val queries: SearchHistor
     }
   }
 
-  override suspend fun clear() {
+  override suspend fun clear() { // TODO implement manual clearing
     withContext(Dispatchers.IO) { queries.clearSearchHistory() }
   }
 }
