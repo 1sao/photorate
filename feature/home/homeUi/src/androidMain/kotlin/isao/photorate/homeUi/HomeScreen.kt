@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -82,11 +83,9 @@ fun HomeScreenContent(
 ) {
   val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
 
-  val gridState = rememberLazyGridState()
-
   Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
-      modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+      modifier = Modifier.fillMaxSize(),
       topBar = {
         TopBar(
           state = state,
@@ -100,6 +99,7 @@ fun HomeScreenContent(
         state = state,
         permissionsState = permissionsState,
         contentPadding = innerPadding,
+        scrollBehavior = scrollBehavior,
         onIntent = onIntent,
         onOpenImage = onOpenImage,
       )
@@ -117,6 +117,7 @@ fun HomeScreenContent(
 private fun GalleryGridContent(
   state: HomeScreenUiState,
   permissionsState: MultiplePermissionsState,
+  scrollBehavior: SearchBarScrollBehavior,
   contentPadding: PaddingValues,
   onIntent: (HomeIntent) -> Unit,
   onOpenImage: (String) -> Unit,
@@ -148,7 +149,7 @@ private fun GalleryGridContent(
   //  span between them
   LazyVerticalGrid(
     state = rememberLazyGridState(),
-    modifier = Modifier.fillMaxSize(),
+    modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
     columns = GridCellsAdaptiveEvenOnly(160.dp),
     contentPadding =
       contentPadding +
