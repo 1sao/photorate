@@ -35,7 +35,7 @@ class DatabaseModule {
           pointsAdapter = PointsAdapter,
         ),
       GalleryImageAdapter = GalleryImage.Adapter(EnumColumnAdapter()),
-      configAdapter =
+      ConfigAdapter =
         Config.Adapter(
           sort_byAdapter = EnumColumnAdapter(),
           date_header_modeAdapter = EnumColumnAdapter(),

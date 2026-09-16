@@ -26,37 +26,35 @@ FROM GalleryImage;
 --  - An uncertain score
 selectScoredImages:
 WITH
-imagesSelection AS (
-    SELECT gi.uri, gi.scannedAt, gi.createdAt, gi.modifiedAt, dh.score, dh.isUserRated,
-        IIF(dh.isUncertain, 0, 1) AS isCertain
+scoresSelection AS (
+    SELECT gi.uri, gi.scannedAt, gi.createdAt, gi.modifiedAt, dh.score,
+        dh.isUserRated, IIF(dh.isUncertain, 0, 1) AS isCertain,
+        ROW_NUMBER() OVER (
+            PARTITION BY gi.uri
+            ORDER BY dh.isUserRated DESC, IIF(dh.isUncertain, 0, 1) DESC, dh.score DESC
+        ) AS handRank
     FROM GalleryImage gi
     JOIN DetectedHand dh ON dh.imageUri = gi.uri
     CROSS JOIN ConfigInstance
     WHERE gi.status != 'IGNORED'
       AND dh.bboxAreaFraction >= ConfigInstance.min_bboxAreaFraction
 ),
-imagesWithBestScoresSelection AS (
-    SELECT uri, scannedAt, createdAt, modifiedAt, isUserRated,
-        MAX(isCertain) AS isCertain,
-        COALESCE(
-            MAX(CASE WHEN isUserRated = 1 THEN score END),
-            MAX(CASE WHEN isCertain = 1 THEN score END),
-            MAX(CASE WHEN isCertain = 0 THEN score END)
-        ) AS bestScore
-    FROM imagesSelection
-    GROUP BY uri
+bestScoreSelection AS (
+    SELECT uri, scannedAt, createdAt, modifiedAt, score AS bestScore, isCertain
+    FROM scoresSelection
+    WHERE handRank = 1
 )
-SELECT scored.uri, scored.scannedAt, scored.createdAt,
- scored.modifiedAt, scored.bestScore, scored.isCertain
-FROM imagesWithBestScoresSelection scored
+SELECT bestScoredImage.uri, bestScoredImage.scannedAt, bestScoredImage.createdAt,
+ bestScoredImage.modifiedAt, bestScoredImage.bestScore, bestScoredImage.isCertain = 1 AS isCertain
+FROM bestScoreSelection bestScoredImage
 CROSS JOIN ConfigInstance
-WHERE scored.bestScore BETWEEN ConfigInstance.min_score AND ConfigInstance.max_score
+WHERE bestScoredImage.bestScore BETWEEN ConfigInstance.min_score AND ConfigInstance.max_score
 -- A trick to add a tiebreaker.
 -- If sorting by score, then sort by bestScore (line 1) and then modifiedAt (line 2).
 -- If NOT sorting by score, then sort by modifiedAt (line 1) and then bestScore (line 2).
 ORDER BY
-    IIF(ConfigInstance.sort_by = 'SCORE', scored.bestScore, scored.modifiedAt) DESC,
-    IIF(ConfigInstance.sort_by = 'SCORE', scored.modifiedAt, scored.bestScore) DESC;
+    IIF(ConfigInstance.sort_by = 'SCORE', bestScoredImage.bestScore, bestScoredImage.modifiedAt) DESC,
+    IIF(ConfigInstance.sort_by = 'SCORE', bestScoredImage.modifiedAt, bestScoredImage.bestScore) DESC;
 
 -- Insert a new image or update an old one. If this image has been modified after the last scan,
 -- marks it as pending to be scanned again.
