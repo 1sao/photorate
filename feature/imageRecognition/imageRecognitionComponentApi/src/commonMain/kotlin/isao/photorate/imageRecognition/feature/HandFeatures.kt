@@ -13,12 +13,26 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
 
   private val points = hand.points
 
-  val handSize: Float
-  val extentRatio: Float
-  val bboxAreaFraction: Float
-  val kpMean: Float
-  val fingerSpread: Float
-  val allCurled: Boolean
+  val width = run {
+    val xs = points.map { it.x }
+    xs.max() - xs.min()
+  }
+  val height = run {
+    val ys = points.map { it.y }
+    ys.max() - ys.min()
+  }
+  val handSize: Float = dist(points[WRIST], points[MIDDLE_MCP])
+  val extentRatio: Float = max(width, height) / handSize
+  val bboxAreaFraction: Float = width * height
+  val kpMean: Float = points.sumOf { it.z.toDouble() }.toFloat() / points.size
+  val fingerSpread: Float = run {
+    val tips = listOf(points[INDEX_TIP], points[MIDDLE_TIP], points[RING_TIP], points[PINKY_TIP])
+    var spreadTotal = 0f
+    for (i in 0 until tips.size - 1) {
+      spreadTotal += dist(tips[i], tips[i + 1])
+    }
+    spreadTotal / (tips.size - 1) / handSize
+  }
 
   val thumb = Thumb()
   val index = Finger(INDEX_PIP, INDEX_TIP)
@@ -27,25 +41,7 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   val pinky = Finger(PINKY_PIP, PINKY_TIP)
   val fingers: List<Finger> = listOf(index, middle, ring, pinky)
 
-  init {
-    val xs = points.map { it.x }
-    val ys = points.map { it.y }
-    val width = xs.max() - xs.min()
-    val height = ys.max() - ys.min()
-    handSize = dist(points[WRIST], points[MIDDLE_MCP])
-    extentRatio = max(width, height) / handSize
-    bboxAreaFraction = width * height
-    kpMean = points.sumOf { it.z.toDouble() }.toFloat() / points.size
-
-    val tips = listOf(points[INDEX_TIP], points[MIDDLE_TIP], points[RING_TIP], points[PINKY_TIP])
-    var spreadTotal = 0f
-    for (i in 0 until tips.size - 1) {
-      spreadTotal += dist(tips[i], tips[i + 1])
-    }
-    fingerSpread = spreadTotal / (tips.size - 1) / handSize
-
-    allCurled = fingers.none { it.isExtended }
-  }
+  val allCurled: Boolean = fingers.none { it.isExtended }
 
   /** A single finger identified by its PIP and TIP keypoint indices. */
   open inner class Finger(pipIndex: Int, tipIndex: Int) {

@@ -123,7 +123,7 @@ class LandmarkPendingImagesUseCase(
         score = score,
         bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
         points = displayHand.points,
-        isUncertain = result.confidence < 1f,
+        isUncertain = result.confidence == 0f,
         isUserRated = false,
       )
     }
