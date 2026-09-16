@@ -2,16 +2,13 @@ package isao.photorate.galleryComponent.domain
 
 import isao.photorate.galleryComponent.db.DetectedHand
 import isao.photorate.galleryComponent.db.GalleryImage
-import isao.photorate.galleryComponent.db.SelectImagesWithScores
-import isao.photorate.galleryComponent.db.SelectUncertainImagesWithScore
+import isao.photorate.galleryComponent.db.SelectScoredImages
 import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 interface GalleryImageRepository {
-  fun selectScoredCertainImages(): Flow<List<SelectImagesWithScores>>
-
-  fun selectScoredUncertainImages(): Flow<List<SelectUncertainImagesWithScore>>
+  fun selectScoredImages(): Flow<List<SelectScoredImages>>
 
   fun getImages(): Flow<List<GalleryImage>>
 

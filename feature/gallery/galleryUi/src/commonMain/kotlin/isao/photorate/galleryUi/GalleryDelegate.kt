@@ -5,7 +5,6 @@ import isao.photorate.galleryComponent.domain.GalleryImageStatus
 import isao.photorate.galleryComponent.domain.SetUserScoreUseCase
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.imageRecognition.Score
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -28,27 +27,27 @@ class DefaultGalleryDelegate(
 
   override val uiState: Flow<GalleryUiState> =
     combine(
-      galleryImageRepository.selectScoredCertainImages(),
-      galleryImageRepository.selectScoredUncertainImages(),
+      galleryImageRepository.selectScoredImages(),
       selectStatusCounts().sample(.1.seconds),
-    ) { images, uncertainImages, status ->
+    ) { scoredImages, status ->
+      val (certain, uncertain) = scoredImages.partition { it.isCertain }
       GalleryUiState(
         imagesState =
           ImagesState(
             status = status,
             detections =
-              images.map { row ->
+              certain.map { row ->
                 GalleryImageItem(
                   uri = row.uri,
-                  scores = parseScores(row.scores),
+                  score = row.bestScore,
                   scannedAt = row.scannedAt,
                 )
               },
             uncertainDetections =
-              uncertainImages.map { row ->
+              uncertain.map { row ->
                 GalleryImageItem(
                   uri = row.uri,
-                  scores = listOf(row.bestGuessScore ?: Score.THREE),
+                  score = row.bestScore,
                   scannedAt = row.scannedAt,
                 )
               },
@@ -105,21 +104,10 @@ data class GalleryStatusCounts(
     get() = pending + done + failed
 }
 
-data class GalleryImageItem(val uri: String, val scores: List<Score>, val scannedAt: Long? = null)
+data class GalleryImageItem(val uri: String, val score: Score, val scannedAt: Long? = null)
 
 sealed interface GalleryIntent {
   data class AcceptUncertain(val uri: String, val score: Int) : GalleryIntent
 
   data class DeleteUncertain(val uri: String) : GalleryIntent
 }
-
-private fun parseScores(aggregated: String?): List<Score> =
-  aggregated
-    ?.split(',')
-    .orEmpty()
-    .mapNotNull { token ->
-      val value = token.trim().toDoubleOrNull()?.roundToInt() ?: return@mapNotNull null
-      Score.entries.firstOrNull { it.score == value }
-    }
-    .distinct()
-    .sortedBy { it.score }

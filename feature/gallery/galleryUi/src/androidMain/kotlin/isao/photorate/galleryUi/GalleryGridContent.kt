@@ -123,7 +123,7 @@ fun GalleryItem(
       modifier = Modifier.fillMaxSize(),
     )
     RatingStar(
-      fraction = item.scores.max().ratingStarFraction,
+      fraction = item.score.ratingStarFraction,
       modifier = Modifier.padding(12.dp).size(20.dp),
     )
   }
@@ -149,7 +149,7 @@ fun UncertainGalleryItem(
         modifier = Modifier.weight(1f).aspectRatio(1f),
       )
 
-      var stars by rememberSaveable { mutableIntStateOf(item.scores.first().score) }
+      var stars by rememberSaveable { mutableIntStateOf(item.score.score) }
       Column(
         modifier =
           Modifier.weight(1f).fillMaxHeight().padding(horizontal = 24.dp, vertical = 12.dp),
@@ -259,7 +259,7 @@ private fun UncertainSectionHeader(count: Int, modifier: Modifier = Modifier) {
 private fun GalleryItemPreview() {
   PhotoRatePreview {
     GalleryItem(
-      item = GalleryImageItem("content://preview/a", listOf(Score.FIVE)),
+      item = GalleryImageItem("content://preview/a", Score.FIVE),
       onClick = {},
     )
   }
@@ -270,7 +270,7 @@ private fun GalleryItemPreview() {
 private fun UncertainGalleryItemPreview() {
   PhotoRatePreview {
     UncertainGalleryItem(
-      item = GalleryImageItem("content://preview/u1", listOf(Score.THREE)),
+      item = GalleryImageItem("content://preview/u1", Score.THREE),
       onClick = {},
       onAccept = { _: String, _: Int -> },
       onDelete = { _: String -> },

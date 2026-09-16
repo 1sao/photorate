@@ -228,15 +228,15 @@ private fun HomeScreenPreview() {
                   status = GalleryStatusCounts(pending = 15L, done = 98L),
                   detections =
                     listOf(
-                      GalleryImageItem("content://preview/a", listOf(Score.FIVE)),
-                      GalleryImageItem("content://preview/b", listOf(Score.ONE)),
-                      GalleryImageItem("content://preview/c", listOf(Score.FOUR)),
-                      GalleryImageItem("content://preview/d", listOf(Score.TWO)),
+                      GalleryImageItem("content://preview/a", Score.FIVE),
+                      GalleryImageItem("content://preview/b", Score.ONE),
+                      GalleryImageItem("content://preview/c", Score.FOUR),
+                      GalleryImageItem("content://preview/d", Score.TWO),
                     ),
                   uncertainDetections =
                     listOf(
-                      GalleryImageItem("content://preview/u1", listOf(Score.THREE)),
-                      GalleryImageItem("content://preview/u2", listOf(Score.FOUR)),
+                      GalleryImageItem("content://preview/u1", Score.THREE),
+                      GalleryImageItem("content://preview/u2", Score.FOUR),
                     ),
                 ),
             ),

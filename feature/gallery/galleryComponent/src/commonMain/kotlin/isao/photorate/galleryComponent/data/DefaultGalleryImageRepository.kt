@@ -8,8 +8,7 @@ import isao.photorate.galleryComponent.db.DetectedHand
 import isao.photorate.galleryComponent.db.DetectedHandQueries
 import isao.photorate.galleryComponent.db.GalleryImage
 import isao.photorate.galleryComponent.db.GalleryImageQueries
-import isao.photorate.galleryComponent.db.SelectImagesWithScores
-import isao.photorate.galleryComponent.db.SelectUncertainImagesWithScore
+import isao.photorate.galleryComponent.db.SelectScoredImages
 import isao.photorate.galleryComponent.domain.GalleryImageRepository
 import isao.photorate.galleryComponent.domain.GalleryImageStatus
 import kotlin.time.Clock
@@ -28,11 +27,8 @@ class DefaultGalleryImageRepository(
   @Provided private val detectedHandQueries: DetectedHandQueries,
 ) : GalleryImageRepository {
 
-  override fun selectScoredCertainImages(): Flow<List<SelectImagesWithScores>> =
-    galleryImageQueries.selectImagesWithScores().asFlow().mapToList(Dispatchers.IO)
-
-  override fun selectScoredUncertainImages(): Flow<List<SelectUncertainImagesWithScore>> =
-    galleryImageQueries.selectUncertainImagesWithScore().asFlow().mapToList(Dispatchers.IO)
+  override fun selectScoredImages(): Flow<List<SelectScoredImages>> =
+    galleryImageQueries.selectScoredImages().asFlow().mapToList(Dispatchers.IO)
 
   override fun getImages(): Flow<List<GalleryImage>> =
     galleryImageQueries.selectAllImages().asFlow().mapToList(Dispatchers.IO)
