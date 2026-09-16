@@ -48,6 +48,8 @@ import org.junit.runner.RunWith
  * requires a *current* EGL context (litert's GlTexture wraps the TFLite GL delegate's GlTexture,
  * which calls glGenTextures on whatever context is current). Instrumentation tests have no GL
  * context by default, so every GPU path in this file runs inside an [EglEnv] scope.
+ *
+ * TODO: AI slop. Review and refactor.
  */
 @RunWith(AndroidJUnit4::class)
 class LiteRtOnDeviceVerificationTest {

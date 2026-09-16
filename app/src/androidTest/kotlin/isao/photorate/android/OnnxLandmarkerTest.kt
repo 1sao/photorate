@@ -11,6 +11,8 @@ import org.junit.runner.RunWith
 /**
  * Runs the ONNX hand pipeline (RTMDet -> multi-rotation RTMPose -> gesture rating — see
  * [AndroidOnnxHandLandmarkerFactory]) over the shared bucket dataset via [LandmarkerTest].
+ *
+ * TODO: AI slop. Review and refactor.
  */
 @RunWith(AndroidJUnit4::class)
 class OnnxLandmarkerTest : LandmarkerTest() {

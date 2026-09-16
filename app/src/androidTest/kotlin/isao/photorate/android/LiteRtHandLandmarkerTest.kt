@@ -17,6 +17,8 @@ import org.junit.runner.RunWith
  * bucket dataset with the same expectations on host (`--backend tflite` = this test's models,
  * `--backend onnx` = rtmlib ground-truth baseline). Diff both runs with
  * `feature/imageRecognition/scripts/compare_device_log.py`.
+ *
+ * TODO: AI slop. Review and refactor.
  */
 @RunWith(AndroidJUnit4::class)
 class LiteRtHandLandmarkerTest : LandmarkerTest() {

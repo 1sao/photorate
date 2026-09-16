@@ -25,6 +25,8 @@ import org.junit.Test
  * - `uncertain_N` -> must detect gesture with exact score N, confidence == 0
  * - `rejected` -> must NOT detect any gesture
  * - `*_temp_disabled` -> excluded
+ *
+ * TODO: AI slop. Review and refactor.
  */
 abstract class LandmarkerTest {
 

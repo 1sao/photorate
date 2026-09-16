@@ -34,6 +34,8 @@ import org.junit.runner.RunWith
  *
  * Python mirror: `feature/imageRecognition/scripts/test_clip_search_regression.py` runs the same
  * two checks (top-1 ranking + scaled-decode equivalence) on host via ai-edge-litert.
+ *
+ * TODO: AI slop. Review and refactor.
  */
 @RunWith(AndroidJUnit4::class)
 class LiteRtClipSearchDatasetTest {
