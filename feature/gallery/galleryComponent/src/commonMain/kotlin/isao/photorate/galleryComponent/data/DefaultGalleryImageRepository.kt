@@ -45,6 +45,9 @@ class DefaultGalleryImageRepository(
   override fun selectCount(status: GalleryImageStatus): Flow<Long> =
     galleryImageQueries.selectCount(status).asFlow().mapToOne(Dispatchers.IO)
 
+  override fun selectImagesWithDetectionsCount(): Flow<Long> =
+    galleryImageQueries.selectImagesWithDetectionsCount().asFlow().mapToOne(Dispatchers.IO)
+
   override suspend fun upsertImage(image: GalleryImage) {
     withContext(Dispatchers.IO) {
       galleryImageQueries.insertOrUpdateImage(

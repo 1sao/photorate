@@ -29,6 +29,8 @@ interface GalleryImageRepository {
 
   fun selectCount(status: GalleryImageStatus): Flow<Long>
 
+  fun selectImagesWithDetectionsCount(): Flow<Long>
+
   suspend fun setScanFailed(uri: String)
 
   suspend fun setScanSuccessful(

@@ -76,11 +76,13 @@ class DefaultGalleryDelegate(
       galleryImageRepository.selectCount(GalleryImageStatus.PENDING),
       galleryImageRepository.selectCount(GalleryImageStatus.DONE),
       galleryImageRepository.selectCount(GalleryImageStatus.FAILED),
-    ) { pending, done, failed ->
+      galleryImageRepository.selectImagesWithDetectionsCount(),
+    ) { pending, done, failed, detected ->
       GalleryStatusCounts(
         pending = pending,
         done = done,
         failed = failed,
+        detected = detected,
       )
     }
 }
@@ -99,6 +101,7 @@ data class GalleryStatusCounts(
   val pending: Long = 0L,
   val done: Long = 0L,
   val failed: Long = 0L,
+  val detected: Long = 0L,
 ) {
   val total: Long
     get() = pending + done + failed

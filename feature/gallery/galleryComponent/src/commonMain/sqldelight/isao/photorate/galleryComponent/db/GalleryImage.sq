@@ -19,6 +19,10 @@ selectTotalCount:
 SELECT COUNT(*)
 FROM GalleryImage;
 
+selectImagesWithDetectionsCount:
+SELECT COUNT(DISTINCT imageUri)
+FROM DetectedHand;
+
 -- Select images that have scores from either a user-set score or a detected hand gesture.
 -- Only one score is selected per image, descending by priority:
 --  - A score assigned by user

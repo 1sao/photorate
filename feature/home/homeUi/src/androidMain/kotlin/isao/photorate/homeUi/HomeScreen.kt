@@ -225,7 +225,7 @@ private fun HomeScreenPreview() {
             GalleryUiState(
               imagesState =
                 ImagesState(
-                  status = GalleryStatusCounts(pending = 15L, done = 98L),
+                  status = GalleryStatusCounts(pending = 15L, detected = 98L),
                   detections =
                     listOf(
                       GalleryImageItem("content://preview/a", Score.FIVE),

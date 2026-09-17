@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 private val PendingColor = Color(0xFF9E9E9E)
-private val DoneColor = Color(0xFF4CAF50)
+private val DetectedColor = Color(0xFF4CAF50)
 
 @Composable
 fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modifier) {
@@ -77,9 +77,9 @@ fun ScanStatusCard(statusCounts: GalleryStatusCounts, modifier: Modifier = Modif
           modifier = Modifier.weight(1f),
         )
         Counter(
-          title = "Done",
-          count = statusCounts.done + statusCounts.failed,
-          color = DoneColor,
+          title = "Detected",
+          count = statusCounts.detected,
+          color = DetectedColor,
           modifier = Modifier.weight(1f),
         )
       }
@@ -192,7 +192,7 @@ private fun previewGalleryStatusFlow(
       emit(
         GalleryStatusCounts(
           pending = totalPhotos - done - failed,
-          done = done,
+          detected = done,
           failed = failed,
         ),
       )
