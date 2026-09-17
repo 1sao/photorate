@@ -9,7 +9,7 @@ CREATE TABLE DetectedHand (
     imageUri TEXT NOT NULL,
     handIndex INTEGER NOT NULL,
     score REAL AS Score NOT NULL,
-    bboxAreaFraction REAL NOT NULL,
+    area REAL NOT NULL,
     points TEXT AS List<Point> NOT NULL,
     isUncertain INTEGER AS Boolean NOT NULL DEFAULT 0, --TODO store degree of certainty instead
     -- Set when the score was entered by the user (fake hand) instead of
@@ -21,24 +21,24 @@ CREATE TABLE DetectedHand (
 
 CREATE INDEX DetectedHand_image_idx ON DetectedHand(imageUri);
 CREATE INDEX DetectedHand_score_idx ON DetectedHand(score);
-CREATE INDEX DetectedHand_bbox_area_idx ON DetectedHand(bboxAreaFraction);
+CREATE INDEX DetectedHand_area_idx ON DetectedHand(area);
 
 CREATE UNIQUE INDEX DetectedHand_user_rated_image_idx ON DetectedHand(imageUri) WHERE isUserRated = 1;
 
 -- Plain insert for real detections. Never insert with isUserRated = 1 here: the partial unique
 -- index below allows only one user-rated row per image (use upsertUserRatedHand for those).
 insertHand:
-INSERT INTO DetectedHand(imageUri, handIndex, score, bboxAreaFraction, points, isUncertain, isUserRated)
+INSERT INTO DetectedHand(imageUri, handIndex, score, area, points, isUncertain, isUserRated)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- Upsert the single user-entered (fake) hand for an image, keeping real detections.
 upsertUserRatedHand:
-INSERT INTO DetectedHand(imageUri, handIndex, score, bboxAreaFraction, points, isUncertain, isUserRated)
+INSERT INTO DetectedHand(imageUri, handIndex, score, area, points, isUncertain, isUserRated)
 VALUES (?, ?, ?, ?, ?, ?, 1)
 ON CONFLICT(imageUri) WHERE isUserRated = 1 DO UPDATE SET
   handIndex = excluded.handIndex,
   score = excluded.score,
-  bboxAreaFraction = excluded.bboxAreaFraction,
+  area = excluded.area,
   points = excluded.points,
   isUncertain = excluded.isUncertain,
   isUserRated = excluded.isUserRated;

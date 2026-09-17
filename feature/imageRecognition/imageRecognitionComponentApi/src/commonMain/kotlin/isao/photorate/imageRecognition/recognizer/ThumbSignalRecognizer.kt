@@ -11,7 +11,7 @@ class ThumbSignalRecognizer : GestureRecognizer<ThumbSignal> {
   override fun recognize(features: HandFeatures): RecognizedGesture<ThumbSignal>? {
     if (features.handSize <= 0f || features.extentRatio > MAX_EXTENT_RATIO) return null
     if (!features.allCurled) return null
-    if (features.fingers.any { it.isStraight }) return null
+    if (features.fingers.any { it.isStraight && it.isExtended }) return null
 
     with(features.thumb) {
       if (lengthRatio <= MIN_THUMB_LENGTH) return null
@@ -19,7 +19,12 @@ class ThumbSignalRecognizer : GestureRecognizer<ThumbSignal> {
       if (fingerAngle <= MIN_THUMB_FINGER_ANGLE) return null
     }
 
-    val confidence = if (features.kpMean >= CONFIDENT_KP) 1f else features.kpMean
+    val confidence =
+      if (features.meanKeypointConfidence >= CONFIDENT_KP) {
+        1f
+      } else {
+        features.meanKeypointConfidence
+      }
     return RecognizedGesture(ThumbSignal(features.thumb.tipAngle), confidence)
   }
 

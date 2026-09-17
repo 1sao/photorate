@@ -19,7 +19,7 @@ import isao.photorate.imageRecognition.gesture.ThumbOnlyGesture
 class ThumbOnlyGestureRecognizer : GestureRecognizer<ThumbOnlyGesture> {
 
   override fun recognize(features: HandFeatures): RecognizedGesture<ThumbOnlyGesture>? {
-    if (features.kpMean < MIN_KP_CONFIDENCE) return null
+    if (features.meanKeypointConfidence < MIN_KP_CONFIDENCE) return null
     if (features.handSize <= 0f || features.extentRatio > MAX_EXTENT_RATIO) return null
     if (features.fingerConfidence() >= FALLBACK_MAX_FINGER_CONF) return null
     if (features.thumbConfidence() < FALLBACK_MIN_THUMB_CONF) return null

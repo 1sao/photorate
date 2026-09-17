@@ -105,13 +105,19 @@ class HandFeatures:
 class _Finger:
     """Port of HandFeatures2.Finger (extension + straightness)."""
 
+    STRAIGHT_CURL_MAX = 1.02
+
     def __init__(self, p, pip_i, tip_i, hand_size):
         self.is_extended = dist(p[tip_i], p[WRIST]) > dist(p[pip_i], p[WRIST])
-        self.is_straight = (
-            dist(p[tip_i], p[pip_i]) / hand_size < STRAIGHT_THRESHOLD
-            if hand_size > 0
-            else False
+        mcp_i, dip_i = pip_i - 1, pip_i + 1
+        chord = dist(p[mcp_i], p[tip_i])
+        self.length = chord
+        self.curl_ratio = (
+            (dist(p[mcp_i], p[pip_i]) + dist(p[pip_i], p[dip_i]) + dist(p[dip_i], p[tip_i])) / chord
+            if chord > 0
+            else 0.0
         )
+        self.is_straight = self.curl_ratio < self.STRAIGHT_CURL_MAX
 
 
 class _Thumb:
@@ -174,7 +180,9 @@ class ThumbSignalRecognizer:
             return None
         if f.all_curled is False:
             return None
-        if any(fin.is_straight for fin in f.fingers):
+        # Open-hand bail: a straight finger that is also extended means the hand
+        # is not a fist. (Folded-in fingers can still read near-collinear.)
+        if any(fin.is_straight and fin.is_extended for fin in f.fingers):
             return None
         t = f.thumb
         if t.length_ratio <= self.MIN_THUMB_LENGTH or t.length_ratio >= self.MAX_THUMB_LENGTH:
@@ -307,37 +315,32 @@ class LenientThumbRecognizer:
 
     MIN_KP = 0.30
     MIN_LENGTH_RATIO = 0.2
-    HIGH_TIP_RANGE = (100.0, 180.0)
     LONG_THUMB_RATIO = 1.0
-    VERY_HIGH_TIP_MIN = 155.0
-    LOW_TIP_RANGE = (10.0, 35.0)
+    MIN_FINGER_ANGLE = 75.0
+    NONSENSE_FINGER_RATIO = 2.5
 
     def recognize(self, f):
         if f.kp_mean < self.MIN_KP:
             return None
         if f.hand_size <= 0:
             return None
-        t = f.thumb
-        if t.length_ratio <= self.MIN_LENGTH_RATIO:
+        lens = [fin.length for fin in f.fingers if fin.length > 0]
+        if lens and max(lens) / min(lens) > self.NONSENSE_FINGER_RATIO:
             return None
+        t = f.thumb
         has_straight = any(fin.is_straight for fin in f.fingers)
         has_extended = any(fin.is_extended for fin in f.fingers)
 
-        # Pattern A: extended fingers, high tipAngle, long thumb
-        if has_extended and self.HIGH_TIP_RANGE[0] <= t.tip_angle <= self.HIGH_TIP_RANGE[1]:
-            if t.length_ratio >= self.LONG_THUMB_RATIO:
-                return RecognizedGesture("THUMBS_UP", score_for_thumb_angle(t.tip_angle), 0.0)
-
-        # Pattern B: all curled, thumb nearly straight down
-        if f.all_curled and t.tip_angle >= self.VERY_HIGH_TIP_MIN:
+        # Pattern A: extended fingers, thumb pointing away from them, long thumb
+        if has_extended and t.finger_angle >= self.MIN_FINGER_ANGLE and t.length_ratio >= self.LONG_THUMB_RATIO:
             return RecognizedGesture("THUMBS_UP", score_for_thumb_angle(t.tip_angle), 0.0)
 
-        # Pattern C: extended fingers, low tipAngle, no straight fingers
-        if (
-                has_extended
-                and not has_straight
-                and self.LOW_TIP_RANGE[0] <= t.tip_angle <= self.LOW_TIP_RANGE[1]
-        ):
+        # Pattern B: all curled
+        if f.all_curled:
+            return RecognizedGesture("THUMBS_UP", score_for_thumb_angle(t.tip_angle), 0.0)
+
+        # Pattern C: extended fingers, no straight fingers, thumb pointing away
+        if has_extended and not has_straight and t.finger_angle >= self.MIN_FINGER_ANGLE:
             return RecognizedGesture("THUMBS_UP", score_for_thumb_angle(t.tip_angle), 0.0)
 
         return None

@@ -25,7 +25,7 @@ class DefaultDetectedHandRepository(@Provided private val queries: DetectedHandQ
         imageUri = hand.imageUri,
         handIndex = hand.handIndex,
         score = hand.score,
-        bboxAreaFraction = hand.bboxAreaFraction,
+        area = hand.area,
         points = hand.points,
         isUncertain = hand.isUncertain,
         isUserRated = hand.isUserRated,
@@ -39,7 +39,7 @@ class DefaultDetectedHandRepository(@Provided private val queries: DetectedHandQ
         imageUri = hand.imageUri,
         handIndex = hand.handIndex,
         score = hand.score,
-        bboxAreaFraction = hand.bboxAreaFraction,
+        area = hand.area,
         points = hand.points,
         isUncertain = hand.isUncertain,
       )

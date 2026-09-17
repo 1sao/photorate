@@ -121,7 +121,7 @@ class LandmarkPendingImagesUseCase(
         imageUri = imageUri,
         handIndex = index.toLong(),
         score = score,
-        bboxAreaFraction = handFeatures.bboxAreaFraction.toDouble(),
+        area = handFeatures.area.toDouble(),
         points = displayHand.points,
         isUncertain = result.confidence == 0f,
         isUserRated = false,

@@ -1,5 +1,6 @@
 package isao.photorate.imageRecognition.feature
 
+import isao.photorate.imageRecognition.feature.HandFeatures.Companion.STRAIGHT_CURL_MAX
 import isao.photorate.imageRecognition.landmark.LandmarkedImage
 import kotlin.math.PI
 import kotlin.math.abs
@@ -23,8 +24,8 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   }
   val handSize: Float = dist(points[WRIST], points[MIDDLE_MCP])
   val extentRatio: Float = max(width, height) / handSize
-  val bboxAreaFraction: Float = width * height
-  val kpMean: Float = points.sumOf { it.z.toDouble() }.toFloat() / points.size
+  val area: Float = width * height
+  val meanKeypointConfidence: Float = points.sumOf { it.z.toDouble() }.toFloat() / points.size
   val fingerSpread: Float = run {
     val tips = listOf(points[INDEX_TIP], points[MIDDLE_TIP], points[RING_TIP], points[PINKY_TIP])
     var spreadTotal = 0f
@@ -35,31 +36,40 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   }
 
   val thumb = Thumb()
-  val index = Finger(INDEX_PIP, INDEX_TIP)
-  val middle = Finger(MIDDLE_PIP, MIDDLE_TIP)
-  val ring = Finger(RING_PIP, RING_TIP)
-  val pinky = Finger(PINKY_PIP, PINKY_TIP)
+  val index = Finger(INDEX_MCP, INDEX_PIP, INDEX_TIP)
+  val middle = Finger(MIDDLE_MCP, MIDDLE_PIP, MIDDLE_TIP)
+  val ring = Finger(RING_MCP, RING_PIP, RING_TIP)
+  val pinky = Finger(PINKY_MCP, PINKY_PIP, PINKY_TIP)
   val fingers: List<Finger> = listOf(index, middle, ring, pinky)
 
   val allCurled: Boolean = fingers.none { it.isExtended }
 
-  /** A single finger identified by its PIP and TIP keypoint indices. */
-  open inner class Finger(pipIndex: Int, tipIndex: Int) {
+  /** A single finger identified by its MCP, PIP and TIP keypoint indices. */
+  open inner class Finger(mcpIndex: Int, pipIndex: Int, tipIndex: Int) {
     /** Finger is extended when its tip is farther from the wrist than its PIP joint. */
     val isExtended: Boolean =
       dist(points[tipIndex], points[WRIST]) > dist(points[pipIndex], points[WRIST])
 
+    val length: Float = dist(points[mcpIndex], points[tipIndex])
+
     /**
-     * Finger is straight when PIP→TIP distance / handSize < 0.25. A straight finger is both
-     * extended and not curled around an object.
+     * Finger is straight when its jointed path length is within [STRAIGHT_CURL_MAX] of the MCP→TIP
+     * chord (curl ratio ≈ 1.0 = perfectly straight).
      */
     val isStraight: Boolean =
-      if (handSize > 0f) dist(points[tipIndex], points[pipIndex]) / handSize < STRAIGHT_THRESHOLD
-      else false
+      if (length > 0f) {
+        val path =
+          dist(points[mcpIndex], points[pipIndex]) +
+            dist(points[pipIndex], points[pipIndex + 1]) +
+            dist(points[pipIndex + 1], points[tipIndex])
+        path / length < STRAIGHT_CURL_MAX
+      } else {
+        false
+      }
   }
 
   /** Thumb-specific features beyond the basic [Finger] extension/straightness checks. */
-  inner class Thumb : Finger(THUMB_IP, THUMB_TIP) {
+  inner class Thumb : Finger(THUMB_MCP, THUMB_IP, THUMB_TIP) {
     /** Thumb length ratio: MCP→TIP distance / handSize. */
     val lengthRatio: Float = dist(points[THUMB_MCP], points[THUMB_TIP]) / handSize
 
@@ -103,7 +113,7 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
   }
 
   companion object {
-    private const val STRAIGHT_THRESHOLD = 0.25f
+    private const val STRAIGHT_CURL_MAX = 1.02f
     private const val RAD_TO_DEG = 180.0 / PI
 
     const val NUM_LANDMARKS = 21
@@ -119,8 +129,10 @@ class HandFeatures(val hand: LandmarkedImage.Hand) {
     const val MIDDLE_MCP = 9
     const val MIDDLE_PIP = 10
     const val MIDDLE_TIP = 12
+    const val RING_MCP = 13
     const val RING_PIP = 14
     const val RING_TIP = 16
+    const val PINKY_MCP = 17
     const val PINKY_PIP = 18
     const val PINKY_TIP = 20
   }

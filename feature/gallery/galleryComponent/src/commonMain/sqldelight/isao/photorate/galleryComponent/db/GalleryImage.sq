@@ -37,7 +37,7 @@ scoresSelection AS (
     JOIN DetectedHand dh ON dh.imageUri = gi.uri
     CROSS JOIN ConfigInstance
     WHERE gi.status != 'IGNORED'
-      AND dh.bboxAreaFraction >= ConfigInstance.min_bboxAreaFraction
+      AND dh.area >= ConfigInstance.min_bboxAreaFraction
 ),
 bestScoreSelection AS (
     SELECT uri, scannedAt, createdAt, modifiedAt, score AS bestScore, isCertain

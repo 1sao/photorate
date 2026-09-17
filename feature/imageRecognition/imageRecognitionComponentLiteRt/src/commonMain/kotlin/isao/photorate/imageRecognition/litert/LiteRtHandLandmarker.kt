@@ -138,7 +138,7 @@ class LiteRtHandLandmarker(
 
     return when {
       recognized != null -> GestureResult(recognized.first, recognized.second, hand)
-      features.kpMean >= MIN_KP_CONFIDENCE -> GestureResult(null, 0f, hand)
+      features.meanKeypointConfidence >= MIN_KP_CONFIDENCE -> GestureResult(null, 0f, hand)
       else -> null
     }
   }
@@ -318,6 +318,8 @@ class LiteRtHandLandmarker(
     val RTMLIB_DET_STD = floatArrayOf(58.395f, 57.12f, 57.375f)
     val RTMLIB_POSE_MEAN = floatArrayOf(123.675f, 116.28f, 103.53f)
     val RTMLIB_POSE_STD = floatArrayOf(58.395f, 57.12f, 57.375f)
+
+    // TODO avoid hardcoded sizes, image size might change
     const val MIN_HAND_SIZE = 40f
     const val MIN_THUMB_CONF = 0.35f
   }

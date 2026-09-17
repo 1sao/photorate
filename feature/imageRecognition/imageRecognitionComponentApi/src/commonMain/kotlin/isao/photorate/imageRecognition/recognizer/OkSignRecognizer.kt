@@ -24,7 +24,8 @@ class OkSignRecognizer : GestureRecognizer<OkSign> {
       return null
     }
 
-    val confidence = if (features.kpMean >= CONFIDENT_KP) 1f else features.kpMean
+    val confidence =
+      if (features.meanKeypointConfidence >= CONFIDENT_KP) 1f else features.meanKeypointConfidence
     return RecognizedGesture(OkSign(), confidence)
   }
 
