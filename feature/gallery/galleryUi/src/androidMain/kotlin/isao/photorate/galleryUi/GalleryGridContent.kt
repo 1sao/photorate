@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.request.crossfade
 import isao.photorate.coreUi.composable.LocalSharedTransitionScope
 import isao.photorate.coreUi.composable.PhotoRatePreview
 import isao.photorate.coreUi.composable.imageSharedContentKey
@@ -205,6 +206,7 @@ private fun GalleryCardImage(
       .data(uri)
       .placeholderMemoryCacheKey(imageKey)
       .memoryCacheKey(imageKey)
+      .crossfade(true)
       .build()
 
   val sharedBounds =
