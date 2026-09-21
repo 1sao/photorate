@@ -36,9 +36,10 @@ kotlin {
         }
       }
       it.binaries.framework {
-        isStatic = true // TODO revert?
+        isStatic = false
         linkerOpts("-lsqlite3")
         export(libs.touchlab.kermit.simple)
+        export(project(":core"))
         if (it.name == "iosArm64" || it.name == "iosSimulatorArm64") {
           // The user's LiteRT C++ dylibs (ml/litert_cpp) feed kmplitert's
           // `-lLiteRt` cinterop linkerOpt. Stage a per-target copy named
@@ -83,27 +84,29 @@ kotlin {
   //     }
   // }
 
-  swiftPMDependencies {
-    swiftPackage(
-      url = url("https://github.com/jordond/SwiftTasksVision.git"),
-      version = branch("main"),
-      products = listOf(product("MediaPipeTasksVision")),
-    )
-  }
-
+  // Can be used to add MediaPipeTasksVision or other swiftPM dependencies
+  //  swiftPMDependencies {
+  //    swiftPackage(
+  //      url = url("https://github.com/jordond/SwiftTasksVision.git"),
+  //      version = branch("main"),
+  //      products = listOf(product("MediaPipeTasksVision")),
+  //    )
+  //  }
   sourceSets {
+    /** Image recognition backend: 'litert' or 'onnx' (gradle.properties). */
+    val backend = providers.gradleProperty("photorate.backend").getOrElse("litert")
+    check(backend in setOf("litert", "onnx")) {
+      "Unknown photorate.backend '$backend' (expected 'litert' or 'onnx')"
+    }
+    val backendSrcDir = file("src/backend${backend.replaceFirstChar(Char::uppercase)}Main")
+    getByName("androidMain").kotlin.srcDir(backendSrcDir)
     androidMain.dependencies {
-      // The LiteRT provider backs
-      // the PlatformModule's
-      // landmarker + search
-      // factories on Android (custom
-      // CompiledModel code) and iOS
-      // (kmplitert). It has no
-      // iosX64 target (kmplitert
-      // publishes none),
-      // so it stays out of the
-      // iosX64-only classpath.
-      implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+      when (backend) {
+        "litert" ->
+          implementation(projects.feature.imageRecognition.imageRecognitionComponentLiteRt)
+
+        "onnx" -> implementation(projects.feature.imageRecognition.imageRecognitionComponentOnnx)
+      }
       implementation(projects.feature.tracking.trackingComponentFirebase)
       implementation(compose.components.resources)
       implementation(libs.compose.runtime)
@@ -116,6 +119,7 @@ kotlin {
     iosMain.dependencies {
       implementation(libs.sqlDelight.native)
       api(libs.touchlab.kermit.simple)
+      api(project(":core"))
     }
     // LiteRT on iOS: kmplitert-core publishes iosArm64 +
     // iosSimulatorArm64
