@@ -73,9 +73,9 @@ fun GalleryPermissionCard(
       Text(
         text =
           if (isPartialGalleryAccess) {
-            "PhotoRate can only see the photos you selected. You can change which photos are visible at any time. Your photos never leave your device."
+            "Photo Rate can only see the photos you selected. You can change which photos are visible at any time. Your photos never leave your device."
           } else {
-            "PhotoRate needs access to your gallery to look for scored images. Your photos never leave your device."
+            "Photo Rate needs access to your gallery to look for scored images. Your photos never leave your device."
           },
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onPrimaryContainer,

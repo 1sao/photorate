@@ -1,4 +1,4 @@
-# PhotoRate2
+# Photo Rate
 
 Kotlin Multiplatform (Android + iOS) app that scans every image in the device gallery for hands,
 then displays those with a valid thumb-rating score (1–5).
