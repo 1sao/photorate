@@ -13,19 +13,13 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(
-      url: "https://github.com/jordond/SwiftTasksVision.git",
-      branch: "main"
-    )
+      .package(path: "subpackages/_shared")
   ],
   targets: [
     .target(
       name: "KotlinMultiplatformLinkedPackage",
       dependencies: [
-        .product(
-          name: "MediaPipeTasksVision",
-          package: "SwiftTasksVision"
-        )
+          .product(name: "_shared", package: "_shared")
       ]
     )
   ]

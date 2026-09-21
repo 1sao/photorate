@@ -22,8 +22,6 @@ import kotlin.math.min
  */
 object LiteRtRtmModels {
   const val DETECTOR_ASSET = "rtmdet_hand_320_f32.tflite"
-  const val RTMLIB_DETECTOR_ASSET = "rtmlib_rtmdet_hand_320_f32.tflite"
-  const val RTMLIB_DETECTOR_WITH_NMS_ASSET = "rtmlib_rtmdet_hand_320_with_nms_f32.tflite"
   const val RTMPOSE_ASSET = "rtmpose_hand_256_f32.tflite"
 
   // Raw anchor output shapes (NCHW; outputs are transposed to NHWC on device).

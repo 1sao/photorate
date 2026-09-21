@@ -3,14 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		46A5B5EF26AF54F7002EFEAA /* BreedListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A5B5EE26AF54F7002EFEAA /* BreedListScreen.swift */; };
-		46A5B60826B04921002EFEAA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 46A5B60626B04920002EFEAA /* Main.storyboard */; };
+		3AAFA81392134042A79D1E1C /* ThumbRatingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25AF3F1E36C041AF815D2D21 /* ThumbRatingScreen.swift */; };
 		46B5284D249C5CF400A7725D /* Koin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B5284C249C5CF400A7725D /* Koin.swift */; };
-		BB0000000000000000000001 /* ThumbRatingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* ThumbRatingScreen.swift */; };
 		D4EC3EAD30010F610091579C /* KotlinMultiplatformLinkedPackage in Frameworks */ = {isa = PBXBuildFile; productRef = D4EC3EAC30010F610091579C /* KotlinMultiplatformLinkedPackage */; };
 		F1465F0123AA94BF0055F7C3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */; };
 		F1465F0A23AA94BF0055F7C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1465F0923AA94BF0055F7C3 /* Assets.xcassets */; };
@@ -37,10 +35,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		46A5B5EE26AF54F7002EFEAA /* BreedListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreedListScreen.swift; sourceTree = "<group>"; };
-		46A5B60726B04920002EFEAA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		25AF3F1E36C041AF815D2D21 /* ThumbRatingScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThumbRatingScreen.swift; sourceTree = "<group>"; };
 		46B5284C249C5CF400A7725D /* Koin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Koin.swift; sourceTree = "<group>"; };
-		BB0000000000000000000002 /* ThumbRatingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbRatingScreen.swift; sourceTree = "<group>"; };
 		F1465EFD23AA94BF0055F7C3 /* PhotoRateiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoRateiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F1465F0923AA94BF0055F7C3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -53,6 +49,10 @@
 		F1465F2223AA94C00055F7C3 /* PhotoRateiOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoRateiOSUITests.swift; sourceTree = "<group>"; };
 		F1465F2423AA94C00055F7C3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D42FBB5130612FC400E4A39A /* feature */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = feature; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F1465EFA23AA94BF0055F7C3 /* Frameworks */ = {
@@ -111,14 +111,13 @@
 		F1465EFF23AA94BF0055F7C3 /* PhotoRateiOS */ = {
 			isa = PBXGroup;
 			children = (
+				D42FBB5130612FC400E4A39A /* feature */,
 				F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */,
-				46A5B60626B04920002EFEAA /* Main.storyboard */,
 				46B5284C249C5CF400A7725D /* Koin.swift */,
 				F1465F0923AA94BF0055F7C3 /* Assets.xcassets */,
 				F1465F0B23AA94BF0055F7C3 /* LaunchScreen.storyboard */,
 				F1465F0E23AA94BF0055F7C3 /* Info.plist */,
-				46A5B5EE26AF54F7002EFEAA /* BreedListScreen.swift */,
-				BB0000000000000000000002 /* ThumbRatingScreen.swift */,
+				25AF3F1E36C041AF815D2D21 /* ThumbRatingScreen.swift */,
 			);
 			path = PhotoRateiOS;
 			sourceTree = "<group>";
@@ -149,7 +148,7 @@
 			buildConfigurationList = F1465F2723AA94C00055F7C3 /* Build configuration list for PBXNativeTarget "PhotoRateiOS" */;
 			buildPhases = (
 				9C16E6F82C0618F100154B87 /* ShellScript */,
-				AA0000000000000000000001 /* ShellScript */,
+				28486F1DF10DDE57A0B78907 /* Stage LiteRT Models & Dylib */,
 				F1465EF923AA94BF0055F7C3 /* Sources */,
 				F1465EFA23AA94BF0055F7C3 /* Frameworks */,
 				F1465EFB23AA94BF0055F7C3 /* Resources */,
@@ -157,6 +156,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D42FBB5130612FC400E4A39A /* feature */,
 			);
 			name = PhotoRateiOS;
 			packageProductDependencies = (
@@ -253,7 +255,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				46A5B60826B04921002EFEAA /* Main.storyboard in Resources */,
 				F1465F0D23AA94BF0055F7C3 /* LaunchScreen.storyboard in Resources */,
 				F1465F0A23AA94BF0055F7C3 /* Assets.xcassets in Resources */,
 			);
@@ -276,6 +277,33 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		28486F1DF10DDE57A0B78907 /* Stage LiteRT Models & Dylib */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				ml/litert/converted/rtmdet_hand_320_f32.tflite,
+				ml/litert/converted/rtmpose_hand_256_f32.tflite,
+				ml/litert/converted/clip_s1_combined_f16.tflite,
+				ml/litert/tokenizer/tokenizer.json,
+			);
+			name = "Stage LiteRT Models & Dylib";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/rtmdet_hand_320_f32.tflite",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/rtmpose_hand_256_f32.tflite",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/clip_s1_combined_f16.tflite",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/tokenizer.json",
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libLiteRt.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "set -euo pipefail\n\nREPO_ROOT=\"$SRCROOT/..\"\nMODELS_DIR=\"$REPO_ROOT/ml/litert/converted\"\nTOKENIZER=\"$REPO_ROOT/ml/litert/tokenizer/tokenizer.json\"\nRESOURCES_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\nMODEL_FILES=(\n  \"rtmdet_hand_320_f32.tflite\"\n  \"rtmpose_hand_256_f32.tflite\"\n  \"clip_s1_combined_f16.tflite\"\n)\n\nfor f in \"${MODEL_FILES[@]}\"; do\n  if [ ! -f \"$MODELS_DIR/$f\" ]; then\n    echo \"error: missing model $MODELS_DIR/$f\" >&2\n    exit 1\n  fi\ndone\nif [ ! -f \"$TOKENIZER\" ]; then\n  echo \"error: missing tokenizer $TOKENIZER\" >&2\n  exit 1\nfi\n\ncase \"$PLATFORM_NAME\" in\n  iphoneos) DYLIB_SRC=\"$REPO_ROOT/ml/litert_cpp/libLiteRt-ios.dylib\" ;;\n  *)        DYLIB_SRC=\"$REPO_ROOT/ml/litert_cpp/libLiteRt-simulator.dylib\" ;;\nesac\nif [ ! -f \"$DYLIB_SRC\" ]; then\n  echo \"error: missing dylib $DYLIB_SRC\" >&2\n  exit 1\nfi\n\nmkdir -p \"$RESOURCES_DIR\" \"$FRAMEWORKS_DIR\"\n\nfor f in \"${MODEL_FILES[@]}\"; do\n  cp -c \"$MODELS_DIR/$f\" \"$RESOURCES_DIR/$f\"\ndone\ncp -c \"$TOKENIZER\" \"$RESOURCES_DIR/tokenizer.json\"\n\ncp -c \"$DYLIB_SRC\" \"$FRAMEWORKS_DIR/libLiteRt.dylib\"\nif command -v codesign > /dev/null; then\n  codesign --force --sign - --timestamp \"$FRAMEWORKS_DIR/libLiteRt.dylib\" 2>/dev/null || true\nfi\n\necho \"info: staged LiteRT models + libLiteRt.dylib\"\n";
+		};
 		9C16E6F82C0618F100154B87 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -291,24 +319,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew embedAndSignAppleFrameworkForXcode";
-		};
-		AA0000000000000000000001 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "FRAMEWORK_NAME=\"MediaPipeCommonGraphLibraries\"\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\nif [ -d \"$FRAMEWORKS_DIR/$FRAMEWORK_NAME.framework\" ]; then\n  echo \"info: $FRAMEWORK_NAME.framework already embedded.\"\n  exit 0\nfi\n\nFRAMEWORK_PATH=$(find \"${BUILD_DIR}/../../SourcePackages\" -path \"*/$FRAMEWORK_NAME.xcframework/ios-*_*/$FRAMEWORK_NAME.framework\" -type d 2>/dev/null | head -1)\n\nif [ -z \"$FRAMEWORK_PATH\" ]; then\n  echo \"error: $FRAMEWORK_NAME.framework not found in SourcePackages.\"\n  exit 1\nfi\n\necho \"info: Embedding $FRAMEWORK_NAME.framework from $FRAMEWORK_PATH\"\nmkdir -p \"$FRAMEWORKS_DIR\"\ncp -R \"$FRAMEWORK_PATH\" \"$FRAMEWORKS_DIR/\"\n\nif command -v codesign &> /dev/null; then\n  codesign --force --sign \"-\" --timestamp --identifier \"com.swift-tasks.$FRAMEWORK_NAME\" \"$FRAMEWORKS_DIR/$FRAMEWORK_NAME.framework\" 2>/dev/null || true\nfi\n";
+			shellScript = "export GRADLE_USER_HOME=\"${HOME}/.gradle\"\nexport KONAN_DATA_DIR=\"${SRCROOT}/../.konan\"\nexport JAVA_TOOL_OPTIONS=\"-Djava.net.preferIPv4Stack=true -Duser.home=${SRCROOT}/../.fakehome\"\nif [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -318,9 +329,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				46B5284D249C5CF400A7725D /* Koin.swift in Sources */,
-				46A5B5EF26AF54F7002EFEAA /* BreedListScreen.swift in Sources */,
 				F1465F0123AA94BF0055F7C3 /* AppDelegate.swift in Sources */,
-				BB0000000000000000000001 /* ThumbRatingScreen.swift in Sources */,
+				3AAFA81392134042A79D1E1C /* ThumbRatingScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,14 +366,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		46A5B60626B04920002EFEAA /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				46A5B60726B04920002EFEAA /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		F1465F0B23AA94BF0055F7C3 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -414,6 +416,7 @@
 				DEVELOPMENT_TEAM = 6A5MWU525T;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -478,6 +481,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -504,23 +508,23 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/SwiftTasksVision/Dependencies/MediaPipeCommonGraphLibraries.xcframework/ios-arm64_x86_64-simulator",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = PhotoRateiOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-l\"c++\"",
 					"-lsqlite3",
-					"-framework",
-					MediaPipeCommonGraphLibraries,
+					"-lLiteRt",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = isao.photorate.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -536,23 +540,23 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/SwiftTasksVision/Dependencies/MediaPipeCommonGraphLibraries.xcframework/ios-arm64_x86_64-simulator",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = PhotoRateiOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-l\"c++\"",
 					"-lsqlite3",
-					"-framework",
-					MediaPipeCommonGraphLibraries,
+					"-lLiteRt",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = isao.photorate.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";

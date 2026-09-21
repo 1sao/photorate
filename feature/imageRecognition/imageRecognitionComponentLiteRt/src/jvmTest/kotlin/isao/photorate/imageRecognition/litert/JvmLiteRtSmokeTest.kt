@@ -1,7 +1,6 @@
 package isao.photorate.imageRecognition.litert
 
 import isao.photorate.imageRecognition.gesture.ThumbSignal
-import isao.photorate.imageRecognition.landmark.LandmarkModel
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
@@ -28,7 +27,7 @@ class JvmLiteRtSmokeTest {
     assertTrue(pose.exists(), "pose model missing: $pose")
 
     val factory = JvmLiteRtHandLandmarkerFactory(modelsDir.path)
-    val landmarker = factory.createFromOptions(LandmarkModel.LITERT.defaultOptions)
+    val landmarker = factory.create()
     try {
       val sample = File(samplesDir, "5/5_trope.jpg")
       assertTrue(sample.exists(), "sample missing: $sample")

@@ -9,18 +9,17 @@ import arrow.core.raise.recover
 import isao.photorate.galleryComponent.db.DetectedHand
 import isao.photorate.galleryComponent.db.GalleryImage
 import isao.photorate.imageRecognition.GestureResult
+import isao.photorate.imageRecognition.RecognitionBackend
 import isao.photorate.imageRecognition.ResourceFailure
 import isao.photorate.imageRecognition.feature.HandFeatures
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import isao.photorate.imageRecognition.landmark.LandmarkImageLoader
 import isao.photorate.imageRecognition.landmark.LandmarkedImage
-import isao.photorate.imageRecognition.landmark.LandmarkerFactoryProvider
 import isao.photorate.imageRecognition.landmark.heightPx
 import isao.photorate.imageRecognition.landmark.widthPx
 import isao.photorate.imageRecognition.recognizer.GestureRecognizer
-import isao.photorate.imageRecognition.recognizer.GestureRecognizerProvider
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -44,19 +43,17 @@ import org.koin.core.annotation.Provided
 @Factory
 class LandmarkPendingImagesUseCase(
   private val galleryImageRepository: GalleryImageRepository,
-  @Provided private val landmarkerFactoryProvider: LandmarkerFactoryProvider,
-  @Provided private val gestureRecognizerProvider: GestureRecognizerProvider,
+  @Provided private val backend: RecognitionBackend,
   private val imageLoader: LandmarkImageLoader,
 ) {
   suspend operator fun invoke() = iorNel {
     withContext(Dispatchers.Default) {
-      val model = landmarkerFactoryProvider.defaultModel
-      val options = model.defaultOptions
-      val recognizers = gestureRecognizerProvider.createRecognizers()
+      val options = CommonLandmarkerOptions()
+      val recognizers = backend.gestureRecognizerProvider.createRecognizers()
 
       var processedCount = 0
 
-      landmarkerFactoryProvider.factoryFor(model).createFromOptions(options).use { landmarker ->
+      backend.handLandmarkerFactory.create(options).use { landmarker ->
         do {
           var unprocessed = galleryImageRepository.getUnprocessedImages().first()
           forEachAccumulating(unprocessed) { image ->
@@ -84,7 +81,7 @@ class LandmarkPendingImagesUseCase(
     landmarker: HandLandmarker,
     image: GalleryImage,
     recognizers: List<GestureRecognizer<*>>,
-    options: HandLandmarkerOptions,
+    options: CommonLandmarkerOptions,
   ) {
     recover(
       {

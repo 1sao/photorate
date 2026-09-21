@@ -2,9 +2,9 @@ package isao.photorate.imageRecognition.litert
 
 import android.content.Context
 import android.util.Log
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
 import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.search.AppClipSearch
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import javax.inject.Inject
@@ -12,13 +12,12 @@ import kotlin.system.measureTimeMillis
 
 /**
  * Android [HandLandmarkerFactory] backed by the shared LiteRT pipeline and the custom CompiledModel
- * engine (GPU-first, CPU fallback). The pipeline itself lives in commonMain — this factory only
- * wires the two engines + options.
+ * engine (GPU-first, CPU fallback).
  */
 class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context: Context) :
   HandLandmarkerFactory {
 
-  override fun createFromOptions(options: HandLandmarkerOptions): HandLandmarker {
+  override fun create(options: CommonLandmarkerOptions): HandLandmarker {
     initAssetContext(context)
     val landmarker: LiteRtHandLandmarker
     measureTimeMillis {
@@ -34,6 +33,7 @@ class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context
               ModelSource.Asset(LiteRtRtmModels.RTMPOSE_ASSET),
               EngineConfig(LiteRtAccelerator.GPU),
             ),
+          options = options,
         )
     }
       .also { Log.d(TAG, "Initialized LiteRT hand pipeline in $it ms (GPU first, CPU fallback)") }
@@ -47,8 +47,7 @@ class AndroidLiteRtHandLandmarkerFactory @Inject constructor(private val context
 
 /**
  * Android [AppClipSearchFactory] backed by the shared LiteRT session and the custom CompiledModel
- * engine (CPU+GPU hybrid, CPU fallback). The session itself lives in commonMain — this factory only
- * wires the engine + tokenizer.
+ * engine (CPU+GPU hybrid, CPU fallback).
  */
 class AndroidLiteRtAppClipSearchFactory @Inject constructor(private val context: Context) :
   AppClipSearchFactory {

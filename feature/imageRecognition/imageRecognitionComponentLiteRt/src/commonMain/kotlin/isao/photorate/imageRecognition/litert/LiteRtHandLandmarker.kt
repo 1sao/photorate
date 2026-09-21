@@ -3,6 +3,7 @@ package isao.photorate.imageRecognition.litert
 import isao.photorate.imageRecognition.GestureResult
 import isao.photorate.imageRecognition.feature.HandFeatures
 import isao.photorate.imageRecognition.feature.thumbConfidence
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
 import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import isao.photorate.imageRecognition.landmark.LandmarkedImage
@@ -29,6 +30,7 @@ import kotlin.math.min
 class LiteRtHandLandmarker(
   private val detector: LiteRtEngine,
   private val pose: LiteRtEngine,
+  private val options: CommonLandmarkerOptions,
 ) : HandLandmarker, AutoCloseable {
 
   private val detectorTensor =
@@ -57,12 +59,12 @@ class LiteRtHandLandmarker(
     val image = candidate.toEngineImage()
     val boxes = detectBoxes(image)
     val hands = ArrayList<LandmarkedImage.Hand>()
-    for ((box, score) in boxes.take(MAX_HANDS)) {
-      if (score < MIN_DET) continue
+    for ((box, score) in boxes.take(options.maxNumHands)) {
+      if (score < options.minHandDetectionConfidence) continue
       val kpResult = rtmposeLandmarks(image, box) ?: continue
       val points = kpResult.keypoints
       val kpMean = points.sumOf { it.z.toDouble() }.toFloat() / NUM_LANDMARKS
-      if (kpMean < MIN_KP_CONFIDENCE) continue
+      if (kpMean < options.minHandKpConfidence) continue
       val hand = LandmarkedImage.Hand(points, rotationDegrees = 0f)
       val features = HandFeatures(hand)
       if (features.handSize < MIN_HAND_SIZE) continue
@@ -85,12 +87,12 @@ class LiteRtHandLandmarker(
     val boxes = detectBoxes(image)
     val results = ArrayList<GestureResult>()
     // Select the first and the second option boxes
-    for ((index, entry) in boxes.take(MAX_HANDS).withIndex()) {
+    for ((index, entry) in boxes.take(options.maxNumHands).withIndex()) {
       val (box, score) = entry
-      val isTier2 = index > 0 && score < MIN_DET
+      val isTier2 = index > 0 && score < options.minHandDetectionConfidence
       if (isTier2) {
         if (score < TIER2_MIN_DET) continue
-      } else if (score < MIN_DET) {
+      } else if (score < options.minHandDetectionConfidence) {
         continue
       }
       val handResult = classifyBox(image, box, recognizers) ?: continue
@@ -138,7 +140,8 @@ class LiteRtHandLandmarker(
 
     return when {
       recognized != null -> GestureResult(recognized.first, recognized.second, hand)
-      features.meanKeypointConfidence >= MIN_KP_CONFIDENCE -> GestureResult(null, 0f, hand)
+      features.meanKeypointConfidence >= options.minHandKpConfidence ->
+        GestureResult(null, 0f, hand)
       else -> null
     }
   }
@@ -305,8 +308,6 @@ class LiteRtHandLandmarker(
     const val MIN_HAND_TO_BOX_RATIO = 0.15f
     const val MAX_THUMB_LENGTH_RATIO = 2f
 
-    const val MIN_KP_CONFIDENCE = 0.30f
-    const val MAX_HANDS = 2
     const val MIN_BOX_SIDE = 8
     const val NUM_LANDMARKS = 21
     const val SIMCC_SIZE = 512

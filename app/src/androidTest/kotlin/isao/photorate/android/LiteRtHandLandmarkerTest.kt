@@ -1,8 +1,8 @@
 package isao.photorate.android
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.litert.AndroidLiteRtHandLandmarkerFactory
 import isao.photorate.imageRecognition.litert.LiteRtGestureRecognizerProvider
 import isao.photorate.imageRecognition.recognizer.GestureRecognizer
@@ -30,8 +30,8 @@ class LiteRtHandLandmarkerTest : LandmarkerTest() {
 
   override fun createLandmarker(): HandLandmarker =
     AndroidLiteRtHandLandmarkerFactory(context)
-      .createFromOptions(
-        HandLandmarkerOptions(
+      .create(
+        CommonLandmarkerOptions(
           maxNumHands = 2,
           minHandDetectionConfidence = 0.25f,
           minHandKpConfidence = 0.3f,

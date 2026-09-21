@@ -65,14 +65,6 @@ kotlin {
     }
   }
 
-  swiftPMDependencies {
-    swiftPackage(
-      url = url("https://github.com/jordond/SwiftTasksVision.git"),
-      version = branch("main"),
-      products = listOf(product("MediaPipeTasksVision")),
-    )
-  }
-
   sourceSets {
     all {
       languageSettings.apply {

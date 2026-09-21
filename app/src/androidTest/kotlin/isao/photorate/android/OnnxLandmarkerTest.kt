@@ -1,8 +1,8 @@
 package isao.photorate.android
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.onnx.AndroidOnnxHandLandmarkerFactory
 import isao.photorate.imageRecognition.onnx.OnnxGestureRecognizerProvider
 import isao.photorate.imageRecognition.recognizer.GestureRecognizer
@@ -24,8 +24,8 @@ class OnnxLandmarkerTest : LandmarkerTest() {
 
   override fun createLandmarker(): HandLandmarker =
     AndroidOnnxHandLandmarkerFactory(context)
-      .createFromOptions(
-        HandLandmarkerOptions(
+      .create(
+        CommonLandmarkerOptions(
           maxNumHands = 2,
           minHandDetectionConfidence = 0.25f,
           minHandKpConfidence = 0.3f,

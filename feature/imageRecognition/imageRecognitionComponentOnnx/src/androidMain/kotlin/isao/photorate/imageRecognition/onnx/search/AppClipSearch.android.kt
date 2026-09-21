@@ -18,13 +18,6 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
-/**
- * ONNX-backed [AppClipSearchFactory] (MobileCLIP search). Mirrors the hand-landmarker architecture
- * ([isao.photorate.imageRecognition.landmark.HandLandmarkerFactory]): the factory is
- * Android-specific, injected with a [Context], and registered in Koin from the shared module's
- * [isao.photorate.PlatformModule] when the ONNX provider is active (currently the app uses the
- * LiteRT provider — see `photosLiteRT`).
- */
 class AndroidAppClipSearchFactory @Inject constructor(private val context: Context) :
   AppClipSearchFactory {
 
@@ -40,8 +33,6 @@ class AndroidAppClipSearchFactory @Inject constructor(private val context: Conte
   companion object {
     private const val TAG = "AndroidAppClipSearchFactory"
 
-    // Confirmed-source Xenova exports (ml/original_models), alongside the
-    // tokenizer at the asset root.
     const val TEXT_MODEL_ASSET = "text_model_fp16/text_model_fp16.onnx"
     const val VISION_MODEL_ASSET = "vision_model_fp16/vision_model_fp16.onnx"
     const val TOKENIZER_ASSET = "tokenizer.json"
@@ -110,9 +101,8 @@ internal constructor(
   }
 
   /**
-   * Replicates CLIPFeatureExtractor: resize shortest edge to 224, center crop 224x224, rescale by
-   * 1/255 (no ImageNet normalization for this model). Returns a CHW float32 buffer matching
-   * `pixel_values`.
+   * Resize the shortest edge to 224, center crop 224x224, rescale by 1/255 (no ImageNet
+   * normalization for this model). Returns a CHW float32 buffer matching `pixel_values`.
    */
   private fun preprocess(bitmap: Bitmap): FloatBuffer {
     val w = bitmap.width
@@ -168,7 +158,7 @@ internal constructor(
   }
 }
 
-private fun java.nio.FloatBuffer.takeFloatArray(): FloatArray {
+private fun FloatBuffer.takeFloatArray(): FloatArray {
   val array = FloatArray(remaining())
   get(array)
   return array

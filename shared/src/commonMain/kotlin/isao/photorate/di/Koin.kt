@@ -3,29 +3,49 @@ package isao.photorate.di
 import co.touchlab.kermit.Logger
 import isao.photorate.core.AppInfo
 import isao.photorate.homeUi.HomeUIModule
-import isao.photorate.imageRecognition.landmark.LandmarkerFactoryProvider
+import isao.photorate.imageRecognition.RecognitionBackend
 import isao.photorate.imageRecognition.recognizer.GestureRecognizerProvider
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import org.koin.core.KoinApplication
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
+import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
-import org.koin.core.scope.Scope
 import org.koin.plugin.module.dsl.startKoin
 
 @org.koin.core.annotation.KoinApplication(modules = [AppModule::class]) class MyApp
 
-@Module(includes = [HomeUIModule::class, PlatformModule::class, DatabaseModule::class])
+@Module(
+  includes =
+    [
+      HomeUIModule::class,
+      PlatformModule::class,
+      DatabaseModule::class,
+      RecognitionBackendModule::class,
+    ],
+)
 @ComponentScan("isao.photorate")
-class AppModule
+class AppModule {
+  // Utilities to avoid injecting the whole backend at once
+  @Single
+  fun provideLandmarkerFactoryProvider(@Provided backend: RecognitionBackend) =
+    backend.handLandmarkerFactory
+
+  @Single
+  fun provideGestureRecognizerProvider(
+    @Provided backend: RecognitionBackend
+  ): GestureRecognizerProvider = backend.gestureRecognizerProvider
+
+  @Single
+  fun provideAppClipSearchFactory(@Provided backend: RecognitionBackend): AppClipSearchFactory =
+    backend.appClipSearchFactory
+}
+
+@Module expect class RecognitionBackendModule
 
 @Module
 expect class PlatformModule() {
-  @Single fun provideLandmarkerFactoryProvider(scope: Scope): LandmarkerFactoryProvider
-
-  @Single fun provideGestureRecognizerProvider(): GestureRecognizerProvider
-
-  @Single fun provideAppClipSearchFactory(scope: Scope): AppClipSearchFactory
+  // Put platform-specific dependencies here
 }
 
 fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}): KoinApplication {

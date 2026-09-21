@@ -1,8 +1,8 @@
 package isao.photorate.imageRecognition.litert
 
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
 import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.search.AppClipSearch
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 
@@ -12,7 +12,7 @@ import isao.photorate.imageRecognition.search.AppClipSearchFactory
  */
 class IosLiteRtHandLandmarkerFactory(private val modelsDir: String) : HandLandmarkerFactory {
 
-  override fun createFromOptions(options: HandLandmarkerOptions): HandLandmarker =
+  override fun create(options: CommonLandmarkerOptions): HandLandmarker =
     LiteRtHandLandmarker(
       detector =
         createLiteRtEngine(
@@ -24,6 +24,7 @@ class IosLiteRtHandLandmarkerFactory(private val modelsDir: String) : HandLandma
           ModelSource.File("$modelsDir/${LiteRtRtmModels.RTMPOSE_ASSET}"),
           EngineConfig(LiteRtAccelerator.GPU),
         ),
+      options = options,
     )
 }
 

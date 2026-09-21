@@ -60,5 +60,21 @@ ml/litert/scripts/test/output/
 # Skills for agents
 skills/
 
+# Project-local toolchain dirs used to run builds in a sandbox
+.konan/
+.fakehome/
+
+# npx/npm caches for additional tools.
+.npm-cache/
+
+# SwiftPM checkout cache.
+ios/.spm-checkouts/
+
+# Generated ML analysis outputs (overlays, benchmark result JSONs).
+feature/imageRecognition/scripts/output/
+
+# Machine-local sandbox profile drafts.
+.config/nono/profile-drafts/
+
 # Keep the small MediaPipe detector fixture used by instrumented tests.
 !app/src/androidTest/assets/hand_landmarks_detector.tflite

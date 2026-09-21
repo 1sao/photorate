@@ -4,25 +4,17 @@ plugins {
   id("com.google.firebase.crashlytics")
 }
 
+/** Image recognition backend: 'litert' or 'onnx' (gradle.properties). */
+val recognitionBackend = providers.gradleProperty("photorate.backend").getOrElse("litert")
+
+check(recognitionBackend in setOf("litert", "onnx")) {
+  "Unknown photorate.backend '$recognitionBackend' (expected 'litert' or 'onnx')"
+}
+
 android {
   // AGP 9 built-in Kotlin toolchain (set here; not exposed via the public DSL).
   kotlin { jvmToolchain(11) }
-
-  // The LiteRT conversions (ml/litert/converted: RTMDet/RTMPose hand models
-  // + the MobileCLIP-S1 combined tflite) and the shared CLIP tokenizer ship
-  // as app assets; the ONNX source models (ml/original_models, 514 MB) are
-  // not shipped while the imageRecognitionComponentOnnx provider is unplugged.
   sourceSets {
-    getByName("main") {
-      assets.directories.add(
-        rootProject.layout.projectDirectory.dir("ml/litert/converted").asFile.path
-      )
-      assets.directories.add(
-        rootProject.layout.projectDirectory.dir("ml/litert/tokenizer").asFile.path,
-      )
-      // ONNX hand models for the ONNX hand pipeline.
-      assets.directories.add(rootProject.layout.projectDirectory.dir("ml/onnx_hand").asFile.path)
-    }
     // Instrumented hand-landmarker + search dataset tests
     // read the sample
     // images straight from plans/samples (score dirs 5,
@@ -47,42 +39,83 @@ android {
     // can mmap them.
     noCompress += "tflite"
   }
-
-  androidResources {
-    // ml/original_models carries the SDK descriptor jsons
-    // + verification
-    // renders next to each model; ship only the .onnx
-    // binaries + the
-    // tokenizer. ignoreAssetsPattern is the aapt2
-    // mechanism that filters
-    // files out of the packaged assets (colon-separated
-    // patterns; files
-    // matching are not packaged). NOTE: it REPLACES (does
-    // not augment)
-    // aapt's default ignore list — fine here because the
-    // ml/original_models dir is controlled, with no
-    // dotfiles/vcs junk.
-    // The verification renders are filtered by EXACT
-    // name, not *.jpg — a
-    // *.jpg glob would also strip the plans/samples jpgs
-    // from the
-    // androidTest APK (the dataset tests read those as
-    // assets). The
-    // original baked end2end.onnx stays on disk as
-    // canonical source but
-    // is not packaged (only the *_f32clean GPU-ready
-    // variants ship).
-    ignoreAssetsPattern =
-      "deploy.json:detail.json:pipeline.json:" +
-        "output_onnxruntime.jpg:output_pytorch.jpg:end2end.onnx:" +
-        "*.jpeg:*.png:*.md:.DS_Store:" +
-        "*.pth:text_model_fp16.onnx:vision_model_fp16.onnx"
-  }
 }
 
 composeCompiler {
   stabilityConfigurationFiles =
     listOf(rootProject.layout.projectDirectory.file("app/compose_stability.conf"))
+}
+
+// Model asset staging for the active backend.
+abstract class StagePackagedAssetsTask : DefaultTask() {
+  @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+  @get:InputFiles abstract val sources: ConfigurableFileCollection
+
+  @get:Input abstract val relativePaths: ListProperty<String>
+
+  @TaskAction
+  fun stage() {
+    val out = outputDir.get().asFile
+    out.deleteRecursively()
+    out.mkdirs()
+    val files = sources.files.toList()
+    val paths = relativePaths.get()
+    require(files.size == paths.size) { "sources/relativePaths size mismatch" }
+    files.zip(paths).forEach { (src, rel) ->
+      val dst = File(out, rel)
+      dst.parentFile?.mkdirs()
+      src.copyTo(dst, overwrite = true)
+    }
+  }
+}
+
+val backendStaging =
+  tasks.register<StagePackagedAssetsTask>("stageBackendPackagedAssets") {
+    outputDir.set(layout.buildDirectory.dir("packagedAssets/$recognitionBackend"))
+    val root = rootProject.layout.projectDirectory
+    when (recognitionBackend) {
+      "litert" -> {
+        with(root) {
+          sources.from(file("ml/litert/converted/rtmdet_hand_320_f32.tflite"))
+          sources.from(file("ml/litert/converted/rtmpose_hand_256_f32.tflite"))
+          sources.from(file("ml/litert/converted/clip_s1_combined_f16.tflite"))
+          sources.from(file("ml/litert/tokenizer/tokenizer.json"))
+        }
+        relativePaths.set(
+          listOf(
+            "rtmdet_hand_320_f32.tflite",
+            "rtmpose_hand_256_f32.tflite",
+            "clip_s1_combined_f16.tflite",
+            "tokenizer.json",
+          ),
+        )
+      }
+
+      "onnx" -> {
+        val onnxHand = root.dir("ml/onnx_hand").asFile
+        val originalModels = root.dir("ml/original_models").asFile
+        val handFiles = fileTree(onnxHand) { include("**/*.onnx") }.files.sorted()
+        sources.from(handFiles)
+        sources.from(root.file("ml/original_models/text_model_fp16/text_model_fp16.onnx"))
+        sources.from(root.file("ml/original_models/vision_model_fp16/vision_model_fp16.onnx"))
+        sources.from(root.file("ml/original_models/tokenizer.json"))
+        relativePaths.set(
+          handFiles.map { it.toRelativeString(onnxHand) } +
+            listOf(
+              "text_model_fp16/text_model_fp16.onnx",
+              "vision_model_fp16/vision_model_fp16.onnx",
+              "tokenizer.json",
+            ),
+        )
+      }
+    }
+  }
+
+androidComponents {
+  onVariants { variant ->
+    variant.sources.assets?.addGeneratedSourceDirectory(backendStaging) { it.outputDir }
+  }
 }
 
 dependencies {

@@ -16,9 +16,9 @@ import isao.photorate.imageRecognition.feature.HandFeatures
 import isao.photorate.imageRecognition.gesture.Gesture
 import isao.photorate.imageRecognition.gesture.ThumbOnlyGesture
 import isao.photorate.imageRecognition.gesture.ThumbSignal
+import isao.photorate.imageRecognition.landmark.CommonLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.HandLandmarker
 import isao.photorate.imageRecognition.landmark.HandLandmarkerFactory
-import isao.photorate.imageRecognition.landmark.HandLandmarkerOptions
 import isao.photorate.imageRecognition.landmark.LandmarkCandidate
 import isao.photorate.imageRecognition.landmark.LandmarkedImage
 import isao.photorate.imageRecognition.onnx.AndroidOnnxHandLandmarker.Companion.NMS_MAX_OUT
@@ -48,7 +48,7 @@ constructor(
   /** null = plain CPU (the app default). */
   private val nnapiFlags: Set<NNAPIFlags>? = null,
 ) : HandLandmarkerFactory {
-  override fun createFromOptions(options: HandLandmarkerOptions): HandLandmarker {
+  override fun create(options: CommonLandmarkerOptions): HandLandmarker {
     val landmarker: AndroidOnnxHandLandmarker
     measureTimeMillis {
       landmarker = AndroidOnnxHandLandmarker(context, options, nnapiFlags)
@@ -103,7 +103,7 @@ constructor(
 class AndroidOnnxHandLandmarker
 internal constructor(
   context: Context,
-  private val options: HandLandmarkerOptions,
+  private val options: CommonLandmarkerOptions,
   private val nnapiFlags: Set<NNAPIFlags>?,
 ) : HandLandmarker {
 
@@ -291,7 +291,7 @@ internal constructor(
    * best hand. The rotation search prefers a rotation that forms a recognized gesture; if NO
    * rotation does, the highest- confidence hand is still returned so the scan's rater can decide
    * (normally it rejects it; the dev-mode best-guess rater guesses). The only hard gate here is
-   * [HandLandmarkerOptions.minHandKpConfidence] — below it a box is not a hand at all (no_score
+   * [CommonLandmarkerOptions.minHandKpConfidence] — below it a box is not a hand at all (no_score
    * stays filtered).
    *
    * The image-space (deg 0) rating is the ground truth for normally-photographed hands — it
@@ -311,10 +311,10 @@ internal constructor(
    * anisotropically squash the geometry on non-square images and reject valid hands (verified:
    * 3_ok_sign_peanuts fails normalized but rates OK in pixels). Storage code un-rotates via
    * [LandmarkedImage.Hand.rotationDegrees] and normalizes to 0..1. Confidence tiers are
-   * keypoint-based: below [HandLandmarkerOptions.minHandKpConfidence] a box is not a hand at all;
-   * ROCK/OK below [HandLandmarkerOptions.minHandConfidentKpConfidence] are still rated but flagged
-   * uncertain (best guess) — tuned so low-confidence ROCK/OK reads (holding-in-two-hands at kp
-   * 0.28) filter while real ones (kp >= 0.58) stay confident.
+   * keypoint-based: below [CommonLandmarkerOptions.minHandKpConfidence] a box is not a hand at all;
+   * ROCK/OK below [CommonLandmarkerOptions.minHandConfidentKpConfidence] are still rated but
+   * flagged uncertain (best guess) — tuned so low-confidence ROCK/OK reads (holding-in-two-hands at
+   * kp 0.28) filter while real ones (kp >= 0.58) stay confident.
    */
   private fun rtmposeRating(bitmap: Bitmap, box: IntArray): LandmarkedImage.Hand? {
     val iw = bitmap.width
