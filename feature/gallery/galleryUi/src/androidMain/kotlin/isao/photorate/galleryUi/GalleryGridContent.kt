@@ -93,7 +93,7 @@ private fun SearchResultsHeader(query: String, count: Int, modifier: Modifier = 
 fun NoMatchesCard(query: String, modifier: Modifier = Modifier) {
   Surface(
     modifier = modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
+    shape = MaterialTheme.shapes.largeIncreased,
     color = MaterialTheme.colorScheme.surfaceVariant,
   ) {
     Column(Modifier.padding(20.dp)) {
@@ -237,7 +237,7 @@ private fun GalleryCardImage(
 private fun UncertainSectionHeader(count: Int, modifier: Modifier = Modifier) {
   Surface(
     modifier = modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
+    shape = MaterialTheme.shapes.largeIncreased,
     color = MaterialTheme.colorScheme.surfaceVariant,
   ) {
     Column(Modifier.padding(16.dp)) {
