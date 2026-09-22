@@ -6,19 +6,26 @@ thumbs up.
 Next time you're in the store and don't remember which coffee struck your fancy the last time, open
 Photo Rate to quickly check what you already tried and if you liked it.
 
+<img src="readme/home.webp" alt="Home" width="480"> 
+<img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> 
+<img src="readme/search_oats.webp" alt="Search: oats" width="480"> 
+<img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> 
+
 ## Features
 
 - Scan your whole gallery to retroactively find images with scores you took years ago.
 - Represent a 1-5 score with a hand gesture to filter your scored images later. A 5 is a thumb
-  pointing straight up; a 3 is a thumb pointing to the side horizontally or an OK sign; a thumb
-  pointing slightly down is a 2; and so on.
-- Describe what you're looking for in the search bar and get the most closely matched scored images.
+  pointing straight up; a 3 is a thumb pointing to the side horizontally or an OK sign; a 2 is a
+  thumb pointing slightly down; and so on.
+- Describe what you're looking for in the search bar and get the closest matches among scored
+  images.
 - Never worry about a tech billionaire learning about your taste in coffee -- everything is
   processed locally, with your own phone's powers alone.
 
 ## Technical details
 
-Built with KMP. The Android part is done. The SwiftUI part is under construction.
+Built with KMP. The Android part is feature complete. The SwiftUI part is under construction. The UI
+is not reused for the sole purpose of experimenting with native SwiftUI.
 
 Uses LiteRT or ONNX (configurable) for inference.
 
@@ -28,7 +35,7 @@ Found it to be the best option for this use case.
 
 #### ONNX
 
-Worked great, but no running on GPU or NPU without gutting the model with manual tweaks and
+Worked great, but no running on GPU or NPU without gutting the models with manual tweaks and
 sacrificing a lot of precision in the process.
 
 #### MediaPipe
