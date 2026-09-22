@@ -38,7 +38,7 @@ internal fun DetailsBottomSection(
               spring(
                 Spring.DampingRatioLowBouncy,
                 Spring.StiffnessVeryLow,
-                IntOffset.VisibilityThreshold,
+                IntOffset(3, 3), // A slow bouncy animation needs higher visibility threshold
               ),
             initialOffsetY = { it },
           ),

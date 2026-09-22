@@ -3,6 +3,7 @@ package isao.photorate.galleryUi.details
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -43,10 +45,19 @@ internal fun ImageSection(
       .memoryCacheKey(imageKey)
       .build()
 
+  // Play if there is no more content with this key to go back to (e.g. the image is deleted).
+  val animateEnterExit =
+    with(LocalNavAnimatedContentScope.current) {
+      Modifier.animateEnterExit(
+        enter = fadeIn(),
+        exit = fadeOut(),
+      )
+    }
+
   val sharedBounds =
     with(LocalSharedTransitionScope.current) {
       Modifier.sharedBounds(
-        LocalSharedTransitionScope.current.rememberSharedContentState(key = imageKey),
+        rememberSharedContentState(key = imageKey),
         LocalNavAnimatedContentScope.current,
         enter = EnterTransition.None,
         exit = fadeOut(snap()),
@@ -64,17 +75,17 @@ internal fun ImageSection(
       Modifier.fillMaxSize()
     }
 
-  Box(modifier.then(sizePlaceholder)) {
+  Box(modifier.then(sizePlaceholder), Alignment.Center) {
     AsyncImage(
       model = imageRequest,
       contentDescription = null,
-      placeholder = null,
       error = rememberImageUnavailablePainter(),
       contentScale = ContentScale.Fit,
       onSuccess = { isSizeKnown = true },
       onError = { isSizeKnown = true },
       modifier =
         Modifier.wrapContentSize()
+          .then(animateEnterExit)
           .then(sharedBounds)
           .clip(MaterialTheme.shapes.largeIncreased)
           // TODO Use ZoomableAsyncImage to allow for better zoom
