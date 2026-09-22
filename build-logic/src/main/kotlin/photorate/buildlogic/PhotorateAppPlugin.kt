@@ -41,10 +41,9 @@ class PhotorateAppPlugin : Plugin<Project> {
         }
 
         buildTypes {
-          // AGP's debug buildType already uses the "debug"
-          // signingConfig by default.
+          getByName("debug") { versionNameSuffix = "-demo" }
           getByName("release") {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
               getDefaultProguardFile("proguard-android-optimize.txt"),
               "proguard-rules.pro",
