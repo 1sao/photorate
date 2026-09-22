@@ -6,10 +6,7 @@ thumbs up.
 Next time you're in the store and don't remember which coffee struck your fancy the last time, open
 Photo Rate to quickly check what you already tried and if you liked it.
 
-<img src="readme/home.webp" alt="Home" width="480"> 
-<img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> 
-<img src="readme/search_oats.webp" alt="Search: oats" width="480"> 
-<img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> 
+<img src="readme/home.webp" alt="Home" width="480"> <img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> <img src="readme/search_oats.webp" alt="Search: oats" width="480"> <img src="readme/search_coffee_bag.webp" alt="Search: coffee bag" width="480"> 
 
 ## Features
 
