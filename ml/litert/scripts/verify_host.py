@@ -11,22 +11,28 @@ failed host GPU compile does not fail the run on macOS hosts without GPU
 support; the on-device run is the real gate).
 
 Usage:
-  ml/litert/.venv/bin/python ml/litert/scripts/verify_host.py [DET_MODEL [POSE_MODEL]]
+  <python> ml/litert/scripts/verify_host.py [DET_MODEL [POSE_MODEL]]
+      [--refs-dir DIR] [--converted-dir DIR]
 
 The optional positional args pick the tflite variants to check (defaults to
-the float32 shipped models) so the same harness verifies every quantized
-variant (e.g. rtmdet_hand_320_f16.tflite rtmpose_hand_256_i8.tflite).
+the float32 shipped models, resolved against --converted-dir) so the same
+harness verifies every quantized variant (e.g. rtmdet_hand_320_f16.tflite
+rtmpose_hand_256_i8.tflite). Defaults: --refs-dir ml/litert/refs,
+--converted-dir ml/litert/converted.
 """
 
+import argparse
+import numpy as np
 import os
 import sys
 from pathlib import Path
 
-import numpy as np
-
 ROOT = Path(__file__).resolve().parents[1]
-REFS = ROOT / "refs"
-CONVERTED = ROOT / "converted"
+DEFAULT_REFS = ROOT / "refs"
+DEFAULT_CONVERTED = ROOT / "converted"
+
+REFS = DEFAULT_REFS
+CONVERTED = DEFAULT_CONVERTED
 
 NMS_IOU = 0.6
 NMS_SCORE = 0.05
@@ -174,9 +180,17 @@ def pose_task_gate(tflite: Path) -> dict:
 
 
 def main() -> None:
-    args = sys.argv[1:]
-    det = CONVERTED / (args[0] if args else "rtmdet_hand_320_f32.tflite")
-    pose = CONVERTED / (args[1] if len(args) > 1 else "rtmpose_hand_256_f32.tflite")
+    global REFS, CONVERTED
+    ap = argparse.ArgumentParser()
+    ap.add_argument("det_model", nargs="?", default="rtmdet_hand_320_f32.tflite")
+    ap.add_argument("pose_model", nargs="?", default="rtmpose_hand_256_f32.tflite")
+    ap.add_argument("--refs-dir", type=Path, default=DEFAULT_REFS)
+    ap.add_argument("--converted-dir", type=Path, default=DEFAULT_CONVERTED)
+    args = ap.parse_args()
+    REFS, CONVERTED = args.refs_dir, args.converted_dir
+
+    det = CONVERTED / args.det_model
+    pose = CONVERTED / args.pose_model
     for r in verify_model("det", det, ["boxes", "scores"]):
         print(r)
     for r in verify_model("pose", pose, ["simcc_x", "simcc_y"]):

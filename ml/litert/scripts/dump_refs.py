@@ -3,33 +3,39 @@
 
 Ground truth for every later step (host verify, on-device verification).
 Fixed inputs — one fixed-seed random tensor + one real preprocessed sample
-(plans/samples/5/5_kenya.jpg) — run through onnxruntime CPU; inputs AND
-outputs are saved as .npy next to the recipe. Regenerate only when the
-source model changes.
+image — run through onnxruntime CPU; inputs AND outputs are saved as .npy
+next to the recipe. Regenerate only when the source model changes.
 
 Preprocessing mirrors the app's AndroidOnnxHandLandmarker exactly:
 - detector: top-left letterbox to 320, gray-114 padding, RGB order,
   mmdet mean/std (123.675, 116.28, 103.53) / (58.395, 57.12, 57.375).
 - pose: mmpose top-down affine to 256 (black fill), BGR order, same stats.
 
-Usage: ml/litert/.venv/bin/python ml/litert/scripts/dump_refs.py
+Usage:
+  <python> ml/litert/scripts/dump_refs.py [--orig-dir DIR] [--refs-dir DIR]
+      [--sample PATH]
+
+Defaults: --orig-dir ml/original_models, --refs-dir ml/litert/refs,
+--sample app/src/androidTest/assets/confident_5/5_alesto.jpg.
 """
 
-import json
-
+import argparse
 import cv2
+import json
 import numpy as np
 import onnxruntime as ort
-
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]          # ml/litert
-ORIG = ROOT.parent / "original_models"              # ml/original_models
-REFS = ROOT / "refs"
-SAMPLE = ROOT.parents[1] / "plans" / "samples" / "5" / "5_kenya.jpg"
+DEFAULT_ORIG = ROOT.parent / "original_models"  # ml/original_models
+DEFAULT_REFS = ROOT / "refs"
+DEFAULT_SAMPLE = (
+        ROOT.parents[1]
+        / "app" / "src" / "androidTest" / "assets" / "confident_5" / "5_alesto.jpg"
+)
 
-DET_ONNX = ORIG / "rtmdet_nano_8xb32-300e_hand-267f9c8f" / "end2end_f32clean.onnx"
-POSE_ONNX = ORIG / "rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320" / "end2end_f32clean.onnx"
+DET_REL = "rtmdet_nano_8xb32-300e_hand-267f9c8f/end2end_f32clean.onnx"
+POSE_REL = "rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320/end2end_f32clean.onnx"
 
 MEAN = np.array([123.675, 116.28, 103.53], dtype=np.float32)
 STD = np.array([58.395, 57.12, 57.375], dtype=np.float32)
@@ -108,9 +114,10 @@ def decode_simcc(simcc_x: np.ndarray, simcc_y: np.ndarray) -> np.ndarray:
     return kps.astype(np.float32)
 
 
-def dump_detector(sess: ort.InferenceSession, rng: np.random.Generator) -> None:
-    real = cv2.imread(str(SAMPLE))
-    assert real is not None, SAMPLE
+def dump_detector(sess: ort.InferenceSession, rng: np.random.Generator, refs: Path,
+                  sample: Path) -> None:
+    real = cv2.imread(str(sample))
+    assert real is not None, sample
     real_input = to_chw_norm(letterbox_top_left(real, 320), rgb_order=True)
     rand_input = rng.standard_normal((1, 3, 320, 320), dtype=np.float32)
 
@@ -121,42 +128,49 @@ def dump_detector(sess: ort.InferenceSession, rng: np.random.Generator) -> None:
         ref = np.concatenate(
             [boxes[0][keep].reshape(-1, 4), scores_flat[keep].reshape(-1, 1)], axis=1
         )
-        np.save(REFS / f"det_{tag}_input.npy", arr)
-        np.save(REFS / f"det_{tag}_boxes.npy", boxes)
-        np.save(REFS / f"det_{tag}_scores.npy", scores)
-        np.save(REFS / f"det_{tag}_refboxes.npy", ref)
+        np.save(refs / f"det_{tag}_input.npy", arr)
+        np.save(refs / f"det_{tag}_boxes.npy", boxes)
+        np.save(refs / f"det_{tag}_scores.npy", scores)
+        np.save(refs / f"det_{tag}_refboxes.npy", ref)
         print(f"det {tag}: {len(keep)} boxes after NMS")
 
 
-def dump_pose(sess: ort.InferenceSession, rng: np.random.Generator) -> None:
-    real = cv2.imread(str(SAMPLE))
-    assert real is not None, SAMPLE
+def dump_pose(sess: ort.InferenceSession, rng: np.random.Generator, refs: Path,
+              sample: Path) -> None:
+    real = cv2.imread(str(sample))
+    assert real is not None, sample
     real_input = to_chw_norm(top_down_affine(real), rgb_order=False)
     rand_input = rng.standard_normal((1, 3, 256, 256), dtype=np.float32)
 
     for tag, arr in (("rand", rand_input), ("real", real_input)):
         simcc_x, simcc_y = sess.run(None, {"input": arr})
         kps = decode_simcc(simcc_x, simcc_y)
-        np.save(REFS / f"pose_{tag}_input.npy", arr)
-        np.save(REFS / f"pose_{tag}_simcc_x.npy", simcc_x)
-        np.save(REFS / f"pose_{tag}_simcc_y.npy", simcc_y)
-        np.save(REFS / f"pose_{tag}_kps.npy", kps)
+        np.save(refs / f"pose_{tag}_input.npy", arr)
+        np.save(refs / f"pose_{tag}_simcc_x.npy", simcc_x)
+        np.save(refs / f"pose_{tag}_simcc_y.npy", simcc_y)
+        np.save(refs / f"pose_{tag}_kps.npy", kps)
         print(f"pose {tag}: kp max conf {kps[:, 2].max():.3f}")
 
-    np.save(REFS / "pose_real_ref_kps.npy", np.load(REFS / "pose_real_kps.npy"))
+    np.save(refs / "pose_real_ref_kps.npy", np.load(refs / "pose_real_kps.npy"))
 
 
 def main() -> None:
-    REFS.mkdir(parents=True, exist_ok=True)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--orig-dir", type=Path, default=DEFAULT_ORIG)
+    ap.add_argument("--refs-dir", type=Path, default=DEFAULT_REFS)
+    ap.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
+    args = ap.parse_args()
+
+    args.refs_dir.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(42)
-    det = ort.InferenceSession(str(DET_ONNX), providers=["CPUExecutionProvider"])
-    pose = ort.InferenceSession(str(POSE_ONNX), providers=["CPUExecutionProvider"])
-    dump_detector(det, rng)
-    dump_pose(pose, rng)
-    (REFS / "refs.json").write_text(
+    det = ort.InferenceSession(str(args.orig_dir / DET_REL), providers=["CPUExecutionProvider"])
+    pose = ort.InferenceSession(str(args.orig_dir / POSE_REL), providers=["CPUExecutionProvider"])
+    dump_detector(det, rng, args.refs_dir, args.sample)
+    dump_pose(pose, rng, args.refs_dir, args.sample)
+    (args.refs_dir / "refs.json").write_text(
         json.dumps(
             {
-                "sample": str(SAMPLE),
+                "sample": str(args.sample),
                 "seed": 42,
                 "nms": {"iou": NMS_IOU, "score_thr": NMS_SCORE, "max_out": NMS_MAX_OUT},
                 "note": "inputs are the exact tensors fed to the models; "
@@ -165,7 +179,7 @@ def main() -> None:
             indent=2,
         )
     )
-    print("refs dumped to", REFS)
+    print("refs dumped to", args.refs_dir)
 
 
 if __name__ == "__main__":

@@ -10,53 +10,6 @@ lifecycle order:
 3. [`accuracy-safe-quantization`](../../skills/accuracy-safe-quantization/SKILL.md) — shrink after device verification passes
 4. [`compiled-model-app-scaffolding`](../../skills/compiled-model-app-scaffolding/SKILL.md) — the `photosLiteRT` module
 
-## Source models
-
-The confirmed-source mmdeploy exports in `ml/original_models/` — the
-`*_f32clean.onnx` GPU-ready variants (float32-only graphs, verified bit-exact
-against the originals; see `ml/original_models/GPU_READY_README.md`):
-
-| Model | Source ONNX | Input | Outputs |
-|---|---|---|---|
-| RTMDet-nano hand | `rtmdet_nano_8xb32-300e_hand-267f9c8f/end2end_f32clean.onnx` | `input` f32 [1,3,320,320] | `1442` boxes [1,2100,4], `1415` scores [1,2100,1] (raw anchors, NMS caller-side) |
-| RTMPose-m hand SimCC | `rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320/end2end_f32clean.onnx` | `input` f32 [1,3,256,256] | `simcc_x`/`simcc_y` [1,21,512] (raw SimCC, decode caller-side) |
-
-`.onnx` was chosen over the `.pth` checkpoints: the exports are the verified,
-bit-exact source of the app's current pipeline, while the `.pth` files would
-require reconstructing the mmpose/mmdet architectures to export again.
-
-## What was produced
-
-```
-ml/litert/
-  converted/
-    rtmdet_hand_320_f32.tflite     4.1 MB  float32, NCHW I/O preserved
-    rtmdet_hand_320_f16.tflite     2.1 MB  fp16 variant (recommended; app not yet wired)
-    rtmdet_hand_320_i8.tflite      1.2 MB  int8 variant (NOT accuracy-safe: 49/52 boxes)
-    rtmpose_hand_256_f32.tflite   55.1 MB  float32, NCHW I/O preserved
-    rtmpose_hand_256_f16.tflite   27.6 MB  fp16 variant (recommended; app not yet wired)
-    rtmpose_hand_256_i8.tflite    14.1 MB  int8 variant (passes pose gate on GPU)
-  refs/                            reference .npy dumps (ONNX ground truth)
-  converted/
-    README.md                      on-device verification + quantization report (the gate)
-  scripts/
-    rewrite_gpu_clean.py           ONNX rewrites (Gather/Split/HardSigmoid) + bit-exact check
-    convert_models.py              onnx2tf *_f32clean_gpu.onnx -> float32 .tflite
-    convert_originals.py           end2end.onnx -> *_end2end_f32.tflite (comparison)
-    quantize_models.py             f32 -> fp16 + int8 (ai-edge-quantizer 0.8.0)
-    dump_refs.py                   ONNX reference dumps (random + real sample)
-    verify_host.py                 host parity (any variant path as CLI arg)
-    probe_ops.py                   single-op GPU support probes
-```
-
-Quantization (accuracy-safe-quantization skill) came after the float32 on-device
-verification passed. Sizes hit the predicted 1/2 (fp16) and 1/4 (int8); on-device
-GPU results make **fp16 the recommended row** (both models pass every gate, ~2×
-smaller, zero risk) and int8 a size/speed row for the pose only (the int8 detector
-misses 3/52 boxes). The app still loads the float32 assets — wiring a quantized
-asset into `LiteRtRtmModels` is a separate deployment step. Full numbers in
-`converted/README.md`.
-
 ## App wiring
 
 The `photosLiteRT` module implements the app's inference providers on top of
@@ -94,6 +47,7 @@ binary; the device harness is index-based so names don't matter).
 ## Pipeline
 
 ```bash
+~/.venvs/photorate-onnx/bin/python ml/litert/scripts/make_f32clean.py --write     # end2end.onnx -> *_f32clean.onnx
 ml/litert/.venv/bin/python ml/litert/scripts/rewrite_gpu_clean.py  # *_f32clean_gpu.onnx (bit-exact rewrites)
 ml/litert/.venv/bin/python ml/litert/scripts/convert_models.py      # *_f32clean_gpu.onnx -> tflite
 ml/litert/.venv/bin/python ml/litert/scripts/dump_refs.py           # npy ground truth

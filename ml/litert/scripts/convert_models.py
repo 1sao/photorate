@@ -16,41 +16,39 @@ matches the ONNX contract exactly (input "input" [1,3,320,320] / [1,3,256,256];
 detector outputs boxes [1,2100,4] + scores [1,2100,1]; pose outputs
 simcc_x/simcc_y [1,21,512]).
 
-Usage: ml/litert/.venv/bin/python ml/litert/scripts/convert_models.py
+Usage:
+  <python> ml/litert/scripts/convert_models.py [--orig-dir DIR] [--out-dir DIR]
+
+Defaults: --orig-dir ml/original_models, --out-dir ml/litert/converted.
 """
 
+import argparse
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]          # ml/litert
-ORIG = ROOT.parent / "original_models"              # ml/original_models
-OUT = ROOT / "converted"
+DEFAULT_ORIG = ROOT.parent / "original_models"  # ml/original_models
+DEFAULT_OUT = ROOT / "converted"
 VENV_BIN = ROOT / ".venv" / "bin"
 
-MODELS = [
-    (
-        ORIG / "rtmdet_nano_8xb32-300e_hand-267f9c8f" / "end2end_f32clean_gpu.onnx",
-        OUT / "rtmdet_hand_320_f32.tflite",
-    ),
-    (
-        ORIG / "rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320" / "end2end_f32clean_gpu.onnx",
-        OUT / "rtmpose_hand_256_f32.tflite",
-    ),
+RELATIVE_MODELS = [
+    ("rtmdet_nano_8xb32-300e_hand-267f9c8f", "rtmdet_hand_320_f32.tflite"),
+    ("rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320",
+     "rtmpose_hand_256_f32.tflite"),
 ]
 
 
-def convert(src: Path, dst: Path) -> None:
+def convert(src: Path, dst: Path, venv_bin: Path) -> None:
     with tempfile.TemporaryDirectory() as tmp:
         env = dict(os.environ)
         env["TF_CPP_MIN_LOG_LEVEL"] = "2"
         # Silence onnx2tf's per-op "DynamicRangeQuantize" warnings.
         env["ONNX2TF_QUIET"] = "1"
         cmd = [
-            str(VENV_BIN / "onnx2tf"),
+            str(venv_bin / "onnx2tf"),
             "-i", str(src),
             "-o", tmp,
             "-k", "input",
@@ -68,8 +66,15 @@ def convert(src: Path, dst: Path) -> None:
 
 
 def main() -> None:
-    for src, dst in MODELS:
-        convert(src, dst)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--orig-dir", type=Path, default=DEFAULT_ORIG)
+    ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
+    args = ap.parse_args()
+
+    venv_bin = Path(os.environ.get("ONNX2TF_BIN_DIR", VENV_BIN))
+    for rel, out_name in RELATIVE_MODELS:
+        convert(args.orig_dir / rel / "end2end_f32clean_gpu.onnx", args.out_dir / out_name,
+                venv_bin)
     print("conversion done")
 
 

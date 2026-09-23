@@ -199,15 +199,15 @@ models.
 
 ## What the *original* graphs do on GPU (why the head-cut exists)
 
-The `end2end.onnx` originals (NMS/post-processing in-graph) were run through the same
-pipeline to confirm the head-cut is necessary, not just convenient:
+The `end2end.onnx` originals (NMS/post-processing in-graph) were checked to confirm
+the head-cut is necessary, not just convenient:
 
 - **Detector `end2end.onnx`** converts with warnings, but the converted model
   contains `NON_MAX_SUPPRESSION_V4`, `TOPK_V2`, 13 data-dependent `GATHER`s and
-  `RELU_0_TO_1` — none of which have GPU kernels. A strict GPU compile fails on-device
-  (`original_det_gpu=COMPILE_FAILED`). Worse, onnx2tf's heuristic fix for the dynamic
-  NMS output shape caps the result at **5 detections** (the ONNX keeps 39/53 on the
-  same inputs); the top-5 rows still match the ONNX to ~6e-4. CPU latency: 31 ms.
+  `RELU_0_TO_1` — none of which have GPU kernels. A strict GPU compile fails on-device.
+  Worse, onnx2tf's heuristic fix for the dynamic NMS output shape caps the result at
+  **5 detections** (the ONNX keeps 39/53 on the same inputs); the top-5 rows still
+  match the ONNX to ~6e-4.
 - **Pose `end2end.onnx`** does not convert at all: its dynamic batch dims break
   onnx2tf's shape inference (`Mul` on `[?,128,1,1152] × [1,2,128,1]`).
 - The `*_f32clean.onnx` graphs used for the GPU path are the verified bit-exact
@@ -224,15 +224,17 @@ converted/
   rtmpose_hand_256_f32.tflite         float32 baseline
   rtmpose_hand_256_f16.tflite         fp16 variant (recommended; app not yet wired)
   rtmpose_hand_256_i8.tflite          int8 variant (passes pose gate on GPU: 1.5 px)
-  rtmdet_hand_320_end2end_f32.tflite  original in-graph-NMS variant (CPU-only, 5-det cap)
 scripts/
   rewrite_gpu_clean.py                ONNX rewrites (Gather/Split/HardSigmoid) + bit-exact check
   convert_models.py                   *_f32clean_gpu.onnx -> float32 .tflite
-  convert_originals.py                end2end.onnx -> *_end2end_f32.tflite (comparison)
   quantize_models.py                  f32 -> fp16 + int8 variants (ai-edge-quantizer 0.8.0)
   dump_refs.py                        ONNX ground-truth .npy dumps
   verify_host.py                      host parity (any variant path as CLI arg)
   probe_ops.py                        single-op probe generator
 ```
+
+See `feature/imageRecognition/README.md` for the full pipeline (including the
+`make_f32clean.py` step that produces the `*_f32clean.onnx` sources) and
+dependency lists for recreating the Python environments.
 
 Weights are not committed to git; regenerate with the scripts above.

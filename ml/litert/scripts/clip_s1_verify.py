@@ -21,19 +21,18 @@ Usage:
 Defaults to the fp32 original; pass a quantized variant to compare.
 """
 
-import sys
-import time
-from pathlib import Path
-
 import numpy as np
+import sys
 import tensorflow as tf
+import time
 from PIL import Image
+from pathlib import Path
 from tokenizers import Tokenizer
 
 ROOT = Path(__file__).resolve().parents[3]  # repo root
 MODEL = ROOT / "ml/original_models/mobileclip2_tflite/mobileclip_s1_datacompdr_last.tflite"
 TOKENIZER_PATH = ROOT / "ml/original_models/tokenizer.json"
-SAMPLES = ROOT / "onnx/samples"
+SAMPLES = ROOT / "ml/litert/scripts/test/images"  # same buckets as androidTest assets
 
 INPUT_SIZE = 256  # matches the exported model's image input
 CONTEXT_LENGTH = 77
@@ -43,12 +42,9 @@ MEAN = np.array([0.48145466, 0.4578275, 0.40821073], dtype=np.float32)
 STD = np.array([0.26862954, 0.26130258, 0.27577711], dtype=np.float32)
 
 SAMPLES_MAP = {
-    SAMPLES / "turtle.jpg": "Turtle",
-    SAMPLES / "a_can_of_tuna.jpg": "a can of tuna",
-    SAMPLES / "a_jar_and_a_hand.jpg": "a jar and a hand",
-    SAMPLES / "cat_lying_with_lemons.jpg": "cat lying with lemons",
-    ROOT / "plans/samples/search/turtle.jpg": "Turtle",
-    ROOT / "plans/samples/search/cat_and_lemons.jpg": "cat and lemons",
+    SAMPLES / "confident_5/5_alesto.jpg": "a hand",
+    SAMPLES / "uncertain_1/no_score_holding_spray_bottle.jpg": "a hand holding a spray bottle",
+    SAMPLES / "confident_4/PXL_20260723_160208322.MP.jpg": "a hand",
 }
 
 

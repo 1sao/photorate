@@ -84,9 +84,9 @@ constructor(
     // (caller-side NMS in detectBoxes, params from the original export);
     // the RTMPose is the raw SimCC export with the int64 shape bookkeeping
     // constant-folded away (decode in rtmposeLandmarks). See
-    // ml/original_models/GPU_READY_README.md. Production stays on these
-    // f32clean assets: the INT8 QDQ experiment (plans/model_zoo_pinto/
-    // quant_int8_documented.py) collapsed detector scores below the 0.25
+    // feature/imageRecognition/README.md. Production stays on these
+    // f32clean assets: the INT8 QDQ experiment collapsed detector scores
+    // below the 0.25
     // gate (15/31 detection gaps) and the darwinn TPU rejected even the
     // preserved-QDQ graph (see docs/MODEL_ZOO_EXPLORATION.md).
     const val DETECTOR_ASSET = "rtmdet_nano_8xb32-300e_hand-267f9c8f/end2end_f32clean.onnx"

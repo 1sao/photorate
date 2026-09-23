@@ -22,22 +22,24 @@ All are replaced with numerically identical, GPU-supported equivalents:
 The rewritten graph must be bit-identical to the source: this script asserts
 that with onnxruntime on a random input before writing `*_gpu.onnx`.
 
-Usage: ml/litert/.venv/bin/python ml/litert/scripts/rewrite_gpu_clean.py
+Usage:
+  <python> ml/litert/scripts/rewrite_gpu_clean.py [--orig-dir DIR]
+
+Default --orig-dir is ml/original_models.
 """
 
-import sys
-from pathlib import Path
-
+import argparse
 import numpy as np
 import onnx
 from onnx import helper, numpy_helper
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ORIG = ROOT.parent / "original_models"
+DEFAULT_ORIG = ROOT.parent / "original_models"
 
-MODELS = [
-    ORIG / "rtmdet_nano_8xb32-300e_hand-267f9c8f" / "end2end_f32clean.onnx",
-    ORIG / "rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320" / "end2end_f32clean.onnx",
+RELATIVE_MODELS = [
+    "rtmdet_nano_8xb32-300e_hand-267f9c8f/end2end_f32clean.onnx",
+    "rtmpose-m_simcc-hand5_pt-aic-coco_210e-256x256-74fb594_20230320/end2end_f32clean.onnx",
 ]
 
 
@@ -233,7 +235,12 @@ def _assert_numeric_equality(original: onnx.ModelProto, rewritten: onnx.ModelPro
 
 
 def main() -> None:
-    for path in MODELS:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--orig-dir", type=Path, default=DEFAULT_ORIG)
+    args = ap.parse_args()
+
+    for rel in RELATIVE_MODELS:
+        path = args.orig_dir / rel
         print("====", path.name)
         model = onnx.load(path)
         g = model.graph
@@ -254,6 +261,8 @@ def main() -> None:
         onnx.save(rewritten, dst)
         print(f"  wrote {dst.name} ({dst.stat().st_size / 1e6:.1f} MB)")
 
+    return 0
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

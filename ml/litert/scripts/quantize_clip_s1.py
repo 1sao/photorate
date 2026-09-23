@@ -11,14 +11,18 @@ Both keep the graph's op set and fp32 outputs unchanged, so the host
 verification harness (clip_s1_verify.py) applies to every variant as-is.
 
 Usage:
-  ml/litert/.venv/bin/python ml/litert/scripts/quantize_clip_s1.py
+  <python> ml/litert/scripts/quantize_clip_s1.py [--src PATH] [--out-dir DIR]
+
+Defaults: --src ml/original_models/mobileclip2_tflite/mobileclip_s1_datacompdr_last.tflite,
+--out-dir ml/litert/converted.
 """
 
+import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]  # repo root
-SRC = ROOT / "ml/original_models/mobileclip2_tflite/mobileclip_s1_datacompdr_last.tflite"
-OUT_DIR = ROOT / "ml/litert/converted"
+DEFAULT_SRC = ROOT / "ml/original_models/mobileclip2_tflite/mobileclip_s1_datacompdr_last.tflite"
+DEFAULT_OUT = ROOT / "ml/litert/converted"
 
 
 def quantize_fp16(src: Path, dst: Path) -> None:
@@ -38,7 +42,8 @@ def quantize_fp16(src: Path, dst: Path) -> None:
         ),
         algorithm_key=AlgorithmName.FLOAT_CASTING,
     )
-    quantizer.Quantizer(str(src), rm.get_quantization_recipe()).quantize().export_model(str(dst))
+    quantizer.Quantizer(str(src), rm.get_quantization_recipe()).quantize().export_model(str(dst),
+                                                                                        overwrite=True)
     print(f"{src.name} -> {dst.name} ({dst.stat().st_size / 1e6:.1f} MB)")
 
 
@@ -46,18 +51,24 @@ def quantize_int8(src: Path, dst: Path) -> None:
     from ai_edge_quantizer import quantizer
     from ai_edge_quantizer.recipe import dynamic_wi8c_afp32
 
-    quantizer.Quantizer(str(src), dynamic_wi8c_afp32()).quantize().export_model(str(dst))
+    quantizer.Quantizer(str(src), dynamic_wi8c_afp32()).quantize().export_model(str(dst),
+                                                                                overwrite=True)
     print(f"{src.name} -> {dst.name} ({dst.stat().st_size / 1e6:.1f} MB)")
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--src", type=Path, default=DEFAULT_SRC)
+    ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
+    args = ap.parse_args()
+
     stem = "clip_s1_combined"
-    if not SRC.exists():
-        print(f"SKIP: {SRC} not found")
+    if not args.src.exists():
+        print(f"SKIP: {args.src} not found")
         return
-    print(f"source f32 = {SRC.stat().st_size / 1e6:.1f} MB")
-    quantize_fp16(SRC, OUT_DIR / f"{stem}_f16.tflite")
-    quantize_int8(SRC, OUT_DIR / f"{stem}_i8.tflite")
+    print(f"source f32 = {args.src.stat().st_size / 1e6:.1f} MB")
+    quantize_fp16(args.src, args.out_dir / f"{stem}_f16.tflite")
+    quantize_int8(args.src, args.out_dir / f"{stem}_i8.tflite")
     print("quantization done")
 
 

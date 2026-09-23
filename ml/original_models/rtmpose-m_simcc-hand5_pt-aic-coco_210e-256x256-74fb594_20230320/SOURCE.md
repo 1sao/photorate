@@ -1,0 +1,1 @@
+https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose#-model-zoo-

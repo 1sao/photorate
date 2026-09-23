@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D42FBB7C3062C8F300E4A39A /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FBB7B3062C8EF00E4A39A /* AppColors.swift */; };
 		3AAFA81392134042A79D1E1C /* ThumbRatingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25AF3F1E36C041AF815D2D21 /* ThumbRatingScreen.swift */; };
 		46B5284D249C5CF400A7725D /* Koin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B5284C249C5CF400A7725D /* Koin.swift */; };
+		D42FBB7A3062C8F300E4A39A /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FBB793062C8EF00E4A39A /* AppTheme.swift */; };
 		D4EC3EAD30010F610091579C /* KotlinMultiplatformLinkedPackage in Frameworks */ = {isa = PBXBuildFile; productRef = D4EC3EAC30010F610091579C /* KotlinMultiplatformLinkedPackage */; };
 		F1465F0123AA94BF0055F7C3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */; };
 		F1465F0A23AA94BF0055F7C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1465F0923AA94BF0055F7C3 /* Assets.xcassets */; };
@@ -35,8 +37,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D42FBB7B3062C8EF00E4A39A /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		25AF3F1E36C041AF815D2D21 /* ThumbRatingScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThumbRatingScreen.swift; sourceTree = "<group>"; };
 		46B5284C249C5CF400A7725D /* Koin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Koin.swift; sourceTree = "<group>"; };
+		D42FBB793062C8EF00E4A39A /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		F1465EFD23AA94BF0055F7C3 /* PhotoRateiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoRateiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F1465F0923AA94BF0055F7C3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -111,6 +115,8 @@
 		F1465EFF23AA94BF0055F7C3 /* PhotoRateiOS */ = {
 			isa = PBXGroup;
 			children = (
+				D42FBB793062C8EF00E4A39A /* AppTheme.swift */,
+				D42FBB7B3062C8EF00E4A39A /* AppColors.swift */,
 				D42FBB5130612FC400E4A39A /* feature */,
 				F1465F0023AA94BF0055F7C3 /* AppDelegate.swift */,
 				46B5284C249C5CF400A7725D /* Koin.swift */,
@@ -331,6 +337,8 @@
 				46B5284D249C5CF400A7725D /* Koin.swift in Sources */,
 				F1465F0123AA94BF0055F7C3 /* AppDelegate.swift in Sources */,
 				3AAFA81392134042A79D1E1C /* ThumbRatingScreen.swift in Sources */,
+				D42FBB7A3062C8F300E4A39A /* AppTheme.swift in Sources */,
+				D42FBB7C3062C8F300E4A39A /* AppColors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

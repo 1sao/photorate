@@ -16,22 +16,22 @@ with the same shapes — the CompiledModel verification harness applies
 unchanged.  This is the "rides the GPU delegate" lane from the skill.
 
 Usage:
-  ml/litert/.venv/bin/python ml/litert/scripts/quantize_models.py
+  <python> ml/litert/scripts/quantize_models.py [--in-dir DIR] [--out-dir DIR]
 
-Outputs (all in ml/litert/converted/):
+Defaults: --in-dir/--out-dir ml/litert/converted.
+Outputs (all in out-dir):
   rtmdet_hand_320_f16.tflite / rtmdet_hand_320_i8.tflite
   rtmpose_hand_256_f16.tflite / rtmpose_hand_256_i8.tflite
 """
 
-import sys
+import argparse
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]  # ml/litert
-OUT = ROOT / "converted"
+DEFAULT_OUT = Path(__file__).resolve().parents[1] / "converted"  # ml/litert/converted
 
-F32 = [
-    (OUT / "rtmdet_hand_320_f32.tflite", "rtmdet_hand_320"),
-    (OUT / "rtmpose_hand_256_f32.tflite", "rtmpose_hand_256"),
+MODELS = [
+    ("rtmdet_hand_320_f32.tflite", "rtmdet_hand_320"),
+    ("rtmpose_hand_256_f32.tflite", "rtmpose_hand_256"),
 ]
 
 FP16_SUFFIX = "_f16.tflite"
@@ -55,7 +55,8 @@ def quantize_fp16(src: Path, dst: Path) -> None:
         ),
         algorithm_key=AlgorithmName.FLOAT_CASTING,
     )
-    quantizer.Quantizer(str(src), rm.get_quantization_recipe()).quantize().export_model(str(dst))
+    quantizer.Quantizer(str(src), rm.get_quantization_recipe()).quantize().export_model(str(dst),
+                                                                                        overwrite=True)
     print(f"{src.name} -> {dst.name} ({dst.stat().st_size / 1e6:.1f} MB)")
 
 
@@ -64,19 +65,25 @@ def quantize_int8(src: Path, dst: Path) -> None:
     from ai_edge_quantizer.recipe import dynamic_wi8c_afp32
 
     # Channelwise dynamic-range int8 (weights), fp32 activations.
-    quantizer.Quantizer(str(src), dynamic_wi8c_afp32()).quantize().export_model(str(dst))
+    quantizer.Quantizer(str(src), dynamic_wi8c_afp32()).quantize().export_model(str(dst),
+                                                                                overwrite=True)
     print(f"{src.name} -> {dst.name} ({dst.stat().st_size / 1e6:.1f} MB)")
 
 
 def main() -> None:
-    for src, stem in F32:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--in-dir", type=Path, default=DEFAULT_OUT)
+    ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
+    args = ap.parse_args()
+
+    for name, stem in MODELS:
+        src = args.in_dir / name
         if not src.exists():
             print(f"SKIP {src.name}: not found (run convert_models.py first)")
             continue
-        f32_size = src.stat().st_size
-        print(f"{src.name} f32={f32_size / 1e6:.1f} MB")
-        quantize_fp16(src, OUT / (stem + FP16_SUFFIX))
-        quantize_int8(src, OUT / (stem + INT8_SUFFIX))
+        print(f"{src.name} f32={src.stat().st_size / 1e6:.1f} MB")
+        quantize_fp16(src, args.out_dir / (stem + FP16_SUFFIX))
+        quantize_int8(src, args.out_dir / (stem + INT8_SUFFIX))
     print("quantization done")
 
 
