@@ -39,7 +39,12 @@ kotlin {
         isStatic = false
         linkerOpts("-lsqlite3")
         export(libs.touchlab.kermit.simple)
-        export(project(":core"))
+        export(projects.core)
+        export(projects.feature.gallery.galleryUi)
+        export(projects.feature.search.searchUi)
+        export(projects.feature.home.homeUi)
+        export(projects.feature.imageRecognition.imageRecognitionComponentApi)
+
         if (it.name == "iosArm64" || it.name == "iosSimulatorArm64") {
           // The user's LiteRT C++ dylibs (ml/litert_cpp) feed kmplitert's
           // `-lLiteRt` cinterop linkerOpt. Stage a per-target copy named
@@ -119,7 +124,11 @@ kotlin {
     iosMain.dependencies {
       implementation(libs.sqlDelight.native)
       api(libs.touchlab.kermit.simple)
-      api(project(":core"))
+      api(projects.core)
+      api(projects.feature.gallery.galleryUi)
+      api(projects.feature.search.searchUi)
+      api(projects.feature.home.homeUi)
+      api(projects.feature.imageRecognition.imageRecognitionComponentApi)
     }
     // LiteRT on iOS: kmplitert-core publishes iosArm64 +
     // iosSimulatorArm64
@@ -135,6 +144,8 @@ kotlin {
     }
   }
 }
+
+skie { features { enableSwiftUIObservingPreview = true } }
 
 // The main database: owns the FULL merged schema (config + gallery + search
 // tables) purely so `PhotoRateDb.Schema` can create the SqlDriver with every

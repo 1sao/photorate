@@ -143,20 +143,20 @@ fun UncertainGalleryItem(
     shape = MaterialTheme.shapes.largeIncreased,
     color = MaterialTheme.colorScheme.surfaceContainerLow,
   ) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max).clickable(onClick = onClick)) {
       GalleryCardImage(
         uri = item.uri,
-        onClick = onClick,
         modifier = Modifier.weight(1f).aspectRatio(1f),
       )
 
-      var stars by rememberSaveable { mutableIntStateOf(item.score.score) }
       Column(
         modifier =
           Modifier.weight(1f).fillMaxHeight().padding(horizontal = 24.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
+        var stars by rememberSaveable { mutableIntStateOf(item.score.score) }
+
         Text(
           text = "Best guess",
           style = MaterialTheme.typography.labelLarge,
@@ -184,7 +184,7 @@ fun UncertainGalleryItem(
           ) {
             Icon(
               Icons.Filled.Close,
-              contentDescription = "Mark as no hand",
+              contentDescription = "Reject image",
             )
           }
         }
@@ -198,7 +198,6 @@ private fun GalleryCardImage(
   uri: String,
   modifier: Modifier = Modifier,
   clipShape: Shape = MaterialTheme.shapes.largeIncreased,
-  onClick: (() -> Unit)? = null,
 ) {
   val imageKey = imageSharedContentKey(uri)
   val imageRequest =
@@ -226,10 +225,7 @@ private fun GalleryCardImage(
     contentDescription = null,
     error = rememberImageUnavailablePainter(),
     contentScale = ContentScale.Crop,
-    modifier =
-      modifier.then(sharedBounds).clip(clipShape).let {
-        if (onClick != null) it.clickable(onClick = onClick) else it
-      },
+    modifier = modifier.then(sharedBounds).clip(clipShape),
   )
 }
 
@@ -263,6 +259,7 @@ private fun GalleryItemPreview() {
     GalleryItem(
       item = GalleryImageItem("content://preview/a", Score.FIVE),
       onClick = {},
+      modifier = Modifier.size(120.dp),
     )
   }
 }

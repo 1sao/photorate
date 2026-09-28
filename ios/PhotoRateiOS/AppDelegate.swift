@@ -8,8 +8,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     lazy var log = koin.loggerWithTag(tag: "AppDelegate")
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions
-        launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication
+        .LaunchOptionsKey: Any]?
+    ) -> Bool {
 
         startKoin()
 
@@ -19,13 +22,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window?.rootViewController = viewController
         self.window?.makeKeyAndVisible()
 
-        log.v(message: {"App Started"})
+        log.v(message: { "App Started" })
         return true
     }
 }
 
 struct ContentView: View {
     var body: some View {
-        ThumbRatingScreen()
+        HomeScreen(onOpenSettings: {}, onOpenImage: { _ in })
     }
 }

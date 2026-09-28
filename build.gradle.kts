@@ -40,23 +40,17 @@ subprojects {
   apply(plugin = rootProject.libs.plugins.ktfmt.get().pluginId)
 
   // ktfmt-gradle 0.27.0 skips src/androidMain sources unless
-  // com.android.kotlin.multiplatform.library
-  // is applied BEFORE kotlin.multiplatform (it snapshots the applied-plugin set when KMP applies).
-  // New KMP modules with Android sources must keep that plugins {} order or androidMain silently
-  // loses ktfmt coverage without failing any check.
+  // com.android.kotlin.multiplatform.library is applied BEFORE kotlin.multiplatform (it snapshots
+  // the applied-plugin set when KMP applies). New KMP modules with Android sources must keep that
+  // plugins {} order or androidMain silently loses ktfmt coverage without failing any check.
   configure<KtfmtExtension> { applyProjectStyle() }
 
-  // The Compose compiler Gradle plugin (org.jetbrains.kotlin.plugin.compose)
-  // resolves
-  // `compose-group-mapping` from this configuration to identify which maven
-  // groups are
-  // Compose libraries. When its version drifts from the Kotlin version, the
-  // plugin can't
-  // map the Compose artifacts on the classpath, and the IDE falls back to
-  // autodecompiled
-  // sources without KDoc for Compose APIs (e.g. Ctrl+click on Box). Force it
-  // to match the
-  // Kotlin version, exactly like the PicQuery reference project does.
+  // The Compose compiler Gradle plugin (org.jetbrains.kotlin.plugin.compose) resolves
+  // `compose-group-mapping` from this configuration to identify which maven groups are Compose
+  // libraries. When its version drifts from the Kotlin version, the plugin can't map the Compose
+  // artifacts on the classpath, and the IDE falls back to autodecompiled sources without KDoc for
+  // Compose APIs (e.g. Ctrl+click on Box). Force it to match the Kotlin version, exactly like the
+  // PicQuery reference project does.
   configurations
     .matching { it.name == "composeMappingProducerClasspath" }
     .configureEach {

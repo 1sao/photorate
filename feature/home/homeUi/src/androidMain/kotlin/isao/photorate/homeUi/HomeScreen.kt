@@ -74,7 +74,7 @@ fun HomeScreen(
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun HomeScreenContent(
+private fun HomeScreenContent(
   state: HomeScreenUiState,
   permissionsState: MultiplePermissionsState,
   onOpenSettings: () -> Unit,

@@ -32,10 +32,10 @@ import kotlin.math.sin
 fun RatingStar(
   fraction: Float,
   modifier: Modifier = Modifier,
-  filledColor: Color = StarColors.filled,
-  emptyColor: Color = StarColors.empty,
-  outlineColor: Color = StarColors.outline,
-  outlineWidth: Dp = StarColors.outlineWidth,
+  filledColor: Color = StarDefaults.filledColor,
+  emptyColor: Color = StarDefaults.emptyColor,
+  outlineColor: Color = StarDefaults.outlineColor,
+  outlineWidth: Dp = StarDefaults.outlineWidth,
 ) {
   val fillFraction = fraction.coerceIn(0f, 1f)
   Canvas(modifier = modifier.defaultMinSize(16.dp, 16.dp)) {
@@ -116,10 +116,11 @@ internal val Score.ratingStarFraction
       Score.FIVE -> 1f
     }
 
-internal object StarColors {
-  val filled = Color.White
-  val empty = Color.White.copy(alpha = .1f)
-  val outline = Color.White
+internal object StarDefaults {
+  val filledColor = Color.White
+  val emptyColor = Color.White.copy(alpha = .1f)
+  val outlineColor = Color.White
+
   val outlineWidth = 1.dp
 }
 
