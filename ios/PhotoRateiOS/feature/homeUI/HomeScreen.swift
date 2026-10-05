@@ -51,14 +51,14 @@ struct HomeScreenContent: View {
                 spacing: 2
             ) {
                 ScanStatusCard(statusCounts: state.gallery.imagesState.status)
-                    .frame(width: .infinity)
+                    .frame(maxWidth: .infinity)
 
                 ForEach(state.gallery.imagesState.detections, id: \.self) { item in
                     GalleryItem(item: item, onClick: onOpenImage)
                         .frame(height: 200)
                 }
             }
-            .frame(width: .infinity, height: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
