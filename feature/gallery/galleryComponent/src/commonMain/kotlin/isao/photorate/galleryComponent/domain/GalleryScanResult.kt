@@ -11,6 +11,6 @@ import isao.photorate.galleryComponent.db.GalleryImage
  */
 data class GalleryScanResult(
   val images: List<GalleryImage>,
-  val checkpoint: Checkpoint,
+  val checkpoint: SystemGalleryImageRepository.Checkpoint,
   val isCompleteScan: Boolean,
 )

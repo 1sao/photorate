@@ -3,7 +3,7 @@ package isao.photorate.galleryComponent.domain
 import arrow.core.raise.Raise
 import isao.photorate.imageRecognition.ResourceFailure
 
-interface SystemGalleryImageRepository {
+interface SystemGalleryImageRepository<Checkpoint : SystemGalleryImageRepository.Checkpoint> {
   /**
    * Returns the gallery images plus the incremental-sync checkpoint that must be saved (via
    * [saveCheckpoint]) only after the images have been persisted.
@@ -16,4 +16,9 @@ interface SystemGalleryImageRepository {
   /** Fetches one image's metadata straight from the system gallery (no caching). */
   context(_: Raise<ResourceFailure>)
   suspend fun getImageDetails(uri: String): SystemImageDetails
+
+  /**
+   * A checkpoint for the gallery state, used to retrieve incremental updates after this checkpoint.
+   */
+  interface Checkpoint
 }

@@ -1,5 +1,6 @@
 package isao.photorate.galleryComponent.domain
 
+import isao.photorate.galleryComponent.domain.SystemGalleryImageRepository.Checkpoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -7,7 +8,7 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class PopulateGalleryUseCase(
-  private val systemGalleryImageRepository: SystemGalleryImageRepository,
+  private val systemGalleryImageRepository: SystemGalleryImageRepository<Checkpoint>,
   private val galleryImageRepository: GalleryImageRepository,
 ) {
   suspend operator fun invoke(): Int {

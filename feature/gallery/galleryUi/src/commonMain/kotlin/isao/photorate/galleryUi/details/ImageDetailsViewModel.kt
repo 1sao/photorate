@@ -9,6 +9,7 @@ import isao.photorate.galleryComponent.domain.DetectedHandRepository
 import isao.photorate.galleryComponent.domain.GalleryImageRepository
 import isao.photorate.galleryComponent.domain.SetUserScoreUseCase
 import isao.photorate.galleryComponent.domain.SystemGalleryImageRepository
+import isao.photorate.galleryComponent.domain.SystemGalleryImageRepository.Checkpoint
 import isao.photorate.galleryComponent.domain.SystemImageDetails
 import isao.photorate.imageRecognition.Score
 import isao.photorate.imageRecognition.landmark.LandmarkedImage.Point
@@ -34,7 +35,7 @@ sealed interface ImageDetailsIntent {
 class ImageDetailsViewModel(
   @InjectedParam private val uri: String,
   private val detectedHandRepository: DetectedHandRepository,
-  private val systemGalleryImageRepository: SystemGalleryImageRepository,
+  private val systemGalleryImageRepository: SystemGalleryImageRepository<Checkpoint>,
   private val setUserScore: SetUserScoreUseCase,
   private val featureFlagRepository: FeatureFlagRepository,
   private val galleryImageRepository: GalleryImageRepository,

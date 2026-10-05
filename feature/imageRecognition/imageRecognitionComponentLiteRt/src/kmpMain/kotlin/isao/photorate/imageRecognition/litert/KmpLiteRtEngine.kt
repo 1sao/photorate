@@ -43,27 +43,47 @@ private constructor(
       filePath: String,
       accelerator: LiteRTAccelerator,
     ): KmpLiteRtEngine {
-      val compiler =
-        LiteRTCompiler(
-          filePath,
-          accelerator,
-        )
-      compiler.init()
+      val compiler = initCompiler(filePath, accelerator)
       return KmpLiteRtEngine(
         compiler = compiler,
         inputs = compiler.getInputBuffers(),
         outputs = compiler.getOutputBuffers(),
       )
     }
+
+    private suspend fun initCompiler(
+      filePath: String,
+      accelerator: LiteRTAccelerator,
+    ): LiteRTCompiler {
+      suspend fun createAndInit(
+        filePath: String,
+        accelerator: LiteRTAccelerator,
+      ): LiteRTCompiler {
+        val compiler = LiteRTCompiler(filePath, accelerator)
+        compiler.init()
+        return compiler
+      }
+
+      if (accelerator == LiteRTAccelerator.CPU) {
+        return createAndInit(filePath, accelerator)
+      }
+      // Delegates like Metal are unavailable in some environments (e.g. the iOS simulator);
+      // fall back to CPU instead of crashing.
+      return try {
+        createAndInit(filePath, accelerator)
+      } catch (_: IllegalStateException) {
+        createAndInit(filePath, LiteRTAccelerator.CPU)
+      }
+    }
   }
 }
 
 /** Maps the common accelerator enum onto kmplitert's. */
-internal fun LiteRtAccelerator.toKmp(): io.github.leitingzi.kmplitert.core.LiteRTAccelerator =
+internal fun LiteRtAccelerator.toKmp(): LiteRTAccelerator =
   when (this) {
-    LiteRtAccelerator.CPU -> io.github.leitingzi.kmplitert.core.LiteRTAccelerator.CPU
-    LiteRtAccelerator.GPU -> io.github.leitingzi.kmplitert.core.LiteRTAccelerator.GPU
-    LiteRtAccelerator.NPU -> io.github.leitingzi.kmplitert.core.LiteRTAccelerator.NPU
+    LiteRtAccelerator.CPU -> LiteRTAccelerator.CPU
+    LiteRtAccelerator.GPU -> LiteRTAccelerator.GPU
+    LiteRtAccelerator.NPU -> LiteRTAccelerator.NPU
   }
 
 actual fun createLiteRtEngine(source: ModelSource, config: EngineConfig): LiteRtEngine {

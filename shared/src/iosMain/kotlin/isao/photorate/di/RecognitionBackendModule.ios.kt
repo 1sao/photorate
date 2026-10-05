@@ -7,6 +7,5 @@ import org.koin.core.annotation.Single
 @Module
 actual class RecognitionBackendModule {
   @Single
-  fun provideRecognitionBackend(factory: IosRecognitionBackendFactory): RecognitionBackend =
-    factory.create()
+  fun provideRecognitionBackend(): RecognitionBackend = IosRecognitionBackendFactory().create()
 }

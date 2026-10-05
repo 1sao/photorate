@@ -12,7 +12,6 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.context.raise
 import isao.photorate.galleryComponent.db.GalleryImage
-import isao.photorate.galleryComponent.domain.Checkpoint
 import isao.photorate.galleryComponent.domain.GalleryImageStatus
 import isao.photorate.galleryComponent.domain.GalleryScanResult
 import isao.photorate.galleryComponent.domain.SystemGalleryImageRepository
@@ -26,7 +25,7 @@ import org.koin.core.annotation.Factory
 @Factory
 class AndroidSystemGalleryImageRepository(
   private val context: Context,
-) : SystemGalleryImageRepository {
+) : SystemGalleryImageRepository<AndroidSystemGalleryImageRepository.Checkpoint> {
   private val sharedPrefs = context.getSharedPreferences("system-gallery", Context.MODE_PRIVATE)
 
   var lastMediaStoreVersion
@@ -34,16 +33,6 @@ class AndroidSystemGalleryImageRepository(
     set(value) = sharedPrefs.edit { putString(LAST_MEDIA_STORE_VERSION_KEY, value) }
 
   val currentMediaStoreVersion = MediaStore.getVersion(context)
-
-  private fun lastCheckpoints(): Map<String, Long> =
-    sharedPrefs.getString(CHECKPOINTS_KEY, null)?.let { stored ->
-      // TODO A silent failure. Good enough for this case?
-      runCatching { Json.decodeFromString<Map<String, Long>>(stored) }.getOrNull()
-    } ?: emptyMap()
-
-  fun resetGenerationCheckpoints() {
-    sharedPrefs.edit { remove(CHECKPOINTS_KEY) }
-  }
 
   context(_: Raise<ResourceFailure>)
   override suspend fun getImageDetails(uri: String): SystemImageDetails =
@@ -189,6 +178,16 @@ class AndroidSystemGalleryImageRepository(
     }
   }
 
+  private fun lastCheckpoints(): Map<String, Long> =
+    sharedPrefs.getString(CHECKPOINTS_KEY, null)?.let { stored ->
+      // TODO A silent failure. Good enough for this case?
+      runCatching { Json.decodeFromString<Map<String, Long>>(stored) }.getOrNull()
+    } ?: emptyMap()
+
+  fun resetGenerationCheckpoints() {
+    sharedPrefs.edit { remove(CHECKPOINTS_KEY) }
+  }
+
   private fun scanCollection(
     collection: Uri,
     selection: String? = null,
@@ -236,6 +235,9 @@ class AndroidSystemGalleryImageRepository(
       }
     return images
   }
+
+  data class Checkpoint(val generations: Map<String, Long> = emptyMap()) :
+    SystemGalleryImageRepository.Checkpoint
 
   private companion object {
     const val CHECKPOINTS_KEY = "lastGenerationCheckpoints"

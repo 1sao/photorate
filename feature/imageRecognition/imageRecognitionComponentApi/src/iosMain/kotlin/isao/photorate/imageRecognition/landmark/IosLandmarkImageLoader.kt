@@ -10,12 +10,15 @@ import platform.Photos.PHAsset
 import platform.Photos.PHImageContentModeDefault
 import platform.Photos.PHImageManager
 import platform.Photos.PHImageRequestOptions
+import platform.Photos.PHImageRequestOptionsDeliveryModeFastFormat
+import platform.Photos.PHImageRequestOptionsDeliveryModeHighQualityFormat
 import platform.UIKit.UIImage
 
 /**
  * iOS [LandmarkImageLoader]: gallery URIs are PHAsset local identifiers, so load the asset via
  * PHImageManager into a [UIImage] (the common candidate on iOS).
  */
+// TODO is it min or max dimension?
 @OptIn(ExperimentalForeignApi::class)
 @Factory
 class IosLandmarkImageLoader : LandmarkImageLoader {
@@ -29,12 +32,17 @@ class IosLandmarkImageLoader : LandmarkImageLoader {
     val options =
       PHImageRequestOptions().apply {
         synchronous = true
-        deliveryMode = 1 // PHImageRequestOptionsDeliveryModeOpportunistic
+        deliveryMode =
+          if (minDimension > 320) {
+            PHImageRequestOptionsDeliveryModeHighQualityFormat
+          } else {
+            PHImageRequestOptionsDeliveryModeFastFormat
+          }
       }
     var resultImage: UIImage? = null
     PHImageManager.defaultManager().requestImageForAsset(
       asset,
-      CGSizeMake(1024.0, 1024.0),
+      CGSizeMake(minDimension.toDouble(), minDimension.toDouble()),
       PHImageContentModeDefault,
       options,
     ) { result, _ ->

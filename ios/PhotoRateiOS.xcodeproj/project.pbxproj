@@ -12,6 +12,29 @@
 		D42FBB7A3062C8F300E4A39A /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FBB793062C8EF00E4A39A /* AppTheme.swift */; };
 		D42FBB7C3062C8F300E4A39A /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FBB7B3062C8EF00E4A39A /* AppColors.swift */; };
 		D42FBB873063DCA000E4A39A /* ComparableExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FBB863063DC9800E4A39A /* ComparableExtensions.swift */; };
+		D445E4083073F7A700BF6FA8 /* ImageEmbeddingRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F23073F7A700BF6FA8 /* ImageEmbeddingRepository.kt */; };
+		D445E4093073F7A700BF6FA8 /* SystemGalleryImageRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F73073F7A700BF6FA8 /* SystemGalleryImageRepository.kt */; };
+		D445E40A3073F7A700BF6FA8 /* ScoreAdapter.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3E63073F7A700BF6FA8 /* ScoreAdapter.kt */; };
+		D445E40B3073F7A700BF6FA8 /* DefaultGalleryImageRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3E93073F7A700BF6FA8 /* DefaultGalleryImageRepository.kt */; };
+		D445E40C3073F7A700BF6FA8 /* MobileClipEmbedUnembeddedImagesUseCase.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F43073F7A700BF6FA8 /* MobileClipEmbedUnembeddedImagesUseCase.kt */; };
+		D445E40D3073F7A700BF6FA8 /* GalleryImageRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3EE3073F7A700BF6FA8 /* GalleryImageRepository.kt */; };
+		D445E40E3073F7A700BF6FA8 /* GalleryImageStatus.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3EF3073F7A700BF6FA8 /* GalleryImageStatus.kt */; };
+		D445E40F3073F7A700BF6FA8 /* LandmarkPendingImagesUseCase.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F33073F7A700BF6FA8 /* LandmarkPendingImagesUseCase.kt */; };
+		D445E4103073F7A700BF6FA8 /* DetectedHand.sq in Resources */ = {isa = PBXBuildFile; fileRef = D445E3FF3073F7A700BF6FA8 /* DetectedHand.sq */; };
+		D445E4113073F7A700BF6FA8 /* GallerySyncManager.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F13073F7A700BF6FA8 /* GallerySyncManager.kt */; };
+		D445E4123073F7A700BF6FA8 /* PopulateGalleryUseCase.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F53073F7A700BF6FA8 /* PopulateGalleryUseCase.kt */; };
+		D445E4133073F7A700BF6FA8 /* PointsAdapter.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3E53073F7A700BF6FA8 /* PointsAdapter.kt */; };
+		D445E4143073F7A700BF6FA8 /* GalleryScanResult.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F03073F7A700BF6FA8 /* GalleryScanResult.kt */; };
+		D445E4153073F7A700BF6FA8 /* DefaultImageEmbeddingRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3EA3073F7A700BF6FA8 /* DefaultImageEmbeddingRepository.kt */; };
+		D445E4163073F7A700BF6FA8 /* DefaultDetectedHandRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3E83073F7A700BF6FA8 /* DefaultDetectedHandRepository.kt */; };
+		D445E4173073F7A700BF6FA8 /* DetectedHandRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3EC3073F7A700BF6FA8 /* DetectedHandRepository.kt */; };
+		D445E4183073F7A700BF6FA8 /* SetUserScoreUseCase.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F63073F7A700BF6FA8 /* SetUserScoreUseCase.kt */; };
+		D445E4193073F7A700BF6FA8 /* SystemImageDetails.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3F83073F7A700BF6FA8 /* SystemImageDetails.kt */; };
+		D445E41A3073F7A700BF6FA8 /* GalleryComponentModule.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3FA3073F7A700BF6FA8 /* GalleryComponentModule.kt */; };
+		D445E41B3073F7A700BF6FA8 /* GalleryImage.sq in Resources */ = {isa = PBXBuildFile; fileRef = D445E4003073F7A700BF6FA8 /* GalleryImage.sq */; };
+		D445E41C3073F7A700BF6FA8 /* EmbedUnembeddedImagesUseCase.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E3ED3073F7A700BF6FA8 /* EmbedUnembeddedImagesUseCase.kt */; };
+		D445E41D3073F7A700BF6FA8 /* ImageEmbedding.sq in Resources */ = {isa = PBXBuildFile; fileRef = D445E4013073F7A700BF6FA8 /* ImageEmbedding.sq */; };
+		D445E4253073F7F800BF6FA8 /* IosSystemGalleryImageRepository.kt in Resources */ = {isa = PBXBuildFile; fileRef = D445E41E3073F7F800BF6FA8 /* IosSystemGalleryImageRepository.kt */; };
 		D4570E643066909000D34403 /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4570E633066902800D34403 /* ImageLoader.swift */; };
 		D4570E66306699C800D34403 /* PhotoRatePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4570E65306699BE00D34403 /* PhotoRatePreview.swift */; };
 		D4EC3EAD30010F610091579C /* KotlinMultiplatformLinkedPackage in Frameworks */ = {isa = PBXBuildFile; productRef = D4EC3EAC30010F610091579C /* KotlinMultiplatformLinkedPackage */; };
@@ -45,6 +68,29 @@
 		D42FBB793062C8EF00E4A39A /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		D42FBB7B3062C8EF00E4A39A /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		D42FBB863063DC9800E4A39A /* ComparableExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparableExtensions.swift; sourceTree = "<group>"; };
+		D445E3E53073F7A700BF6FA8 /* PointsAdapter.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PointsAdapter.kt; sourceTree = "<group>"; };
+		D445E3E63073F7A700BF6FA8 /* ScoreAdapter.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ScoreAdapter.kt; sourceTree = "<group>"; };
+		D445E3E83073F7A700BF6FA8 /* DefaultDetectedHandRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultDetectedHandRepository.kt; sourceTree = "<group>"; };
+		D445E3E93073F7A700BF6FA8 /* DefaultGalleryImageRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultGalleryImageRepository.kt; sourceTree = "<group>"; };
+		D445E3EA3073F7A700BF6FA8 /* DefaultImageEmbeddingRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultImageEmbeddingRepository.kt; sourceTree = "<group>"; };
+		D445E3EC3073F7A700BF6FA8 /* DetectedHandRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = DetectedHandRepository.kt; sourceTree = "<group>"; };
+		D445E3ED3073F7A700BF6FA8 /* EmbedUnembeddedImagesUseCase.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = EmbedUnembeddedImagesUseCase.kt; sourceTree = "<group>"; };
+		D445E3EE3073F7A700BF6FA8 /* GalleryImageRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = GalleryImageRepository.kt; sourceTree = "<group>"; };
+		D445E3EF3073F7A700BF6FA8 /* GalleryImageStatus.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = GalleryImageStatus.kt; sourceTree = "<group>"; };
+		D445E3F03073F7A700BF6FA8 /* GalleryScanResult.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = GalleryScanResult.kt; sourceTree = "<group>"; };
+		D445E3F13073F7A700BF6FA8 /* GallerySyncManager.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = GallerySyncManager.kt; sourceTree = "<group>"; };
+		D445E3F23073F7A700BF6FA8 /* ImageEmbeddingRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ImageEmbeddingRepository.kt; sourceTree = "<group>"; };
+		D445E3F33073F7A700BF6FA8 /* LandmarkPendingImagesUseCase.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LandmarkPendingImagesUseCase.kt; sourceTree = "<group>"; };
+		D445E3F43073F7A700BF6FA8 /* MobileClipEmbedUnembeddedImagesUseCase.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = MobileClipEmbedUnembeddedImagesUseCase.kt; sourceTree = "<group>"; };
+		D445E3F53073F7A700BF6FA8 /* PopulateGalleryUseCase.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PopulateGalleryUseCase.kt; sourceTree = "<group>"; };
+		D445E3F63073F7A700BF6FA8 /* SetUserScoreUseCase.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = SetUserScoreUseCase.kt; sourceTree = "<group>"; };
+		D445E3F73073F7A700BF6FA8 /* SystemGalleryImageRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = SystemGalleryImageRepository.kt; sourceTree = "<group>"; };
+		D445E3F83073F7A700BF6FA8 /* SystemImageDetails.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = SystemImageDetails.kt; sourceTree = "<group>"; };
+		D445E3FA3073F7A700BF6FA8 /* GalleryComponentModule.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = GalleryComponentModule.kt; sourceTree = "<group>"; };
+		D445E3FF3073F7A700BF6FA8 /* DetectedHand.sq */ = {isa = PBXFileReference; lastKnownFileType = text; path = DetectedHand.sq; sourceTree = "<group>"; };
+		D445E4003073F7A700BF6FA8 /* GalleryImage.sq */ = {isa = PBXFileReference; lastKnownFileType = text; path = GalleryImage.sq; sourceTree = "<group>"; };
+		D445E4013073F7A700BF6FA8 /* ImageEmbedding.sq */ = {isa = PBXFileReference; lastKnownFileType = text; path = ImageEmbedding.sq; sourceTree = "<group>"; };
+		D445E41E3073F7F800BF6FA8 /* IosSystemGalleryImageRepository.kt */ = {isa = PBXFileReference; lastKnownFileType = text; path = IosSystemGalleryImageRepository.kt; sourceTree = "<group>"; };
 		D4570E633066902800D34403 /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
 		D4570E65306699BE00D34403 /* PhotoRatePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoRatePreview.swift; sourceTree = "<group>"; };
 		F1465EFD23AA94BF0055F7C3 /* PhotoRateiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoRateiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,6 +108,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D42FBB5130612FC400E4A39A /* feature */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = feature; sourceTree = "<group>"; };
+		D4570E77306F927C00D34403 /* db */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = db; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,9 +144,194 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		D445E3E43073F74F00BF6FA8 /* Kotlin Debug */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4243073F7F800BF6FA8 /* iosMain */,
+				D445E4073073F7A700BF6FA8 /* commonMain */,
+			);
+			path = "Kotlin Debug";
+			sourceTree = "<group>";
+		};
+		D445E3E73073F7A700BF6FA8 /* adapter */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3E53073F7A700BF6FA8 /* PointsAdapter.kt */,
+				D445E3E63073F7A700BF6FA8 /* ScoreAdapter.kt */,
+			);
+			path = adapter;
+			sourceTree = "<group>";
+		};
+		D445E3EB3073F7A700BF6FA8 /* data */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3E73073F7A700BF6FA8 /* adapter */,
+				D445E3E83073F7A700BF6FA8 /* DefaultDetectedHandRepository.kt */,
+				D445E3E93073F7A700BF6FA8 /* DefaultGalleryImageRepository.kt */,
+				D445E3EA3073F7A700BF6FA8 /* DefaultImageEmbeddingRepository.kt */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		D445E3F93073F7A700BF6FA8 /* domain */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3EC3073F7A700BF6FA8 /* DetectedHandRepository.kt */,
+				D445E3ED3073F7A700BF6FA8 /* EmbedUnembeddedImagesUseCase.kt */,
+				D445E3EE3073F7A700BF6FA8 /* GalleryImageRepository.kt */,
+				D445E3EF3073F7A700BF6FA8 /* GalleryImageStatus.kt */,
+				D445E3F03073F7A700BF6FA8 /* GalleryScanResult.kt */,
+				D445E3F13073F7A700BF6FA8 /* GallerySyncManager.kt */,
+				D445E3F23073F7A700BF6FA8 /* ImageEmbeddingRepository.kt */,
+				D445E3F33073F7A700BF6FA8 /* LandmarkPendingImagesUseCase.kt */,
+				D445E3F43073F7A700BF6FA8 /* MobileClipEmbedUnembeddedImagesUseCase.kt */,
+				D445E3F53073F7A700BF6FA8 /* PopulateGalleryUseCase.kt */,
+				D445E3F63073F7A700BF6FA8 /* SetUserScoreUseCase.kt */,
+				D445E3F73073F7A700BF6FA8 /* SystemGalleryImageRepository.kt */,
+				D445E3F83073F7A700BF6FA8 /* SystemImageDetails.kt */,
+			);
+			path = domain;
+			sourceTree = "<group>";
+		};
+		D445E3FB3073F7A700BF6FA8 /* galleryComponent */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3EB3073F7A700BF6FA8 /* data */,
+				D445E3F93073F7A700BF6FA8 /* domain */,
+				D445E3FA3073F7A700BF6FA8 /* GalleryComponentModule.kt */,
+			);
+			path = galleryComponent;
+			sourceTree = "<group>";
+		};
+		D445E3FC3073F7A700BF6FA8 /* photorate */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3FB3073F7A700BF6FA8 /* galleryComponent */,
+			);
+			path = photorate;
+			sourceTree = "<group>";
+		};
+		D445E3FD3073F7A700BF6FA8 /* isao */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3FC3073F7A700BF6FA8 /* photorate */,
+			);
+			path = isao;
+			sourceTree = "<group>";
+		};
+		D445E3FE3073F7A700BF6FA8 /* kotlin */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3FD3073F7A700BF6FA8 /* isao */,
+			);
+			path = kotlin;
+			sourceTree = "<group>";
+		};
+		D445E4023073F7A700BF6FA8 /* db */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3FF3073F7A700BF6FA8 /* DetectedHand.sq */,
+				D445E4003073F7A700BF6FA8 /* GalleryImage.sq */,
+				D445E4013073F7A700BF6FA8 /* ImageEmbedding.sq */,
+			);
+			path = db;
+			sourceTree = "<group>";
+		};
+		D445E4033073F7A700BF6FA8 /* galleryComponent */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4023073F7A700BF6FA8 /* db */,
+			);
+			path = galleryComponent;
+			sourceTree = "<group>";
+		};
+		D445E4043073F7A700BF6FA8 /* photorate */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4033073F7A700BF6FA8 /* galleryComponent */,
+			);
+			path = photorate;
+			sourceTree = "<group>";
+		};
+		D445E4053073F7A700BF6FA8 /* isao */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4043073F7A700BF6FA8 /* photorate */,
+			);
+			path = isao;
+			sourceTree = "<group>";
+		};
+		D445E4063073F7A700BF6FA8 /* sqldelight */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4053073F7A700BF6FA8 /* isao */,
+			);
+			path = sqldelight;
+			sourceTree = "<group>";
+		};
+		D445E4073073F7A700BF6FA8 /* commonMain */ = {
+			isa = PBXGroup;
+			children = (
+				D445E3FE3073F7A700BF6FA8 /* kotlin */,
+				D445E4063073F7A700BF6FA8 /* sqldelight */,
+			);
+			name = commonMain;
+			path = ../feature/gallery/galleryComponent/src/commonMain;
+			sourceTree = SOURCE_ROOT;
+		};
+		D445E41F3073F7F800BF6FA8 /* data */ = {
+			isa = PBXGroup;
+			children = (
+				D445E41E3073F7F800BF6FA8 /* IosSystemGalleryImageRepository.kt */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		D445E4203073F7F800BF6FA8 /* galleryComponent */ = {
+			isa = PBXGroup;
+			children = (
+				D445E41F3073F7F800BF6FA8 /* data */,
+			);
+			path = galleryComponent;
+			sourceTree = "<group>";
+		};
+		D445E4213073F7F800BF6FA8 /* photorate */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4203073F7F800BF6FA8 /* galleryComponent */,
+			);
+			path = photorate;
+			sourceTree = "<group>";
+		};
+		D445E4223073F7F800BF6FA8 /* isao */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4213073F7F800BF6FA8 /* photorate */,
+			);
+			path = isao;
+			sourceTree = "<group>";
+		};
+		D445E4233073F7F800BF6FA8 /* kotlin */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4223073F7F800BF6FA8 /* isao */,
+			);
+			path = kotlin;
+			sourceTree = "<group>";
+		};
+		D445E4243073F7F800BF6FA8 /* iosMain */ = {
+			isa = PBXGroup;
+			children = (
+				D445E4233073F7F800BF6FA8 /* kotlin */,
+			);
+			name = iosMain;
+			path = ../feature/gallery/galleryComponent/src/iosMain;
+			sourceTree = SOURCE_ROOT;
+		};
 		F1465EF423AA94BF0055F7C3 = {
 			isa = PBXGroup;
 			children = (
+				D445E3E43073F74F00BF6FA8 /* Kotlin Debug */,
 				F1465EFF23AA94BF0055F7C3 /* PhotoRateiOS */,
 				F1465F1623AA94C00055F7C3 /* PhotoRateiOSTests */,
 				F1465F2123AA94C00055F7C3 /* PhotoRateiOSUITests */,
@@ -121,6 +353,7 @@
 		F1465EFF23AA94BF0055F7C3 /* PhotoRateiOS */ = {
 			isa = PBXGroup;
 			children = (
+				D4570E77306F927C00D34403 /* db */,
 				D4570E65306699BE00D34403 /* PhotoRatePreview.swift */,
 				D4570E633066902800D34403 /* ImageLoader.swift */,
 				D42FBB863063DC9800E4A39A /* ComparableExtensions.swift */,
@@ -174,6 +407,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				D42FBB5130612FC400E4A39A /* feature */,
+				D4570E77306F927C00D34403 /* db */,
 			);
 			name = PhotoRateiOS;
 			packageProductDependencies = (
@@ -270,6 +504,29 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D445E4083073F7A700BF6FA8 /* ImageEmbeddingRepository.kt in Resources */,
+				D445E4093073F7A700BF6FA8 /* SystemGalleryImageRepository.kt in Resources */,
+				D445E40A3073F7A700BF6FA8 /* ScoreAdapter.kt in Resources */,
+				D445E40B3073F7A700BF6FA8 /* DefaultGalleryImageRepository.kt in Resources */,
+				D445E40C3073F7A700BF6FA8 /* MobileClipEmbedUnembeddedImagesUseCase.kt in Resources */,
+				D445E40D3073F7A700BF6FA8 /* GalleryImageRepository.kt in Resources */,
+				D445E40E3073F7A700BF6FA8 /* GalleryImageStatus.kt in Resources */,
+				D445E4253073F7F800BF6FA8 /* IosSystemGalleryImageRepository.kt in Resources */,
+				D445E40F3073F7A700BF6FA8 /* LandmarkPendingImagesUseCase.kt in Resources */,
+				D445E4103073F7A700BF6FA8 /* DetectedHand.sq in Resources */,
+				D445E4113073F7A700BF6FA8 /* GallerySyncManager.kt in Resources */,
+				D445E4123073F7A700BF6FA8 /* PopulateGalleryUseCase.kt in Resources */,
+				D445E4133073F7A700BF6FA8 /* PointsAdapter.kt in Resources */,
+				D445E4143073F7A700BF6FA8 /* GalleryScanResult.kt in Resources */,
+				D445E4153073F7A700BF6FA8 /* DefaultImageEmbeddingRepository.kt in Resources */,
+				D445E4163073F7A700BF6FA8 /* DefaultDetectedHandRepository.kt in Resources */,
+				D445E4173073F7A700BF6FA8 /* DetectedHandRepository.kt in Resources */,
+				D445E4183073F7A700BF6FA8 /* SetUserScoreUseCase.kt in Resources */,
+				D445E4193073F7A700BF6FA8 /* SystemImageDetails.kt in Resources */,
+				D445E41A3073F7A700BF6FA8 /* GalleryComponentModule.kt in Resources */,
+				D445E41B3073F7A700BF6FA8 /* GalleryImage.sq in Resources */,
+				D445E41C3073F7A700BF6FA8 /* EmbedUnembeddedImagesUseCase.kt in Resources */,
+				D445E41D3073F7A700BF6FA8 /* ImageEmbedding.sq in Resources */,
 				F1465F0D23AA94BF0055F7C3 /* LaunchScreen.storyboard in Resources */,
 				F1465F0A23AA94BF0055F7C3 /* Assets.xcassets in Resources */,
 			);
@@ -334,7 +591,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export GRADLE_USER_HOME=\"${HOME}/.gradle\"\nexport KONAN_DATA_DIR=\"${SRCROOT}/../.konan\"\nexport JAVA_TOOL_OPTIONS=\"-Djava.net.preferIPv4Stack=true -Duser.home=${SRCROOT}/../.fakehome\"\nif [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode";
+			shellScript = "export GRADLE_USER_HOME=\"${HOME}/.gradle\"\nexport KONAN_DATA_DIR=\"${SRCROOT}/../.konan\"\nexport JAVA_TOOL_OPTIONS=\"-Djava.net.preferIPv4Stack=true -Duser.home=${SRCROOT}/../.fakehome\"\nexport HOME=\"${SRCROOT}/../.fakehome\"\nif [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -530,7 +787,7 @@
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = PhotoRateiOS/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoRate scans your photo library to detect hand-gesture ratings.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -563,7 +820,7 @@
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = PhotoRateiOS/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoRate scans your photo library to detect hand-gesture ratings.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
