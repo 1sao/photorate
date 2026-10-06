@@ -10,8 +10,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(
         _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication
-        .LaunchOptionsKey: Any]?
+        didFinishLaunchingWithOptions launchOptions:
+            [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
 
         startKoin()
@@ -29,6 +29,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 struct ContentView: View {
     var body: some View {
-        HomeScreen(onOpenSettings: {}, onOpenImage: { _ in })
+        PhotoRateTheme {
+            HomeScreen(onOpenSettings: {}, onOpenImage: { _ in })
+        }
+        .environment(\.phImageLoader, DefaultPHImageLoader())
     }
 }
