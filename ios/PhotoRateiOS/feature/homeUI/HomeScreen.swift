@@ -30,15 +30,6 @@ struct HomeScreen: View {
                             intent: HomeIntentGalleryPermissionGranted()
                         )
                     }
-
-                if showResetDialog {
-                    ResetGalleryConfirmationDialog(onConfirm: {
-                        showResetDialog = false
-                        viewModel.onIntent(
-                            intent: HomeIntentGalleryResetRequested()
-                        )
-                    })
-                }
             }
         }
     }
