@@ -41,4 +41,7 @@ interface GalleryImageRepository {
   )
 
   suspend fun setIgnored(uri: String)
+
+  /** Removes every non-user-given detection, keeping only user-set scores. */
+  suspend fun deleteNonUserGivenScores()
 }

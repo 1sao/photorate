@@ -59,6 +59,7 @@ class DefaultGalleryDelegate(
     when (intent) {
       is GalleryIntent.AcceptUncertain -> acceptUncertain(intent.uri, intent.score)
       is GalleryIntent.DeleteUncertain -> deleteUncertain(intent.uri)
+      GalleryIntent.ResetGallery -> resetGallery()
     }
   }
 
@@ -69,6 +70,10 @@ class DefaultGalleryDelegate(
 
   private suspend fun deleteUncertain(uri: String) {
     galleryImageRepository.setIgnored(uri)
+  }
+
+  private suspend fun resetGallery() {
+    galleryImageRepository.deleteNonUserGivenScores()
   }
 
   private fun selectStatusCounts(): Flow<GalleryStatusCounts> =
@@ -113,4 +118,6 @@ sealed interface GalleryIntent {
   data class AcceptUncertain(val uri: String, val score: Int) : GalleryIntent
 
   data class DeleteUncertain(val uri: String) : GalleryIntent
+
+  data object ResetGallery : GalleryIntent
 }

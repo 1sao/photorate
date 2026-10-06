@@ -37,10 +37,15 @@ import platform.Photos.PHPhotoLibrary
 @Factory
 class IosSystemGalleryImageRepository :
   SystemGalleryImageRepository<IosSystemGalleryImageRepository.Checkpoint> {
-  override suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult =
+  override suspend fun getImages(
+    requestType: SystemGalleryImageRepository.RequestType
+  ): GalleryScanResult =
     withContext(Dispatchers.IO) {
       val lastChangeToken = getLastSavedToken()
-      if (lastChangeToken == null) {
+
+      if (
+        requestType == SystemGalleryImageRepository.RequestType.FULL_SCAN || lastChangeToken == null
+      ) {
         val images =
           PHAsset.fetchAssetsWithMediaType(
               PHAssetMediaTypeImage,

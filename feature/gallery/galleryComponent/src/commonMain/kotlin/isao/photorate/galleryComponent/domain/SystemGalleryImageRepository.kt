@@ -7,10 +7,19 @@ interface SystemGalleryImageRepository<Checkpoint : SystemGalleryImageRepository
   /**
    * Returns the gallery images plus the incremental-sync checkpoint that must be saved (via
    * [saveCheckpoint]) only after the images have been persisted.
+   *
+   * @param requestType [RequestType.FULL_SCAN] returns every image in the gallery;
+   *   [RequestType.AFTER_CHECKPOINT_IF_AVAILABLE] returns only images changed since the last saved
+   *   checkpoint, or every image if no checkpoint exists.
    */
-  suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult
+  suspend fun getImages(requestType: RequestType): GalleryScanResult
 
-  /** Persists the checkpoint captured by the last [getAllImagesAfterLastCheckpoint] call. */
+  enum class RequestType {
+    FULL_SCAN,
+    AFTER_CHECKPOINT_IF_AVAILABLE,
+  }
+
+  /** Persists the checkpoint captured by the last [getImages] call. */
   suspend fun saveCheckpoint(checkpoint: Checkpoint)
 
   /** Fetches one image's metadata straight from the system gallery (no caching). */

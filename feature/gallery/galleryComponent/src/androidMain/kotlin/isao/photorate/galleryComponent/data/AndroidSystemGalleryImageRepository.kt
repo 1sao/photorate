@@ -100,18 +100,16 @@ class AndroidSystemGalleryImageRepository(
       } ?: raise(ResourceFailure.NotFound(uri))
     }
 
-  override suspend fun getAllImagesAfterLastCheckpoint(): GalleryScanResult =
+  override suspend fun getImages(
+    requestType: SystemGalleryImageRepository.RequestType
+  ): GalleryScanResult =
     withContext(Dispatchers.IO) {
-      if (getMediaAccess() != MediaAccess.Full) {
+      if (
+        requestType == SystemGalleryImageRepository.RequestType.FULL_SCAN ||
+          getMediaAccess() != MediaAccess.Full ||
+          Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+      ) {
         resetGenerationCheckpoints()
-        return@withContext GalleryScanResult(
-          images = scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
-          checkpoint = Checkpoint(emptyMap()),
-          isCompleteScan = true,
-        )
-      }
-
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
         return@withContext GalleryScanResult(
           images = scanCollection(MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
           checkpoint = Checkpoint(emptyMap()),

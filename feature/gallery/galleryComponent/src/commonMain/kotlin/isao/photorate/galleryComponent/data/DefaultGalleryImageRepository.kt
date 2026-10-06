@@ -120,6 +120,10 @@ class DefaultGalleryImageRepository(
     }
   }
 
+  override suspend fun deleteNonUserGivenScores() {
+    withContext(Dispatchers.IO) { galleryImageQueries.updateAllImagesPending() }
+  }
+
   override suspend fun reconcileOrphans(currentValidUris: Set<String>) {
     withContext(Dispatchers.IO) {
       galleryImageQueries.transaction {

@@ -3,6 +3,7 @@ package isao.photorate.homeUi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import isao.photorate.core.keepAlive
+import isao.photorate.galleryComponent.domain.GalleryResetManager
 import isao.photorate.galleryComponent.domain.GallerySyncManager
 import isao.photorate.galleryUi.GalleryDelegate
 import isao.photorate.galleryUi.GalleryIntent
@@ -26,6 +27,7 @@ class HomeViewModel(
   private val galleryDelegate: GalleryDelegate,
   private val searchDelegate: SearchDelegate,
   private val gallerySyncManager: GallerySyncManager,
+  private val galleryResetManager: GalleryResetManager,
   searchSessionHolder: SearchSessionHolder,
 ) : ViewModel() {
   val uiState: StateFlow<HomeScreenUiState> =
@@ -51,6 +53,7 @@ class HomeViewModel(
         HomeIntent.GalleryPermissionGranted -> gallerySyncManager.run()
         is HomeIntent.Gallery -> galleryDelegate.onIntent(intent.intent)
         is HomeIntent.Search -> searchDelegate.onIntent(intent.intent)
+        HomeIntent.GalleryResetRequested -> galleryResetManager.resetAndRescan()
       }
     }
   }
@@ -67,4 +70,6 @@ sealed interface HomeIntent {
   data class Gallery(val intent: GalleryIntent) : HomeIntent
 
   data class Search(val intent: SearchIntent) : HomeIntent
+
+  data object GalleryResetRequested : HomeIntent
 }

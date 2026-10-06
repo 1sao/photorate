@@ -3,6 +3,7 @@ package isao.photorate.di
 import isao.photorate.imageRecognition.RecognitionBackend
 import isao.photorate.imageRecognition.litert.IosLiteRtAppClipSearchFactory
 import isao.photorate.imageRecognition.litert.IosLiteRtHandLandmarkerFactory
+import isao.photorate.imageRecognition.litert.LiteRtGestureRecognizerProvider
 import isao.photorate.imageRecognition.recognizer.GestureRecognizerProvider
 import isao.photorate.imageRecognition.search.AppClipSearchFactory
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -30,9 +31,7 @@ actual class IosRecognitionBackendFactory actual constructor() {
     return object : RecognitionBackend {
       override val handLandmarkerFactory = IosLiteRtHandLandmarkerFactory(modelsDir)
       override val gestureRecognizerProvider: GestureRecognizerProvider =
-        GestureRecognizerProvider {
-          emptyList()
-        }
+        LiteRtGestureRecognizerProvider()
       override val appClipSearchFactory: AppClipSearchFactory =
         IosLiteRtAppClipSearchFactory(modelsDir, tokenizerJson)
     }

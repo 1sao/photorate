@@ -1,6 +1,7 @@
 package isao.photorate.homeUi
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,9 +19,12 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,7 @@ import isao.photorate.galleryUi.GalleryUiState
 import isao.photorate.galleryUi.GalleryUiState.ImagesState
 import isao.photorate.galleryUi.GridCellsAdaptiveEvenOnly
 import isao.photorate.galleryUi.NoMatchesCard
+import isao.photorate.galleryUi.ResetGalleryConfirmationDialog
 import isao.photorate.galleryUi.ScanStatusCard
 import isao.photorate.galleryUi.UncertainGalleryItem
 import isao.photorate.imageRecognition.Score
@@ -180,9 +185,25 @@ private fun GalleryGridContent(
     if (!isSearching) {
       item(key = "status", span = { GridItemSpan(maxLineSpan) }) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+          var showResetDialog by remember { mutableStateOf(false) }
+
+          if (showResetDialog) {
+            ResetGalleryConfirmationDialog(
+              onDismiss = { showResetDialog = false },
+              onConfirm = {
+                showResetDialog = false
+                onIntent(HomeIntent.GalleryResetRequested)
+              },
+            )
+          }
+
           ScanStatusCard(
             statusCounts = state.gallery.imagesState.status,
-            modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth(),
+            modifier =
+              Modifier.widthIn(max = 420.dp)
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.largeIncreased)
+                .clickable { showResetDialog = true },
           )
         }
       }

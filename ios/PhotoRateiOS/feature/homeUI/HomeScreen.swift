@@ -12,21 +12,33 @@ struct HomeScreen: View {
     let onOpenSettings: () -> Void
     let onOpenImage: (String) -> Void
 
-    //  let viewModel: HomeViewModel = koin.get(
-    //    qualifier: shared.getOriginalKotlinClass(objCClass: HomeViewModel)
-    //  ) as! HomeViewModel
-
     let viewModel: HomeViewModel = inject()
+
+    @State private var showResetDialog = false
 
     var body: some View {
         Observing(viewModel.uiState) { state in
-            HomeScreenContent(
-                state: state,
-                onOpenSettings: onOpenSettings,
-                onOpenImage: onOpenImage,
-                onIntent: viewModel.onIntent
-            ).task {
-                viewModel.onIntent(intent: HomeIntentGalleryPermissionGranted())
+            ZStack {
+                HomeScreenContent(
+                    state: state,
+                    onOpenSettings: onOpenSettings,
+                    onOpenImage: onOpenImage,
+                    onIntent: viewModel.onIntent
+                )
+                    .task {
+                        viewModel.onIntent(
+                            intent: HomeIntentGalleryPermissionGranted()
+                        )
+                    }
+
+                if showResetDialog {
+                    ResetGalleryConfirmationDialog(onConfirm: {
+                        showResetDialog = false
+                        viewModel.onIntent(
+                            intent: HomeIntentGalleryResetRequested()
+                        )
+                    })
+                }
             }
         }
     }
@@ -44,7 +56,10 @@ struct HomeScreenContent: View {
     let onOpenImage: (String) -> Void
     let onIntent: (HomeIntent) -> Void
 
+    @State var showResetDialog: Bool = false
+
     var body: some View {
+
         ScrollView {
             LazyVGrid(
                 columns: [GridItem(.flexible()), GridItem(.flexible())],
@@ -52,6 +67,24 @@ struct HomeScreenContent: View {
             ) {
                 ScanStatusCard(statusCounts: state.gallery.imagesState.status)
                     .frame(maxWidth: .infinity)
+                .onTapGesture {
+                    showResetDialog = true
+                }
+                .confirmationDialog(
+                    "Rescan gallery?",
+                    isPresented: $showResetDialog,
+                    ) {
+                    Button("Yes, rescan") {
+                        onIntent(HomeIntentGalleryResetRequested())
+                    }
+                    Button("Cancel", role: .cancel, action: {})
+                } message: {
+                    Text(
+                        "Rescan the whole gallery while keeping scores you assigned manually."
+                    )
+                        .font(.subheadline)
+                        .multilineTextAlignment(.center)
+                }
 
                 ForEach(state.gallery.imagesState.detections, id: \.self) { item in
                     GalleryItem(item: item, onClick: onOpenImage)
@@ -60,68 +93,5 @@ struct HomeScreenContent: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-    }
-}
-
-#Preview {
-    PhotoRatePreview {
-        HomeScreenContent(
-            state: HomeScreenUiState(
-                gallery: GalleryUiState(
-                    imagesState: GalleryUiState.ImagesState(
-                        status: GalleryStatusCounts(
-                            pending: 15,
-                            done: 20,
-                            failed: 0,
-                            detected: 20
-                        ),
-                        detections: [
-                            GalleryImageItem(
-                                uri: "content://preview/a",
-                                score: Score.five,
-                                scannedAt: nil
-                            ),
-                            GalleryImageItem(
-                                uri: "content://preview/b",
-                                score: Score.one,
-                                scannedAt: nil
-                            ),
-                            GalleryImageItem(
-                                uri: "content://preview/c",
-                                score: Score.four,
-                                scannedAt: nil
-                            ),
-                            GalleryImageItem(
-                                uri: "content://preview/d",
-                                score: Score.two,
-                                scannedAt: nil
-                            ),
-                        ],
-                        uncertainDetections: [
-                            GalleryImageItem(
-                                uri: "content://preview/u1",
-                                score: Score.three,
-                                scannedAt: nil
-                            ),
-                            GalleryImageItem(
-                                uri: "content://preview/u2",
-                                score: Score.four,
-                                scannedAt: nil
-                            ),
-                        ]
-                    )
-                ),
-                search: SearchUiState(
-                    queryResults: nil,
-                    pendingQuery: Query.companion.INITIAL,
-                    recentSearches: [],
-                    isInDevMode: false
-                )
-            ),
-            onOpenSettings: {
-            },
-            onOpenImage: { _ in },
-            onIntent: { _ in }
-        )
     }
 }

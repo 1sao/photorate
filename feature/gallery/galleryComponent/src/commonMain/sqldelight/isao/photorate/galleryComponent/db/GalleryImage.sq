@@ -110,5 +110,8 @@ DELETE FROM GalleryImage WHERE uri IN ?;
 selectUnprocessed:
 SELECT * FROM GalleryImage WHERE status = 'PENDING' ORDER BY scannedAt DESC;
 
+updateAllImagesPending:
+UPDATE GalleryImage SET status = 'PENDING', scannedAt = NULL, detectedInMs = NULL;
+
 deleteAllImages:
 DELETE FROM GalleryImage;

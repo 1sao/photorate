@@ -18,9 +18,12 @@ class GallerySyncManager(
 ) {
   private val syncMutex = Mutex()
 
-  suspend fun run() {
+  suspend fun run(
+    requestType: SystemGalleryImageRepository.RequestType =
+      SystemGalleryImageRepository.RequestType.AFTER_CHECKPOINT_IF_AVAILABLE
+  ) {
     syncMutex.withLock {
-      logResults("PopulatingGallery") { populateGallery() }
+      logResults("PopulatingGallery") { populateGallery(requestType) }
       logIorResults("Landmarking") { landmarkPendingImages() }
       logIorResults("Embedding") { populateImageEmbeddings() }
     }
