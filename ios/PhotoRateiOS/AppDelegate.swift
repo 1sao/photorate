@@ -30,7 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 struct ContentView: View {
     var body: some View {
         PhotoRateTheme {
-            HomeScreen(onOpenSettings: {}, onOpenImage: { _ in })
+            PhotoRateNavHost()
         }
         .environment(\.phImageLoader, DefaultPHImageLoader())
     }
