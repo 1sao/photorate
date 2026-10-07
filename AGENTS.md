@@ -31,6 +31,11 @@ Dependency injection via Koin with `expect`/`actual` for `platformModule`.
   any gradle-related errors, run './gradlew --stop '. Optionally
   build iOS and run tests if the change touches shared logic or platform-specific code. When using
   ktfmt, run `ktfmtFormat` first to auto-fix easily fixable problems.
+- **iOS verification (xcodebuild)**: from the repo root:
+  `cd ios && xcodebuild -workspace PhotoRateiOS.xcworkspace -scheme PhotoRateiOS -configuration
+  Debug -destination 'platform=iOS Simulator,name=iPhone 17' build
+  OTHER_SWIFT_FLAGS='$(inherited) -disable-sandbox'`. Keep the exit code (e.g. `set -o pipefail`
+  when piping). The `-disable-sandbox` flag is required inside the sandbox.
 - **ktfmt + Android sources**: KMP modules must declare `android.library` (the
   `com.android.kotlin.multiplatform.library` plugin) BEFORE `kotlin.multiplatform` in their
   `plugins {}` block — otherwise ktfmt-gradle 0.27.0 silently skips `src/androidMain` (upstream
