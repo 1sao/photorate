@@ -39,6 +39,9 @@ class DefaultPHImageLoader: PHImageLoader {
                     options: nil
                 ).firstObject
             else {
+                // The asset is gone or not visible with current permissions.
+                continuation.yield(ImageResult(image: nil, rawInfo: nil))
+                continuation.finish()
                 return
             }
 
