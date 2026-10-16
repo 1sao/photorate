@@ -112,7 +112,7 @@ class IosSystemGalleryImageRepository :
 
   private fun getLastSavedToken(): PHPersistentChangeToken? =
     (NSUserDefaults.standardUserDefaults.objectForKey(LAST_CHANGE_TOKEN))?.let {
-      NSKeyedUnarchiver.unarchiveObjectWithData(it as NSData) as PHPersistentChangeToken
+      NSKeyedUnarchiver.unarchiveObjectWithData(it as NSData) as? PHPersistentChangeToken
     }
 
   private fun getCurrentToken(): PHPersistentChangeToken =
