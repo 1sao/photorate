@@ -77,7 +77,7 @@ class DefaultSearchDelegate(
     searchJob?.cancel()
 
     val trimmedQueryValue = query.value.trim()
-    if (trimmedQueryValue == "") return@coroutineScope null
+    if (trimmedQueryValue == "") return@coroutineScope
 
     searchJob = launch {
       pendingQuery.update {
