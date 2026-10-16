@@ -9,7 +9,7 @@ struct NoMatchesCard: View {
 
     var body: some View {
         VStack {
-            Text("No matches found for \(query)")
+            Text("No matches for \(query)")
                 .font(.title2)
                 .padding(.bottom, 4)
             Text(
@@ -21,7 +21,6 @@ struct NoMatchesCard: View {
         .padding(20)
         .background(theme.colorScheme.surfaceVariant)
         .clipShape(theme.shapes.largeIncreased)
-        .cornerRadius(24)
     }
 }
 
@@ -31,17 +30,6 @@ struct GalleryItem: View {
 
     var body: some View {
         GalleryImage(uri: item.uri)
-            //      .containerRelativeFrame(
-            //        .horizontal,
-            //        count: 5,
-            //        spacing: 2,
-            //      )
-            //      .clipped()
-            //      .frame(width: .infinity)
-            //      .aspectRatio(1, contentMode: .fit)
-            //      .frame(alignment: .topTrailing)
-            //      .clipped()
-            //      .aspectRatio(1, contentMode: .fit)
         .onTapGesture {
             onClick(item.uri)
         }
@@ -71,14 +59,7 @@ struct UncertainGalleryItem: View {
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
 
-//        .aspectRatio(1, contentMode: .fill)
-//        .frame(width: .infinity, height: .infinity)
-
-//        .frame(maxWidth: .infinity)
-//        .aspectRatio(1, contentMode: .fit)
-
             VStack {
-//        Color.black
                 @State var score: Score = item.score
 
                 Text("Best guess")
@@ -105,18 +86,9 @@ struct UncertainGalleryItem: View {
                         .foregroundStyle(theme.colorScheme.errorContainer)
                         .backgroundStyle(theme.colorScheme.onErrorContainer)
                 }
-
-//        Color.black
-
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            //      .frame(height: .infinity)
-            //      .frame(maxHeight: .infinity)
-
             .border(.red, width: 5)
-//      .frame(maxHeight: .infinity)
-
-//      .frame(width: .infinity, height: .infinity)
         }
         .background(theme.colorScheme.surfaceContainerLow)
         .border(.green)
@@ -141,10 +113,6 @@ struct GalleryImage: View {
                     Image("todo")
                 case (let image?, _):
                     Image(uiImage: image)
-                        //            .resizable()
-                        //            .aspectRatio(contentMode: .fill)
-                        //            .aspectRatio(1, contentMode: .fit)
-                        //            .clipped()
                         .resizable()
                         .scaledToFill()
                         .frame(width: geo.size.width, height: geo.size.height)
