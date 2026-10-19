@@ -88,10 +88,8 @@ struct UncertainGalleryItem: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .border(.red, width: 5)
         }
         .background(theme.colorScheme.surfaceContainerLow)
-        .border(.green)
         .clipShape(theme.shapes.largeIncreased)
     }
 }
@@ -152,7 +150,7 @@ struct GalleryImage: View {
                     scannedAt: 0
                 ),
                 onClick: { _ in }
-            ).frame(width: 120, height: 120).border(.red)
+            ).frame(width: 120, height: 120)
 
             UncertainGalleryItem(
                 item: GalleryImageItem(
