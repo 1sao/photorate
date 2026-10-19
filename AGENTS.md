@@ -33,9 +33,27 @@ Dependency injection via Koin with `expect`/`actual` for `platformModule`.
   ktfmt, run `ktfmtFormat` first to auto-fix easily fixable problems.
 - **iOS verification (xcodebuild)**: from the repo root:
   `cd ios && xcodebuild -workspace PhotoRateiOS.xcworkspace -scheme PhotoRateiOS -configuration
-  Debug -destination 'platform=iOS Simulator,name=iPhone 17' build
+  Debug -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build/dd build
   OTHER_SWIFT_FLAGS='$(inherited) -disable-sandbox'`. Keep the exit code (e.g. `set -o pipefail`
-  when piping). The `-disable-sandbox` flag is required inside the sandbox.
+  when piping). `-disable-sandbox` is required inside the sandbox (also for standalone
+  `swiftc -typecheck` runs that expand macros). `-derivedDataPath build/dd` is required: with the
+  default DerivedData path the Gradle Run Script fails with `BUILT_PRODUCTS_DIR is not accessible`.
+- **iOS unit tests**:
+  `cd ios && xcodebuild test -workspace PhotoRateiOS.xcworkspace -scheme PhotoRateiOS -configuration
+  Debug -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build/dd
+  -only-testing:PhotoRateiOSTests OTHER_SWIFT_FLAGS='$(inherited) -disable-sandbox'` (~3.5 min,
+  17 tests; runs on a simulator clone). `IDETestProgressNotification ... thwarted by sandboxing`
+  lines are cosmetic — judge by `Test case ... passed` / `** TEST SUCCEEDED **`. Run it in the
+  foreground (backgrounded shimmed commands are denied); if the tool call times out, `xcodebuild`
+  keeps running — poll the log file instead of re-running.
+- **Gradle CLI vs Xcode-triggered builds**: the Xcode Run Script starts a Gradle daemon with
+  `KONAN_DATA_DIR=<repo>/.konan`, `HOME=<repo>/.fakehome` (`-Duser.home=<repo>/.fakehome`); plain
+  CLI Gradle then reuses it and Kotlin/Native fails with duplicate `unique_name` KLIB errors.
+  Fix: `./gradlew --stop`, then run CLI Gradle with the same env:
+  `env KONAN_DATA_DIR=$PWD/.konan HOME=$PWD/.fakehome GRADLE_USER_HOME=~/.gradle
+  JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true -Duser.home=$PWD/.fakehome" ./gradlew <task>`.
+- **ktfmt and derived data**: once `ios/build` exists, `ktfmtFormat` fails on `ktfmtFormatScripts`
+  (`Couldn't follow symbolic link`) — run `ktfmtFormatMain` instead (or delete `ios/build`).
 - **ktfmt + Android sources**: KMP modules must declare `android.library` (the
   `com.android.kotlin.multiplatform.library` plugin) BEFORE `kotlin.multiplatform` in their
   `plugins {}` block — otherwise ktfmt-gradle 0.27.0 silently skips `src/androidMain` (upstream

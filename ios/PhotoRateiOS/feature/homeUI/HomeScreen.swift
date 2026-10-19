@@ -5,6 +5,7 @@
 //  Created by Ihor Pakharenko on 28. 9. 2026..
 //
 
+import Photos
 import SwiftUI
 import shared
 
@@ -14,23 +15,37 @@ struct HomeScreen: View {
 
     let viewModel: HomeViewModel = inject()
 
-    @State private var showResetDialog = false
+    @State private var permissions = GalleryPermissionsModel()
 
     var body: some View {
         Observing(viewModel.uiState) { state in
             ZStack {
                 HomeScreenContent(
                     state: state,
+                    galleryStatus: permissions.status,
                     onOpenSettings: onOpenSettings,
                     onOpenImage: onOpenImage,
+                    onManagePermission: {
+                        Task {
+                            await permissions.request()
+                            syncGalleryIfAccessGranted()
+                        }
+                    },
                     onIntent: viewModel.onIntent
                 )
-                    .task {
-                        viewModel.onIntent(
-                            intent: HomeIntentGalleryPermissionGranted()
-                        )
-                    }
             }
+            .onChange(of: permissions.status, initial: true) { _, _ in
+                syncGalleryIfAccessGranted()
+            }
+        }
+    }
+
+    private func syncGalleryIfAccessGranted() {
+        switch permissions.status {
+        case .authorized, .limited:
+            viewModel.onIntent(intent: HomeIntentGalleryPermissionGranted())
+        default:
+            break
         }
     }
 }
@@ -43,9 +58,11 @@ func inject<T: AnyObject>() -> T {
 
 struct HomeScreenContent: View {
     let state: HomeScreenUiState
+    let galleryStatus: PHAuthorizationStatus
 
     let onOpenSettings: () -> Void
     let onOpenImage: (String) -> Void
+    let onManagePermission: () -> Void
     let onIntent: (HomeIntent) -> Void
 
     private var isSearching: Bool {
@@ -74,26 +91,24 @@ struct HomeScreenContent: View {
         }
     }
 
-    // TODO: wire to Photos authorization status
-    private var hasFullGalleryAccess: Bool {
-        true
-    }
-
     var body: some View {
-        galleryGrid.modifier(
-            HomeToolbar(
+        galleryGrid
+            .homeToolbar(
                 state: state,
                 onOpenSettings: onOpenSettings,
                 onIntent: onIntent
             )
-        )
+            .homeScrollEdgeEffect()
     }
 
     private var galleryGrid: some View {
         ScrollView {
             VStack(spacing: 6) {
-                if !hasFullGalleryAccess && !isSearching {
-                    GalleryPermissionCard()
+                if galleryStatus != .authorized && !isSearching {
+                    GalleryPermissionCard(
+                        isPartialAccess: galleryStatus == .limited,
+                        onPrimaryAction: onManagePermission
+                    )
                 }
 
                 if isSearching
@@ -142,7 +157,9 @@ struct HomeScreenContent: View {
                         onDelete: { uri in
                             onIntent(
                                 HomeIntentGallery(
-                                    intent: GalleryIntentDeleteUncertain(uri: uri)
+                                    intent: GalleryIntentDeleteUncertain(
+                                        uri: uri
+                                    )
                                 )
                             )
                         }
@@ -236,8 +253,10 @@ private struct GridHeader: View {
                 ),
                 search: previewSearchState()
             ),
+            galleryStatus: .authorized,
             onOpenSettings: {},
             onOpenImage: { _ in },
+            onManagePermission: {},
             onIntent: { _ in }
         )
     }
@@ -261,8 +280,37 @@ private struct GridHeader: View {
                 ),
                 search: previewSearchState()
             ),
+            galleryStatus: .notDetermined,
             onOpenSettings: {},
             onOpenImage: { _ in },
+            onManagePermission: {},
+            onIntent: { _ in }
+        )
+    }
+}
+
+#Preview("Empty (partial access)") {
+    PhotoRatePreview {
+        HomeScreenContent(
+            state: HomeScreenUiState(
+                gallery: GalleryUiState(
+                    imagesState: GalleryUiState.ImagesState(
+                        status: GalleryStatusCounts(
+                            pending: 0,
+                            done: 0,
+                            failed: 0,
+                            detected: 0
+                        ),
+                        detections: [],
+                        uncertainDetections: []
+                    )
+                ),
+                search: previewSearchState()
+            ),
+            galleryStatus: .limited,
+            onOpenSettings: {},
+            onOpenImage: { _ in },
+            onManagePermission: {},
             onIntent: { _ in }
         )
     }

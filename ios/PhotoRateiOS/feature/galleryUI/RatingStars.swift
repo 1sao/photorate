@@ -79,6 +79,7 @@ struct RatingStarSelector<Filled: View, Empty: View>: View {
             @Environment(\.theme) var theme
             return RatingStar(
                 fraction: 1,
+                //TODO: this always retrieves default value, move accessing theme out of constructor.
                 filledColor: theme.colorScheme.primary,
                 outlineWidth: 0
             )

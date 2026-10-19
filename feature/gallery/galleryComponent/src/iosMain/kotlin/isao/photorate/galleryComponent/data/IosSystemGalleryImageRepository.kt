@@ -21,18 +21,18 @@ import platform.Foundation.NSMakeRange
 import platform.Foundation.NSSortDescriptor
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.timeIntervalSince1970
+import platform.Photos.PHAccessLevelReadWrite
 import platform.Photos.PHAsset
 import platform.Photos.PHAssetMediaTypeImage
+import platform.Photos.PHAuthorizationStatusAuthorized
+import platform.Photos.PHAuthorizationStatusLimited
 import platform.Photos.PHFetchOptions
 import platform.Photos.PHFetchResult
 import platform.Photos.PHObjectTypeAsset
 import platform.Photos.PHPersistentChangeToken
 import platform.Photos.PHPhotoLibrary
 
-/**
- * iOS [SystemGalleryImageRepository] placeholder — the populate-from-gallery pipeline is
- * Android-only for now.
- */
+/** iOS [SystemGalleryImageRepository] backed by the Photos framework. */
 @OptIn(ExperimentalForeignApi::class)
 @Factory
 class IosSystemGalleryImageRepository :
@@ -42,6 +42,16 @@ class IosSystemGalleryImageRepository :
   ): GalleryScanResult =
     withContext(Dispatchers.IO) {
       val lastChangeToken = getLastSavedToken()
+
+      if (!hasAnyGalleryAccess()) {
+        // An unauthorized fetch returns an empty result; reporting it as a complete scan would
+        // start orphan reconciliation and reconcile every stored image away.
+        return@withContext GalleryScanResult(
+          images = emptyList(),
+          checkpoint = Checkpoint(lastChangeToken),
+          isCompleteScan = false,
+        )
+      }
 
       if (
         requestType == SystemGalleryImageRepository.RequestType.FULL_SCAN || lastChangeToken == null
@@ -103,7 +113,7 @@ class IosSystemGalleryImageRepository :
   override suspend fun saveCheckpoint(checkpoint: Checkpoint) {
     val encoded =
       NSKeyedArchiver.archivedDataWithRootObject(
-        checkpoint.token,
+        checkpoint.token ?: return,
         requiringSecureCoding = true,
         error = null,
       )
@@ -118,11 +128,19 @@ class IosSystemGalleryImageRepository :
   private fun getCurrentToken(): PHPersistentChangeToken =
     PHPhotoLibrary.sharedPhotoLibrary().currentChangeToken
 
+  private fun hasAnyGalleryAccess(): Boolean =
+    when (PHPhotoLibrary.authorizationStatusForAccessLevel(PHAccessLevelReadWrite)) {
+      PHAuthorizationStatusAuthorized,
+      PHAuthorizationStatusLimited -> true
+
+      else -> false
+    }
+
   context(_: Raise<ResourceFailure>)
   override suspend fun getImageDetails(uri: String): SystemImageDetails =
     raise(ResourceFailure.NotFound(uri))
 
-  data class Checkpoint(val token: PHPersistentChangeToken) :
+  data class Checkpoint(val token: PHPersistentChangeToken?) :
     SystemGalleryImageRepository.Checkpoint
 
   private companion object {

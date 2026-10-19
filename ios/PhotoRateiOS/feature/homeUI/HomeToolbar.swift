@@ -59,7 +59,7 @@ struct HomeToolbar: ViewModifier {
         }
         .listRowSeparator(.hidden)
         //TODO: show confidence slider
-//        Color.black.frame(width: 100, height: 300)
+        //        Color.black.frame(width: 100, height: 300)
     }
 
     private var searchTextBinding: Binding<String> {
@@ -73,6 +73,33 @@ struct HomeToolbar: ViewModifier {
                 )
             }
         )
+    }
+}
+
+struct HomeScrollEdgeEffect: ViewModifier {
+    func body(content: Content) -> some View {
+        //TODO: implement custom gradient to support all OS versions
+        content
+    }
+}
+
+extension View {
+    func homeToolbar(
+        state: HomeScreenUiState,
+        onOpenSettings: @escaping () -> Void,
+        onIntent: @escaping (HomeIntent) -> Void,
+        ) -> some View {
+        modifier(
+            HomeToolbar(
+                state: state,
+                onOpenSettings: onOpenSettings,
+                onIntent: onIntent
+            )
+        )
+    }
+
+    func homeScrollEdgeEffect() -> some View {
+        modifier(HomeScrollEdgeEffect())
     }
 }
 
